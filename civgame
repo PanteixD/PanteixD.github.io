@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Tiny Civilization</title>
+<style>
+  body {
+    font-family: 'Arial', sans-serif;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #f0f4f8;
+    margin: 0;
+    padding: 0;
+  }
+  #game-container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    margin-top: 30px;
+    flex-direction: row; /* Make main container horizontal */
+    align-items: flex-start;
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(10, 60px);
+    grid-gap: 8px;
+    padding: 10px;
+    border-radius: 8px;
+    margin-left: 30px;
+    margin-right: 30px;
+  }
+  .tile {
+    width: 60px;
+    height: 60px;
+    border: 1px solid #e0e0e0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    cursor: pointer;
+    overflow: hidden;
+    word-wrap: break-word;
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+  }
+  .tile:hover {
+    background-color: #f5f5f5;
+  }
+  .pawn {
+    background-color: #42a5f5;
+    color: white;
+    border-radius: 50%;
+    font-size: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+  .tree {
+    background-color: #66bb6a;
+    color: white;
+    font-size: 20px;
+  }
+  .stone {
+    background-color: #90a4ae;
+    color: white;
+    font-size: 20px;
+  }
+  .flint {
+    background-color: #a1887f;
+    color: white;
+    font-size: 20px;
+  }
+  .highlight {
+    background-color: #bbdefb;
+  }
+  #action-button {
+    margin-top: 20px;
+    padding: 12px 24px;
+    font-size: 18px;
+    cursor: pointer;
+    border: none;
+    border-radius: 8px;
+    background-color: #ff7043;
+    color: white;
+    transition: background-color 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    margin-left: 0;
+  }
+  #action-button:hover {
+    background-color: #d84315;
+  }
+  #inventory {
+    text-align: left;
+    margin-right: 30px;
+    background-color: #e0f7fa;
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  #inventory h2 {
+    font-size: 24px;
+    color: #26a69a;
+    margin-bottom: 10px;
+  }
+  #inventory p {
+    font-size: 18px;
+    color: #424242;
+    margin-bottom: 5px;
+  }
+  #research-button {
+    margin-top: 30px;
+    padding: 12px 24px;
+    font-size: 18px;
+    cursor: pointer;
+    border: none;
+    border-radius: 8px;
+    background-color: #4caf50;
+    color: white;
+    transition: background-color 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  }
+  #research-button:hover {
+    background-color: #388e3c;
+  }
+  #tech-tree {
+    display: none;
+    margin-top: 0;
+    text-align: left;
+    border: 1px solid #b0bec5;
+    padding: 20px;
+    background-color: #f5f5f5;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    font-size: 18px;
+    margin-left: 0;
+  }
+  #tech-tree h2 {
+    font-size: 24px;
+    color: #00897b;
+    margin-bottom: 15px;
+  }
+  #tech-tree h3 {
+    font-size: 20px;
+    color: #00acc1;
+    margin-bottom: 10px;
+  }
+  #tech-tree ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+  }
+  #tech-tree li {
+    margin-bottom: 12px;
+  }
+  #research-progress {
+    width: 250px;
+    height: 25px;
+    border: 1px solid #b0bec5;
+    margin-top: 10px;
+    display: none;
+    border-radius: 8px;
+    background-color: #ffffff;
+  }
+  #research-progress-bar {
+    width: 0%;
+    height: 100%;
+    background-color: #aed581;
+    border-radius: 8px;
+    transition: width 0.3s ease;
+  }
+  .farm {
+    background-color: #ffb74d;
+    color: black;
+    font-size: 20px;
+  }
+  #resource-name {
+    margin-top: 20px;
+    font-size: 20px;
+    font-weight: bold;
+    color: #795548;
+    min-height: 25px;
+    margin-bottom: 30px;
+  }
+  #research-points-display {
+    margin-top: 20px;
+    font-size: 20px;
+    font-weight: bold;
+    color: #607d8b;
+    margin-bottom: 30px;
+  }
+  #buildings-list {
+    display: none;
+    margin-top: 20px;
+    text-align: left;
+    border: 1px solid #b0bec5;
+    padding: 20px;
+    background-color: #f5f5f5;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    font-size: 18px;
+    margin-left: 0;
+  }
+  #buildings-list h2 {
+    font-size: 24px;
+    color: #00897b;
+    margin-bottom: 15px;
+  }
+  #buildings-list ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+  }
+  #buildings-list li {
+    margin-bottom: 12px;
+  }
+  #buildings-list li button{
+    padding: 10px 15px;
+    font-size: 16px;
+    cursor: pointer;
+    border: none;
+    border-radius: 8px;
+    background-color: #ffc107;
+    color: #212121;
+    transition: background-color 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  }
+  #buildings-list li button:hover {
+    background-color: #ff8f00;
+  }
+  .research-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .research-progress-container {
+    display: none;
+    width: 250px;
+    height: 25px;
+    border: 1px solid #b0bec5;
+    margin-top: 10px;
+    border-radius: 8px;
+    background-color: #ffffff;
+  }
+  .research-progress-bar {
+    width: 0%;
+    height: 100%;
+    background-color: #aed581;
+    border-radius: 8px;
+    transition: width 0.3s ease;
+  }
+  .research-item button{
+    padding: 10px 15px;
+    font-size: 16px;
+    cursor: pointer;
+    border: none;
+    border-radius: 8px;
+    background-color: #81c784;
+    color: #ffffff;
+    transition: background-color 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  }
+  .research-item button:hover {
+    background-color: #4caf50;
+  }
+  #left-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-right: 30px;
+  }
+  #right-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  #colony-name-display{
+    font-size: 24px;
+    color: #1a237e;
+    font-weight: bold;
+    margin-bottom: 10px;
+  }
+</style>
+</head>
+<body>
+  <h1>Tiny Civilization</h1>
+  <div id="game-container">
+    <div id="left-container">
+      <div id="colony-name-display"></div>
+      <div id="inventory">
+        <h2>Inventory</h2>
+        <p>Wood: <span id="wood-count">0</span></p>
+        <p>Pebbles: <span id="pebble-count">0</span></p>
+        <p>Flint: <span id="flint-count">0</span></p>
+        <p>Wheat: <span id="wheat-count">0</span></p>
+      </div>
+      <button id="action-button">Gather Resource</button>
+      <div id="resource-name"></div>
+    </div>
+    <div id="grid" class="grid"></div>
+    <div id="right-panel">
+      <div id="research-points-display">Research Points: <span id="research-points">0</span></div>
+      <div id="tech-tree">
+        <h2>Tech Tree</h2>
+        <h3>Primitive Age</h3>
+        <ul>
+          <li class="research-item">
+            <button id="agriculture-research">Agriculture</button>
+            <div id="agriculture-research-progress" class="research-progress-container">
+              <div id="agriculture-research-bar" class="research-progress-bar"></div>
+            </div>
+            <span id="agriculture-research-percent">0%</span>
+            <p>Unlocks Farms</p>
+          </li>
+        </ul>
+      </div>
+      <div id="buildings-list">
+        <h2>Buildings</h2>
+        <ul>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <button id="research-button">Research</button>
+  <button id="buildings-button">Buildings</button>
+
+  <script>
+    const gridSize = 10;
+    const grid = document.getElementById('grid');
+    const actionButton = document.getElementById('action-button');
+    const woodCountDisplay = document.getElementById('wood-count');
+    const pebbleCountDisplay = document.getElementById('pebble-count');
+    const flintCountDisplay = document.getElementById('flint-count');
+    const inventoryDisplay = document.getElementById('inventory');
+    const researchButton = document.getElementById('research-button');
+    const techTree = document.getElementById('tech-tree');
+    const agricultureResearch = document.getElementById('agriculture-research');
+    const agricultureResearchProgress = document.getElementById('agriculture-research-progress');
+    const researchProgressBar = document.getElementById('agriculture-research-bar');
+    const agricultureResearchPercent = document.getElementById('agriculture-research-percent');
+    let pawnPosition = { x: 4, y: 4 };  // Start in the middle
+    let resources = [];
+    let currentResourceTile = null;
+    let inventory = { wood: 0, pebble: 0, flint: 0, wheat: 0 };
+    let inventoryVisible = true; // Make inventory always visible
+    let resourceNameDisplay = document.getElementById('resource-name');
+    let researchPoints = 0;
+    let activeResearch = null;
+    let agricultureCompleted = false;
+    let researchPointsDisplay = document.getElementById('research-points');
+    const agricultureResearchCost = 10;
+    const buildingsButton = document.getElementById('buildings-button');
+    const buildingsList = document.getElementById('buildings-list');
+    let buildingsVisible = false;
+    let selectedBuilding = null;
+    let placedBuildings = {};
+    let moveCount = 0;
+    const wheatCountDisplay = document.getElementById('wheat-count');
+    const farmCost = 3;
+    let movesSinceLastResource = 0;
+    const resourceSpawnInterval = 5;
+    let colonyName = "";
+    let discoveredResources = new Set();
+    const colonyNameDisplay = document.getElementById('colony-name-display');
+    let highlightEnabled = false; // Initially disabled
+    const researchStatusDisplay = document.createElement('p'); // Element to show research status
+    researchStatusDisplay.style.marginTop = '10px';
+    techTree.appendChild(researchStatusDisplay);
+  
+    function generateGrid() {
+      for (let y = 0; y < gridSize; y++) {
+        for (let x = 0; x < gridSize; x++) {
+          const tile = document.createElement('div');
+          tile.classList.add('tile');
+          tile.dataset.x = x;
+          tile.dataset.y = y;
+          grid.appendChild(tile);
+        }
+      }
+    }
+  
+    function generateResources() {
+      const resourceCount = 5; // Total resources to generate
+      const treeCount = 10; // Number of trees to generate
+      resources = []; // Clear existing resources
+  
+      // Generate trees
+      for (let i = 0; i < treeCount; i++) {
+        let x, y;
+        do {
+          x = Math.floor(Math.random() * gridSize);
+          y = Math.floor(Math.random() * gridSize);
+        } while (placedBuildings[`${x},${y}`] || resources.some(res => res.x === x && res.y === y)); // Ensure no overlap
+        resources.push({ x, y, type: 0 }); // 0 for tree
+      }
+  
+      // Generate other resources
+      for (let i = 0; i < resourceCount; i++) {
+        let x, y;
+        do {
+          x = Math.floor(Math.random() * gridSize);
+          y = Math.floor(Math.random() * gridSize);
+        } while (placedBuildings[`${x},${y}`] || resources.some(res => res.x === x && res.y === y)); // Ensure no overlap
+        const resourceType = Math.floor(Math.random() * 3); // Randomly choose between stone and flint (1 and 2)
+        resources.push({ x, y, type: resourceType + 1 }); // 1 for stone, 2 for flint
+      }
+    }
+  
+    function updateGrid() {
+      const tiles = document.querySelectorAll('.tile');
+      tiles.forEach(tile => {
+        tile.textContent = '';
+        tile.classList.remove('pawn', 'tree', 'stone', 'flint', 'highlight', 'farm');
+  
+        const x = parseInt(tile.dataset.x);
+        const y = parseInt(tile.dataset.y);
+  
+        if (x === pawnPosition.x && y === pawnPosition.y) {
+          tile.classList.add('pawn');
+          tile.textContent = 'P';
+        }
+  
+        resources.forEach(resource => {
+          if (x === resource.x && y === resource.y) {
+            if (resource.type === 0) {
+              tile.classList.add('tree');
+              tile.textContent = 'T';
+            } else if (resource.type === 1) {
+              tile.classList.add('stone');
+              tile.textContent = 'S';
+            } else if (resource.type === 2) {
+              tile.classList.add('flint');
+              tile.textContent = 'F';
+            }
+          }
+        });
+  
+        if (placedBuildings[`${x},${y}`]) {
+          const buildingType = placedBuildings[`${x},${y}`];
+          tile.classList.add(buildingType);
+          tile.textContent = buildingType.substring(0, 4).toUpperCase();
+        }
+      });
+      if (highlightEnabled) {
+        highlightMoves();
+      } else {
+        const highlightedTiles = document.querySelectorAll('.highlight');
+        highlightedTiles.forEach(tile => tile.classList.remove('highlight'));
+      }
+      updateInventoryDisplay();
+      updateResearchPointsDisplay();
+      updateResearchProgress();
+    }
+  
+    function highlightMoves() {
+      const tiles = document.querySelectorAll('.tile');
+      tiles.forEach(tile => {
+        const x = parseInt(tile.dataset.x);
+        const y = parseInt(tile.dataset.y);
+        const dx = Math.abs(x - pawnPosition.x);
+        const dy = Math.abs(y - pawnPosition.y);
+        if (dx <= 1 && dy <= 1 && dx + dy <= 2) {
+          tile.classList.add('highlight');
+        }
+        if (x === pawnPosition.x && y === pawnPosition.y) {
+          tile.classList.remove('highlight');
+        }
+      });
+    }
+  
+    function checkResource() {
+      currentResourceTile = null;
+      resources.forEach(resource => {
+        if (pawnPosition.x === resource.x && pawnPosition.y === resource.y) {
+          currentResourceTile = resource;
+        }
+      });
+      if (currentResourceTile) {
+        actionButton.style.display = 'block';
+        displayResourceName();
+      } else {
+        actionButton.style.display = 'none';
+        resourceNameDisplay.textContent = '';
+      }
+    }
+  
+    function movePawn(x, y) {
+      const dx = Math.abs(x - pawnPosition.x);
+      const dy = Math.abs(y - pawnPosition.y);
+  
+      if (dx <= 1 && dy <= 1 && dx + dy <= 2) {
+        pawnPosition.x = x;
+        pawnPosition.y = y;
+        updateGrid();
+        checkResource();
+  
+        // Earn research points if research is active
+        if (activeResearch) {
+          researchPoints++;
+          updateResearchPointsDisplay();
+          updateResearchProgress();
+        }
+  
+        moveCount++;
+        movesSinceLastResource++;
+        if (moveCount >= 5) {
+          produceWheat();
+          moveCount = 0;
+        }
+      } else if (x === pawnPosition.x && y === pawnPosition.y) {
+        // Earn research points if research is active
+        if (activeResearch) {
+          researchPoints++;
+          updateResearchPointsDisplay();
+          updateResearchProgress();
+        }
+  
+        moveCount++;
+        movesSinceLastResource++;
+        if (moveCount >= 5) {
+          produceWheat();
+          moveCount = 0;
+        }
+      }
+    }
+  
+    function gatherResource() {
+      if (currentResourceTile) {
+        let resourceType = currentResourceTile.type;
+        if (resourceType === 0) {
+          inventory.wood++;
+          if (!discoveredResources.has('wood')) {
+            discoveredResources.add('wood');
+          }
+        } else if (resourceType === 1) {
+          inventory.pebble++;
+          if (!discoveredResources.has('pebble')) {
+            discoveredResources.add('pebble');
+          }
+        } else if (resourceType === 2) {
+          inventory.flint++;
+          if (!discoveredResources.has('flint')) {
+            discoveredResources.add('flint');
+          }
+        }
+  
+        const index = resources.indexOf(currentResourceTile);
+        if (index > -1) {
+          resources.splice(index, 1);
+        }
+        currentResourceTile = null;
+        actionButton.style.display = 'none';
+        resourceNameDisplay.textContent = '';
+        updateGrid();
+        updateInventoryDisplay();
+      }
+    }
+  
+    function updateInventoryDisplay() {
+      woodCountDisplay.textContent = inventory.wood;
+      pebbleCountDisplay.textContent = inventory.pebble;
+      flintCountDisplay.textContent = inventory.flint;
+      wheatCountDisplay.textContent = inventory.wheat;
+    }
+  
+    function showInventory() {
+      inventoryDisplay.style.display = 'block';
+    }
+    function updateResearchProgress() {
+      if (activeResearch === 'agriculture') {
+        const progress = (researchPoints / agricultureResearchCost) * 100;
+        researchProgressBar.style.width = progress + '%';
+        agricultureResearchPercent.textContent = Math.round(progress) + '%';
+        if (researchPoints >= agricultureResearchCost) {
+          agricultureCompleted = true;
+          activeResearch = null;
+          agricultureResearchProgress.style.display = 'none';
+          agricultureResearch.disabled = true;
+          researchStatusDisplay.textContent = "Agriculture Research Complete! You can now build farms.";
+          updateBuildingsList();
+          // Optionally, change the research button text
+          agricultureResearch.textContent = "Agriculture (Completed)";
+          agricultureResearch.style.backgroundColor = '#777'; // Grey out the button
+          agricultureResearch.style.cursor = 'default';
+        } else if (activeResearch) {
+          researchStatusDisplay.textContent = `Researching Agriculture... ${Math.round(progress)}%`;
+        } else {
+          researchStatusDisplay.textContent = ""; // Clear status when not researching
+        }
+      }
+    }
+  
+    function displayResourceName() {
+      if (currentResourceTile) {
+        let resourceName = '';
+        if (currentResourceTile.type === 0) {
+          resourceName = 'Tree';
+        } else if (currentResourceTile.type === 1) {
+          resourceName = 'Stone';
+        } else if (currentResourceTile.type === 2) {
+          resourceName = 'Flint';
+        }
+        resourceNameDisplay.textContent = `Resource: ${resourceName}`;
+      } else {
+        resourceNameDisplay.textContent = '';
+      }
+    }
+  
+    function updateResearchPointsDisplay() {
+      researchPointsDisplay.textContent = researchPoints;
+    }
+  
+    function updateBuildingsList() {
+      const buildingsListElement = buildingsList.querySelector('ul');
+      buildingsListElement.innerHTML = '';
+  
+      if (agricultureCompleted) {
+        const farmListItem = document.createElement('li');
+        const farmButton = document.createElement('button');
+        farmButton.textContent = 'Farm';
+        farmButton.dataset.building = 'farm';
+        farmButton.addEventListener('click', () => {
+          selectedBuilding = 'farm';
+          alert(`Selected building: ${selectedBuilding}. Now click on an empty tile to build.`);
+        });
+        farmListItem.appendChild(farmButton);
+        buildingsListElement.appendChild(farmListItem);
+      }
+    }
+  
+    function produceWheat() {
+      let farmCount = 0;
+      for (const tileKey in placedBuildings) {
+        if (placedBuildings[tileKey] === 'farm') {
+          farmCount++;
+        }
+      }
+      inventory.wheat += farmCount;
+      updateInventoryDisplay();
+    }
+  
+    grid.addEventListener('click', (event) => {
+      if (event.target.classList.contains('tile')) {
+        const x = parseInt(event.target.dataset.x);
+        const y = parseInt(event.target.dataset.y);
+  
+        if (selectedBuilding) {
+          // Building logic remains the same
+          if (event.target.textContent === '') {
+            if (selectedBuilding === 'farm') {
+              if (inventory.wood >= farmCost) {
+                inventory.wood -= farmCost;
+                event.target.classList.add('farm');
+                event.target.textContent = 'FARM';
+                placedBuildings[`${x},${y}`] = 'farm';
+                selectedBuilding = null;
+                updateInventoryDisplay();
+              } else {
+                alert('Not enough wood to build a farm!');
+                selectedBuilding = null;
+              }
+            }
+          } else {
+            alert('Tile is not empty!');
+            selectedBuilding = null;
+          }
+        } else {
+          // Move pawn and only earn research points if moving to a new tile
+          if (x !== pawnPosition.x || y !== pawnPosition.y) {
+            movePawn(x, y);
+          }
+        }
+      }
+    });
+  
+    actionButton.addEventListener('click', gatherResource);
+  
+    agricultureResearch.addEventListener('click', () => {
+      activeResearch = 'agriculture';
+      researchPoints = 0;
+      agricultureResearchProgress.style.display = 'block';
+      updateResearchPointsDisplay();
+      updateResearchProgress();
+    });
+  
+    researchButton.addEventListener('click', () => {
+      techTree.style.display = techTree.style.display === 'block' ? 'none' : 'block';
+    });
+  
+    buildingsButton.addEventListener('click', () => {
+      buildingsList.style.display = buildingsList.style.display === 'block' ? 'none' : 'block';
+    });
+  
+    // Enable highlights when mouse is over the grid
+    grid.addEventListener('mouseover', () => {
+      highlightEnabled = true;
+      updateGrid(); // Re-render the grid to show highlights
+    });
+  
+    // Disable highlights when mouse leaves the grid
+    grid.addEventListener('mouseout', () => {
+      highlightEnabled = false;
+      updateGrid(); // Re-render to hide highlights
+    });
+  
+    function startGame() {
+      colonyName = prompt("Welcome to Tiny Civilization! Please name your colony:");
+      if (!colonyName || colonyName.trim() === "") {
+        colonyName = "New Colony";
+      }
+      document.querySelector('h1').textContent = `Welcome to ${colonyName}!`;
+      colonyNameDisplay.textContent = `${colonyName}`;
+      generateGrid();
+      generateResources(); // Resources are generated only once at the start
+      pawnPosition = { x: 4, y: 4 }; // Set pawn position after resources are generated.
+      updateGrid();
+      checkResource();
+      showInventory();
+    }
+  
+    startGame();
+  </script>
+</body>
+</html>
