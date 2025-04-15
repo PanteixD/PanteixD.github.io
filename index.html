@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr"> {/* Changed lang to French */}
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Single File Sticky Tabs - Updated</title>
+    <title>Portfolio Simple - Dylan PANTEIX</title> {/* Updated Title */}
 
     <style>
         /* --- CSS STYLES --- */
@@ -13,37 +13,53 @@
             margin: 0;
             font-family: sans-serif;
             line-height: 1.6;
+            /* Custom cursor: embedded SVG circle (8px radius, black) with hotspot at center (12,12) */
+            /* The fallback 'auto' is important */
+            cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='8' fill='black'/%3E%3C/svg%3E") 12 12, auto;
         }
+
+        /* Ensure interactive elements still get a pointer for better UX */
+        a, button, input[type=button], input[type=submit], input[type=reset] {
+           cursor: pointer; /* Overrides the body cursor for these elements */
+            /* If you truly want the circle EVERYWHERE, remove this block and uncomment the rule below */
+        }
+        /* Uncomment this if you want the circle absolutely everywhere, even on links/buttons */
+        /*
+        * {
+             cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='8' fill='black'/%3E%3C/svg%3E") 12 12, auto !important;
+        }
+        */
+
 
         h1 {
             text-align: center;
             padding: 20px;
             background-color: #f4f4f4;
-            margin-top: 0; /* Remove default top margin */
+            margin-top: 0;
         }
 
         /* Tab Container - The Sticky Element */
         .tab-container {
-            position: sticky; /* Makes the element stick */
-            top: 0;          /* Stick to the top of the viewport */
+            position: sticky;
+            top: 0;
             background-color: #333;
-            overflow: hidden; /* Clears floats if needed, good practice */
-            z-index: 100;     /* Ensure it stays on top of other content */
+            overflow: hidden;
+            z-index: 100;
             border-bottom: 3px solid #555;
-            display: flex;    /* Arrange buttons horizontally */
+            display: flex;
         }
 
         /* Style the buttons inside the tab container */
         .tab-button {
-            background-color: inherit; /* Use container's background */
+            background-color: inherit;
             border: none;
             outline: none;
-            cursor: pointer;
+            /* cursor: pointer; /* Let the rule above handle this */
             padding: 14px 16px;
-            transition: background-color 0.3s; /* Smooth hover effect */
+            transition: background-color 0.3s;
             color: white;
             font-size: 16px;
-            flex-grow: 1; /* Make buttons share space equally */
+            flex-grow: 1;
             text-align: center;
         }
 
@@ -66,11 +82,11 @@
 
         /* Style the tab content */
         .tab-content {
-            display: none; /* Hide all tab content by default */
+            display: none;
             padding: 15px 12px;
             border: 1px solid #ccc;
-            border-top: none; /* Remove top border as it touches the tabs */
-            min-height: 50vh; /* Give content some default height */
+            border-top: none;
+            min-height: 50vh;
         }
 
         /* Show the active tab content */
@@ -97,31 +113,30 @@
 </head>
 <body>
 
-    <h1>My Simple Website</h1>
+    <h1>Portfolio Simple - Dylan PANTEIX</h1>
 
     <!-- Sticky Tab Container -->
     <div class="tab-container">
-        <!-- Updated Tab 1 Name -->
         <button class="tab-button active" data-tab="tab1">Accueil</button>
-        <!-- Updated Tab 2 Name -->
         <button class="tab-button" data-tab="tab2">Projets</button>
         <button class="tab-button" data-tab="tab3">Tab 3</button>
     </div>
 
     <!-- Content Area -->
     <div class="content-container">
-        <!-- Tab 1 Content (Accueil) -->
+        <!-- Tab 1 Content (Accueil) - Updated -->
         <div id="tab1" class="tab-content active">
             <h2>Accueil</h2>
-            <p>Bienvenue sur la page d'accueil.</p>
-            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent libero. Sed cursus ante dapibus diam. Sed nisi. Nulla quis sem at nibh elementum imperdiet. Duis sagittis ipsum. Praesent mauris. Fusce nec tellus sed augue semper porta. Mauris massa. Vestibulum lacinia arcu eget nulla.</p>
+            <p>Salutation,</p> {/* Added paragraph breaks */}
+            <p>
+                Je suis Dylan PANTEIX, un étudiant du Lycée Polyvalent Algoud-Laffemas, en cours de formation du Brevet de technicien supérieur (BTS) Services informatiques aux organisations (SIO) dans l’option SISR (Solutions d’Infrastructure, Systèmes et Réseaux). J’ai réalisé une formation en BTS SIO car précédemment, j’ai fait un BAC Pro MELEC (Métiers de l’Électricité et de ses Environnements Connectés) et j’ai pu décrocher un diplôme avec mention “Assez Bien”, puis j’ai voulu me réorienter dans le domaine de l’informatique qui est ma passion principale.
+            </p>
             <p>Scroll down to see the tabs stick!</p>
-            <!-- Add lots of content here to make the page scrollable -->
-            <p style="height: 150vh; background-color: #e0e0e0; margin: 20px 0; padding: 10px;">Extra tall content block to ensure scrolling.</p>
-            <p>More content at the bottom of Accueil.</p>
+            <!-- Keep tall content block for scrolling demo -->
+            <p style="height: 100vh; background-color: #e0e0e0; margin: 20px 0; padding: 10px; display: flex; align-items: center; justify-content: center;">(Placeholder space for scrolling)</p>
         </div>
 
-        <!-- Tab 2 Content (Projets) - Updated -->
+        <!-- Tab 2 Content (Projets) -->
         <div id="tab2" class="tab-content">
             <h2>Projets</h2>
             <p>Here you can find a link to one of my projects:</p>
@@ -131,7 +146,6 @@
                 </a>
             </p>
             <p>The link will open in a new tab.</p>
-             <!-- Add some height to ensure scrolling is possible even with less content -->
             <p style="height: 80vh; background-color: #eee; margin: 20px 0; padding: 10px; display: flex; align-items: center; justify-content: center;">(Placeholder space)</p>
        </div>
 
@@ -140,7 +154,6 @@
             <h2>Content for Tab 3</h2>
             <p>This is the content visible when Tab 3 is active.</p>
             <p>Quisque cursus, metus vitae pharetra auctor, sem massa mattis sem, at interdum magna augue eget diam. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Morbi lacinia molestie dui. Praesent blandit dolor. Sed non quam. In vel mi sit amet augue congue elementum.</p>
-             <!-- Add lots of content here to make the page scrollable -->
              <p style="height: 100vh; background-color: #e0e0e0; margin: 20px 0; padding: 10px;">Yet another tall content block.</p>
              <p>Final words for Tab 3.</p>
         </div>
@@ -148,7 +161,6 @@
 
     <script>
         // --- JAVASCRIPT LOGIC ---
-
         document.addEventListener('DOMContentLoaded', () => {
             const tabButtons = document.querySelectorAll('.tab-button');
             const tabContents = document.querySelectorAll('.tab-content');
