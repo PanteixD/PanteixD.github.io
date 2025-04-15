@@ -5,108 +5,167 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portfolio Simple - Dylan PANTEIX</title>
 
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Poppins:wght@500;700&display=swap" rel="stylesheet">
+
     <style>
         /* --- CSS STYLES --- */
 
-        /* Basic Reset & Body Style */
+        :root {
+            --primary-color: #007bff;
+            --primary-hover: #0056b3;
+            --light-bg: #f8f9fa;
+            --medium-bg: #e9ecef;
+            --dark-bg: #495057;
+            --text-color: #343a40;
+            --light-text: #ffffff;
+            --border-color: #dee2e6;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+        }
+
         body {
             margin: 0;
-            font-family: sans-serif;
-            line-height: 1.6;
-            /* Custom cursor: embedded SVG circle (8px radius, black) with hotspot at center (12,12) */
-            /* The fallback 'auto' is important */
+            font-family: 'Lato', sans-serif;
+            line-height: 1.7;
+            background-color: var(--light-bg);
+            color: var(--text-color);
             cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='8' fill='black'/%3E%3C/svg%3E") 12 12, auto;
         }
 
-        /* Ensure interactive elements still get a pointer for better UX */
-        a, button, input[type=button], input[type=submit], input[type=reset] {
-           cursor: pointer; /* Overrides the body cursor for these elements */
-            /* If you truly want the circle EVERYWHERE, remove this block and uncomment the rule below */
+        h1, h2 {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+            color: var(--text-color);
         }
-        /* Uncomment this if you want the circle absolutely everywhere, even on links/buttons */
-        /*
-        * {
-             cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='8' fill='black'/%3E%3C/svg%3E") 12 12, auto !important;
-        }
-        */
-
 
         h1 {
             text-align: center;
-            padding: 20px;
-            background-color: #f4f4f4;
+            padding: 30px 20px;
+            background-color: var(--light-text);
             margin-top: 0;
+            margin-bottom: 0;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 2.2em;
         }
 
-        /* Tab Container - The Sticky Element */
+        h2 {
+             margin-top: 0;
+             padding-bottom: 10px;
+             border-bottom: 1px solid var(--medium-bg);
+             margin-bottom: 20px;
+             color: var(--primary-color);
+             font-weight: 500;
+        }
+
+        /* Tab Container */
         .tab-container {
             position: sticky;
             top: 0;
-            background-color: #333;
-            overflow: hidden;
+            background-color: var(--dark-bg);
             z-index: 100;
-            border-bottom: 3px solid #555;
             display: flex;
+            box-shadow: 0 2px 5px var(--shadow-color);
         }
 
-        /* Style the buttons inside the tab container */
+        /* Tab Buttons */
         .tab-button {
-            background-color: inherit;
+            background-color: transparent;
             border: none;
+            border-bottom: 3px solid transparent;
             outline: none;
-            /* cursor: pointer; /* Let the rule above handle this */
-            padding: 14px 16px;
-            transition: background-color 0.3s;
-            color: white;
-            font-size: 16px;
+            padding: 15px 20px;
+            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+            color: var(--light-text);
+            font-family: 'Poppins', sans-serif;
+            font-size: 1em;
+            font-weight: 500;
             flex-grow: 1;
             text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
-
-        /* Change background color of buttons on hover */
         .tab-button:hover {
-            background-color: #555;
+            background-color: rgba(255, 255, 255, 0.1);
         }
-
-        /* Style the active/current tab button */
         .tab-button.active {
-            background-color: #ddd;
-            color: #333;
-            font-weight: bold;
+            background-color: var(--light-bg);
+            color: var(--primary-color);
+            font-weight: 700;
+            border-bottom: 3px solid var(--primary-color);
         }
 
         /* Content Area */
         .content-container {
-            padding: 20px;
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 30px;
+            background-color: var(--light-text);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 3px 10px var(--shadow-color);
         }
 
-        /* Style the tab content */
+        /* Tab Content */
         .tab-content {
             display: none;
-            padding: 15px 12px;
-            border: 1px solid #ccc;
-            border-top: none;
-            min-height: 50vh;
+            min-height: 30vh;
         }
-
-        /* Show the active tab content */
         .tab-content.active {
             display: block;
+            animation: fadeIn 0.5s ease;
         }
 
-        /* Style for the link in the projects tab */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* --- Profile Picture Style --- */
+        .profile-picture {
+            display: block; /* Needed for margin: auto centering */
+            width: 150px;   /* Adjust size as needed */
+            height: 150px;  /* Must be same as width for circle */
+            border-radius: 50%; /* Makes it round */
+            object-fit: cover; /* Prevents image stretching if not square */
+            margin: 0 auto 25px auto; /* Centers horizontally, adds 25px space below */
+            border: 4px solid var(--light-text); /* Optional white border */
+            box-shadow: 0 4px 10px var(--shadow-color); /* Optional shadow */
+        }
+        /* ----------------------------- */
+
+        /* Project Link */
         .project-link {
             display: inline-block;
             margin-top: 15px;
-            padding: 10px 15px;
-            background-color: #007bff;
-            color: white;
+            padding: 12px 20px;
+            background-color: var(--primary-color);
+            color: var(--light-text);
             text-decoration: none;
-            border-radius: 4px;
-            transition: background-color 0.2s;
+            border-radius: 5px;
+            transition: background-color 0.2s ease, transform 0.2s ease;
+            font-weight: 700;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
         }
         .project-link:hover {
-            background-color: #0056b3;
+            background-color: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Placeholder blocks styling */
+        .placeholder-block {
+            background-color: var(--medium-bg);
+            margin: 20px 0;
+            padding: 40px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+            font-style: italic;
+            text-align: center;
         }
 
     </style>
@@ -119,48 +178,59 @@
     <div class="tab-container">
         <button class="tab-button active" data-tab="tab1">Accueil</button>
         <button class="tab-button" data-tab="tab2">Projets</button>
-        <button class="tab-button" data-tab="tab3">Tab 3</button>
+        <button class="tab-button" data-tab="tab3">Contact</button>
     </div>
 
     <!-- Content Area -->
     <div class="content-container">
-        <!-- Tab 1 Content (Accueil) - Updated -->
+
+        <!-- Tab 1 Content (Accueil) -->
         <div id="tab1" class="tab-content active">
             <h2>Accueil</h2>
+
+            <!-- === ADDED PROFILE PICTURE HERE === -->
+            <img src="profile.jpg" alt="Photo de profil de Dylan Panteix" class="profile-picture">
+            <!-- === END PROFILE PICTURE === -->
+
             <p>Salutation,</p>
             <p>
                 Je suis Dylan PANTEIX, un étudiant du Lycée Polyvalent Algoud-Laffemas, en cours de formation du Brevet de technicien supérieur (BTS) Services informatiques aux organisations (SIO) dans l’option SISR (Solutions d’Infrastructure, Systèmes et Réseaux). J’ai réalisé une formation en BTS SIO car précédemment, j’ai fait un BAC Pro MELEC (Métiers de l’Électricité et de ses Environnements Connectés) et j’ai pu décrocher un diplôme avec mention “Assez Bien”, puis j’ai voulu me réorienter dans le domaine de l’informatique qui est ma passion principale.
             </p>
-            <p>Scroll down to see the tabs stick!</p>
-            <!-- Keep tall content block for scrolling demo -->
-            <p style="height: 100vh; background-color: #e0e0e0; margin: 20px 0; padding: 10px; display: flex; align-items: center; justify-content: center;">(Placeholder space for scrolling)</p>
+            <!-- Placeholder for scrolling -->
+            <div class="placeholder-block" style="height: 100vh;">
+                (Contenu supplémentaire pour permettre le défilement et tester l'onglet collant)
+            </div>
         </div>
 
         <!-- Tab 2 Content (Projets) -->
         <div id="tab2" class="tab-content">
             <h2>Projets</h2>
-            <p>Here you can find a link to one of my projects:</p>
+            <p>Voici un lien vers l'un de mes projets :</p>
             <p>
                 <a href="https://panteixd.github.io/civgame.html" target="_blank" rel="noopener noreferrer" class="project-link">
-                    View Civilization Game Project
+                    Voir le Projet Civilization Game
                 </a>
             </p>
-            <p>The link will open in a new tab.</p>
-            <p style="height: 80vh; background-color: #eee; margin: 20px 0; padding: 10px; display: flex; align-items: center; justify-content: center;">(Placeholder space)</p>
+            <p>Le lien s'ouvrira dans un nouvel onglet.</p>
+            <div class="placeholder-block" style="height: 80vh;">(Espace réservé)</div>
        </div>
 
-        <!-- Tab 3 Content -->
+        <!-- Tab 3 Content (Contact - Example) -->
         <div id="tab3" class="tab-content">
-            <h2>Content for Tab 3</h2>
-            <p>This is the content visible when Tab 3 is active.</p>
-            <p>Quisque cursus, metus vitae pharetra auctor, sem massa mattis sem, at interdum magna augue eget diam. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Morbi lacinia molestie dui. Praesent blandit dolor. Sed non quam. In vel mi sit amet augue congue elementum.</p>
-             <p style="height: 100vh; background-color: #e0e0e0; margin: 20px 0; padding: 10px;">Yet another tall content block.</p>
-             <p>Final words for Tab 3.</p>
+            <h2>Contact</h2>
+            <p>Vous pouvez me contacter via les méthodes suivantes :</p>
+            <ul>
+                <li>Email: exemple@domaine.com</li>
+                <li>LinkedIn: votre-profil-linkedin</li>
+                <li>GitHub: votre-profil-github</li>
+            </ul>
+            <p>N'hésitez pas à prendre contact !</p>
+             <div class="placeholder-block" style="height: 70vh;">(Espace réservé)</div>
         </div>
     </div>
 
     <script>
-        // --- JAVASCRIPT LOGIC ---
+        // --- JAVASCRIPT LOGIC (No changes needed) ---
         document.addEventListener('DOMContentLoaded', () => {
             const tabButtons = document.querySelectorAll('.tab-button');
             const tabContents = document.querySelectorAll('.tab-content');
