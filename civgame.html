@@ -1,177 +1,239 @@
+<!DOCTYPE html>
+<html>
 <head>
-    <title>Tiny Civilization - Biomes</title> <!-- Updated Title -->
-    <meta charset="UTF-8">
-    <!-- Simple Perlin Noise Library (credit: Joseph Gentle) -->
-    <script>
-        /* Joseph Gentle's perlin noise implementation in javascript.
-         * You can find more information about it here:
-         * http://josephg.com/blog/javascript-perlin-noise/
-         */
-        var perlin = {
-            rand_vect: function(){
-                let theta = Math.random() * 2 * Math.PI;
-                return {x: Math.cos(theta), y: Math.sin(theta)};
-            },
-            dot_prod_grid: function(x, y, vx, vy){
-                let g_vect;
-                let d_vect = {x: x - vx, y: y - vy};
-                if (this.gradients[[vx,vy]]){
-                    g_vect = this.gradients[[vx,vy]];
-                } else {
-                    g_vect = this.rand_vect();
-                    this.gradients[[vx, vy]] = g_vect;
-                }
-                return d_vect.x * g_vect.x + d_vect.y * g_vect.y;
-            },
-            smootherstep: function(x){
-                return 6*x**5 - 15*x**4 + 10*x**3;
-            },
-            interp: function(x, a, b){
-                return a + this.smootherstep(x) * (b-a);
-            },
-            seed: function(seedValue){
-                // Simple seeding using the provided value
-                // Note: This is a basic seed implementation. For true reproducibility
-                // across different JS environments, a more robust PRNG might be needed.
-                 let random = function() {
-                    var x = Math.sin(seedValue++) * 10000;
-                    return x - Math.floor(x);
-                };
-                // We need to override Math.random temporarily for seeding gradients,
-                // but this is tricky globally. Instead, we'll use the seeded PRNG
-                // directly when creating gradients if a seed is active.
-                this.seededRandom = random; // Store the seeded function
-                this.gradients = {}; // Reset gradients when seed changes
-            },
-            get: function(x, y) {
-                // If seededRandom exists, use it, otherwise use Math.random
-                const _randomFunc = this.seededRandom || Math.random;
-                // Need to update rand_vect to use the potentially seeded random function
-                // This requires modifying the library slightly or passing the function
-                // For simplicity here, we'll redefine rand_vect inside get if seeded
-                 this.rand_vect_seeded = function(){
-                    let theta = _randomFunc() * 2 * Math.PI;
-                    return {x: Math.cos(theta), y: Math.sin(theta)};
-                 };
+<title>Tiny Civilization - Revealed Map</title> <!-- Updated Title -->
+<meta charset="UTF-8">
+<style>
+  /* --- General Styles --- */
+  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; display: flex; flex-direction: column; align-items: center; background-color: #e8eff5; margin: 0; padding: 20px; color: #333; }
+  h1 { color: #2c3e50; margin-bottom: 10px; }
 
-                 // Redefine gradient generation to use the correct random source
-                 this.getGradient = function(vx, vy) {
-                    if (this.gradients[[vx,vy]]){
-                        return this.gradients[[vx,vy]];
-                    } else {
-                        const g_vect = this.rand_vect_seeded(); // Use potentially seeded version
-                        this.gradients[[vx, vy]] = g_vect;
-                        return g_vect;
-                    }
-                 };
+  /* Language Switcher */
+  #language-switcher { position: absolute; top: 15px; left: 15px; z-index: 10; }
+  #language-switch-button { padding: 8px 12px; font-size: 14px; background-color: #5dade2; color: white; border: none; border-radius: 6px; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.1); transition: background-color 0.2s ease; }
+  #language-switch-button:hover { background-color: #3498db; }
 
-                let xf = Math.floor(x);
-                let yf = Math.floor(y);
-                //interpolate
-                let tl = this.dot_prod_grid(x, y, xf,   yf);
-                let tr = this.dot_prod_grid(x, y, xf+1, yf);
-                let bl = this.dot_prod_grid(x, y, xf,   yf+1);
-                let br = this.dot_prod_grid(x, y, xf+1, yf+1);
-                let xt = this.interp(x-xf, tl, tr);
-                let xb = this.interp(x-xf, bl, br);
-                let v = this.interp(y-yf, xt, xb);
-                return v;
-            }
-        }
-    </script>
-    <style>
-      /* ... Your existing styles ... */
 
-      /* Biome Backgrounds (Applied to empty tiles) */
-      .tile.biome-forest { background-color: #dcedc8; } /* Light green */
-      .tile.biome-jungle { background-color: #a5d6a7; } /* Deeper green */
-      .tile.biome-desert { background-color: #fff9c4; } /* Pale yellow */
+  /* --- Unit Display Bar --- */
+  #unit-display-bar { display: flex; justify-content: center; align-items: center; gap: 10px; padding: 10px; margin-bottom: 15px; min-height: 40px; background-color: #dde8f0; border-radius: 8px; border: 1px solid #c8d6e1; flex-wrap: wrap; }
+  .unit-icon { width: 35px; height: 35px; border: 2px solid #adb5bd; background-color: #ced4da; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; cursor: pointer; transition: all 0.2s ease; position: relative; }
+  .unit-icon:hover { border-color: #495057; background-color: #e9ecef; transform: scale(1.05); }
+  .unit-icon.selected { border-color: #007bff; box-shadow: 0 0 8px rgba(0, 123, 255, 0.5); transform: scale(1.1); }
+  .unit-icon[data-unit-type="pawn"] { background-color: #3498db; color: white; }
+  .unit-icon[data-unit-type="worker"] { background-color: #e67e22; color: white; }
 
-      /* Adjust Resource/Building Backgrounds to potentially allow biome tint */
-      /* Example: make resource backgrounds slightly transparent */
-      .tile.tree { background-color: rgba(46, 204, 113, 0.9); /* Slightly transparent default */ }
-      .tile.stone { background-color: rgba(149, 165, 166, 0.9); }
-      .tile.flint { background-color: rgba(127, 140, 141, 0.9); }
-      .tile.house { background-color: rgba(142, 68, 173, 0.9); }
-      .tile.farm { background-color: rgba(241, 196, 15, 0.9); }
-      .tile.mine { background-color: rgba(96, 125, 139, 0.9); }
+  /* --- Alert Message --- */
+  #alert-message { padding: 10px 20px; margin-top: 10px; border-radius: 8px; background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; font-weight: bold; text-align: center; opacity: 0; transition: opacity 0.5s ease-in-out; max-width: 550px; width: 90%; box-sizing: border-box; position: relative; left: 50%; transform: translateX(-50%); display: none; z-index: 20; }
+  #alert-message.show { display: block; opacity: 1; }
 
-      /* Ensure unknown is still opaque */
-       .tile.unknown { background-color: #90a4ae; opacity: 1; filter: none; }
+  /* --- Game Layout --- */
+  #game-container { display: flex; justify-content: center; align-items: flex-start; margin-top: 20px; flex-wrap: wrap; gap: 30px; background-color: #ffffff; padding: 30px; border-radius: 16px; box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1); max-width: 1200px; width: 100%; position: relative; }
+  #left-container, #right-panel { display: flex; flex-direction: column; align-items: stretch; gap: 20px; flex: 1; min-width: 250px; }
+  #grid-area { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; min-width: 585px; }
+  #grid { display: grid; grid-template-columns: repeat(10, 55px); grid-template-rows: repeat(10, 55px); gap: 5px; padding: 15px; background-color: #b0bec5; border-radius: 12px; border: 1px solid #90a4ae; margin-bottom: 10px; position: relative; }
 
-    </style>
+  /* --- Tiles --- */
+  .tile { width: 55px; height: 55px; border: 1px solid #cfd8dc; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; cursor: pointer; overflow: hidden; border-radius: 8px; transition: background-color 0.2s ease-in-out; background-color: #eceff1; color: #555; position: relative; }
+  .tile.unknown { background-color: #90a4ae; cursor: default; border-color: #78909c; }
+  .tile:not(.unknown):hover { transform: scale(1.05); box-shadow: 0 0 8px rgba(0, 0, 0, 0.1); z-index: 1; }
+  .unit-marker { border-radius: 50%; width: 70%; height: 70%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; color: white; position: absolute; z-index: 2; box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.3); pointer-events: none; }
+  .unit-marker.pawn { background-color: #3498db; } .unit-marker.worker { background-color: #e67e22; }
+  .unit-marker.selected { outline: 3px solid #007bff; outline-offset: 2px; }
+
+  /* Resource & Building Styles */
+  .tile.tree { background-color: #2ecc71; color: #fff; } .tile.stone { background-color: #95a5a6; color: #fff; } .tile.flint { background-color: #7f8c8d; color: #fff; }
+  .tile.house, .tile.farm, .tile.mine { text-align: center; line-height: 55px; font-weight: bold; }
+  .tile.farm { background-color: #f1c40f; color: #333; font-size: 11px; } .tile.mine { background-color: #607d8b; color: white; font-size: 11px; } .tile.house { background-color: #8e44ad; color: white; font-size: 11px; }
+
+  /* Highlight Style */
+  .highlight { background-color: rgba(52, 152, 219, 0.2) !important; border: 1px solid #3498db !important; }
+
+  /* REMOVED .revealed-dimmed styles */
+
+  /* --- Buttons --- */
+  button { padding: 12px 20px; font-size: 16px; cursor: pointer; border: none; border-radius: 8px; background-color: #3498db; color: white; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); font-weight: 600; margin-top: 5px; }
+  button:hover:not(:disabled) { background-color: #2980b9; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); transform: translateY(-1px); }
+  button:active:not(:disabled) { transform: translateY(0px); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); }
+  button:disabled { background-color: #bdc3c7; cursor: default; opacity: 0.7; }
+  #action-button { background-color: #e67e22; } #action-button:hover:not(:disabled) { background-color: #d35400; }
+  #research-button, #buildings-button, #units-button, #logs-button { background-color: #9b59b6; margin-top: 10px; }
+  #research-button:hover:not(:disabled), #buildings-button:hover:not(:disabled), #units-button:hover:not(:disabled), #logs-button:hover:not(:disabled) { background-color: #8e44ad; }
+  #units-button { background-color: #16a085; } #units-button:hover:not(:disabled) { background-color: #117a65; }
+  #logs-button { background-color: #34495e; } #logs-button:hover:not(:disabled) { background-color: #2c3e50; }
+  .research-item button { background-color: #2ecc71; padding: 8px 15px; font-size: 14px; } .research-item button:hover:not(:disabled) { background-color: #27ae60; }
+  #buildings-list li button, #units-list li button { background-color: #f1c40f; color: #333; padding: 8px 15px; font-size: 14px; }
+  #buildings-list li button:hover:not(:disabled), #units-list li button:hover:not(:disabled) { background-color: #f39c12; }
+  #units-list li button#deploy-worker-button { background-color: #27ae60; color: white; }
+  #units-list li button#deploy-worker-button:hover:not(:disabled) { background-color: #2ecc71; }
+  #save-button { background-color: #27ae60; margin-top: 10px; } #save-button:hover:not(:disabled) { background-color: #229954; }
+  #load-button { background-color: #f39c12; margin-top: 10px; } #load-button:hover:not(:disabled) { background-color: #e67e22; }
+
+
+  /* --- Panels --- */
+  #inventory, #tech-tree, #buildings-list, #units-panel, #logs-panel { text-align: left; background-color: #fdfefe; padding: 20px; border-radius: 12px; border: 1px solid #e4e9ed; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05); }
+  #inventory { display: block; }
+  #tech-tree, #buildings-list, #units-panel, #logs-panel { display: none; }
+  #tech-tree, #buildings-list, #units-panel, #logs-panel { max-height: 300px; overflow-y: auto; }
+  #logs-list { list-style-type: none; padding: 0; margin: 0; font-size: 14px; line-height: 1.5; color: #555; margin-top: 10px; }
+  #logs-list li { padding: 4px 0; border-bottom: 1px dashed #eee; white-space: pre-wrap; } #logs-list li:last-child { border-bottom: none; }
+  #logs-list .log-time { display: inline-block; width: 50px; color: #888; margin-right: 5px; }
+  #log-search-input { width: 100%; padding: 8px 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
+  #log-filter-container { display: block; margin-bottom: 10px; font-size: 14px; color: #555; }
+  #log-filter-checkbox { margin-right: 5px; vertical-align: middle; }
+
+  /* Panel Headers & Lists */
+  #inventory h2, #tech-tree h2, #buildings-list h2, #units-panel h2, #logs-panel h2 { font-size: 20px; color: #2c3e50; margin-top: 0; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+  #inventory p { font-size: 16px; color: #555; margin-bottom: 8px; line-height: 1.4; } #inventory span { font-weight: bold; color: #333; }
+  #tech-tree h3 { font-size: 18px; color: #3498db; margin-bottom: 10px; }
+  #tech-tree ul, #buildings-list ul, #units-list ul { list-style-type: none; padding: 0; margin: 0; }
+  #tech-tree li, #buildings-list li, #units-list li { margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px dashed #eee; }
+  #tech-tree li:last-child, #buildings-list li:last-child, #units-list li:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+
+  /* --- Other UI --- */
+   #colony-name-display { font-size: 22px; color: #2c3e50; font-weight: bold; margin-bottom: 0; text-align: left; padding: 10px; background-color: #ecf0f1; border-radius: 8px; }
+  #resource-name { margin-top: 15px; font-size: 16px; font-weight: bold; color: #7f8c8d; min-height: 20px; text-align: left; }
+  #unit-coords-display-container { font-size: 16px; font-weight: bold; color: #34495e; text-align: left; padding: 10px; background-color: #ecf0f1; border-radius: 8px; margin-bottom: 10px; }
+  #unit-coords-display-container span { font-weight: normal; color: #2c3e50; }
+  #research-points-display-container { font-size: 16px; font-weight: bold; color: #8e44ad; text-align: left; padding: 10px; background-color: #f3eaf7; border-radius: 8px; margin-bottom: 0; }
+
+  /* --- Progress Bars --- */
+  .research-progress-container { width: 100%; height: 20px; border: 1px solid #bdc3c7; margin-top: 8px; border-radius: 10px; background-color: #ecf0f1; overflow: hidden; display: none; align-items: center; }
+  .research-progress-bar { width: 0%; height: 100%; border-radius: 8px 0 0 8px; transition: width 0.3s ease-in-out; }
+  .research-item span { font-size: 12px; margin-left: 5px; color: #555; }
+  .research-item p { font-size: 14px; color: #777; margin-top: 5px; margin-bottom: 0; }
+   #research-status-display { font-size: 14px; font-weight: bold; color: #27ae60; margin-top: 10px; min-height: 18px; text-align: left; padding: 5px 10px; background-color: #e8f8f5; border-radius: 6px; border: 1px solid #a3e4d7; }
+
+</style>
 </head>
 <body>
-    <!-- ... Your existing HTML body ... -->
-    <script>
-        // --- DOM Element References ---
-        // ... (no changes) ...
-        const grid = document.getElementById('grid'); const actionButton = document.getElementById('action-button');
-        const woodCountDisplay = document.getElementById('wood-count'); const pebbleCountDisplay = document.getElementById('pebble-count'); const flintCountDisplay = document.getElementById('flint-count'); const wheatCountDisplay = document.getElementById('wheat-count'); const coalCountDisplay = document.getElementById('coal-count');
-        const inventoryDisplay = document.getElementById('inventory'); const researchButton = document.getElementById('research-button'); const buildingsButton = document.getElementById('buildings-button'); const unitsButton = document.getElementById('units-button'); const logsButton = document.getElementById('logs-button');
-        const techTree = document.getElementById('tech-tree'); const buildingsList = document.getElementById('buildings-list'); const unitsPanel = document.getElementById('units-panel'); const unitsList = document.getElementById('units-list'); const logsPanel = document.getElementById('logs-panel'); const logsList = document.getElementById('logs-list');
-        const logSearchInput = document.getElementById('log-search-input'); const logFilterCheckbox = document.getElementById('log-filter-checkbox'); const resourceNameDisplay = document.getElementById('resource-name');
-        const researchPointsDisplay = document.getElementById('research-points'); const researchStatusDisplay = document.getElementById('research-status-display'); const colonyNameDisplay = document.getElementById('colony-name-display');
-        const alertMessageElement = document.getElementById('alert-message'); const unitDisplayBar = document.getElementById('unit-display-bar');
-        const unitCoordsDisplay = document.getElementById('unit-coords');
-        const settlementResearchBtn = document.getElementById('settlement-research'); const settlementResearchProgress = document.getElementById('settlement-research-progress'); const settlementResearchProgressBar = document.getElementById('settlement-research-bar'); const settlementResearchPercent = document.getElementById('settlement-research-percent');
-        const agricultureResearchBtn = document.getElementById('agriculture-research'); const agricultureResearchProgress = document.getElementById('agriculture-research-progress'); const agricultureResearchProgressBar = document.getElementById('agriculture-research-bar'); const agricultureResearchPercent = document.getElementById('agriculture-research-percent');
-        const miningResearchBtn = document.getElementById('mining-research'); const miningResearchProgress = document.getElementById('mining-research-progress'); const miningResearchProgressBar = document.getElementById('mining-research-bar'); const miningResearchPercent = document.getElementById('mining-research-percent');
-        const deployWorkerButton = document.getElementById('deploy-worker-button');
-        const saveButton = document.getElementById('save-button');
-        const loadButton = document.getElementById('load-button');
-        const loadFileInput = document.getElementById('load-file-input');
-        const languageSwitchButton = document.getElementById('language-switch-button');
+  <!-- Language Switch Button -->
+  <div id="language-switcher">
+      <button id="language-switch-button" title="Switch Language / Changer de langue"></button>
+  </div>
 
-        // --- Game State Variables ---
-        const gridSize = 10; let units = []; let nextUnitId = 0; let selectedUnitId = null;
-        let inventory = { wood: 0, pebble: 0, flint: 0, wheat: 0, coal: 0 };
-        let researchPoints = 0; let activeResearch = null;
-        let settlementCompleted = false; let agricultureCompleted = false; let miningCompleted = false;
-        let maxWorkers = 0; let selectedBuilding = null; let moveCount = 0; let movesSinceLastCoal = 0;
-        let viewOffsetX = 0; let viewOffsetY = 0; let worldData = {};
-        let revealedTiles = new Set();
-        let worldSeed = Date.now(); // Generate a seed for this game session
-        let colonyName = "New Colony"; let highlightEnabled = false; let alertTimeout; let eventLogs = []; const maxLogEntries = 50; let currentLanguage = 'en';
+  <h1>Tiny Civilization</h1>
+  <div id="unit-display-bar"></div>
 
-        // --- Game Constants ---
-        const settlementResearchCost = 15; const agricultureResearchCost = 10; const miningResearchCost = 15;
-        const houseCost = { wood: 10, pebble: 5 }; const farmCost = { wood: 3 }; const mineCost = { pebble: 5, wood: 2 };
-        const wheatProductionInterval = 5; const coalProductionInterval = 7;
-        const unitCapabilities = { pawn: { canBuild: ['house'] }, worker: { canBuild: ['farm', 'mine'] } };
-        const REVEAL_RADIUS = 2;
-        const VIEW_CENTER_OFFSET = Math.floor(gridSize / 2);
-        const PERLIN_FREQUENCY = 0.05; // Lower value = larger biomes
+  <div id="game-container">
+    <!-- === LEFT CONTAINER === -->
+    <div id="left-container">
+      <div id="colony-name-display">Colony Name</div>
+      <div id="inventory">
+        <h2>Inventory</h2>
+        <p>Wood: <span id="wood-count">0</span></p>
+        <p>Pebbles: <span id="pebble-count">0</span></p>
+        <p>Flint: <span id="flint-count">0</span></p>
+        <p>Wheat: <span id="wheat-count">0</span></p>
+        <p>Coal: <span id="coal-count">0</span></p>
+      </div>
+      <button id="action-button" style="display: none;">Gather Resource</button>
+      <div id="resource-name"></div>
+       <button id="research-button">Research</button>
+       <button id="buildings-button">Buildings</button>
+       <button id="units-button">Units</button>
+       <button id="logs-button">Logs</button>
+       <button id="save-button">Save Game</button>
+       <button id="load-button">Load Game</button>
+       <input type="file" id="load-file-input" accept=".json" style="display: none;">
+       <div id="logs-panel" style="display: none;">
+           <h2>Event Logs</h2>
+           <input type="text" id="log-search-input" placeholder="Search logs...">
+           <div id="log-filter-container">
+               <label><input type="checkbox" id="log-filter-checkbox"> Hide gather/cost messages</label>
+           </div>
+           <ul id="logs-list"></ul>
+       </div>
+    </div>
 
-        // --- Translations ---
-        // ... (Translation object - needs biome names) ...
-        const translations = {
-            en: { /* ..., */ biomeForest: "Forest", biomeDesert: "Desert", biomeJungle: "Jungle" },
-            fr: { /* ..., */ biomeForest: "Forêt", biomeDesert: "Désert", biomeJungle: "Jungle" },
-            // Make sure to add these to your existing translations object!
-             // General UI
-            gameTitle: "Tiny Civilization", switchLanguageTooltip: "Switch Language / Changer de langue", switchToFrench: "Français", switchToEnglish: "English", colonyLabel: "Colony:",
-            // Panels & Buttons
-            inventoryTitle: "Inventory", researchButton: "Research", buildingsButton: "Buildings", unitsButton: "Units", logsButton: "Logs", saveButton: "Save Game", loadButton: "Load Game",
-            // Inventory Items (also used as keys for costs/alerts)
-            wood: "Wood", pebble: "Pebbles", flint: "Flint", wheat: "Wheat", coal: "Coal",
-            // Grid Area
-            gatherButton: "Gather Resource", noUnitSelected: "No unit selected", onTile: "On Tile:", emptyTile: "Empty", unknownTile: "Unknown", tileResourceTree: "Tree (Wood)", tileResourceStone: "Stone (Pebbles)", tileResourceFlint: "Flint",
-            // Biomes
-            biomeForest: "Forest", biomeDesert: "Desert", biomeJungle: "Jungle",
-            // Research Panel
-            researchPointsLabel: "Research Points:", researchPanelTitle: "Tech Tree", primitiveAge: "Primitive Age", researchSettlement: "Settlement", researchSettlementDesc: "Unlocks Houses.", researchAgriculture: "Agriculture", researchAgricultureDesc: "Unlocks Farms.", researchMining: "Mining", researchMiningDesc: "Unlocks Mines (requires Agriculture).", researchStatusResearching: "⏳ Researching", researchStatusComplete: "✅", researchStatusCompleteSettlement: "Settlement Complete! Houses unlocked.", researchStatusCompleteAgriculture: "Agriculture Complete! Farms unlocked.", researchStatusCompleteMining: "Mining Complete! Mines unlocked.", researchStatusInitial: "Begin your journey! Select units via the top bar and move them on the grid.",
-            // Buildings Panel (Keys: buildingHouse, buildingFarm, buildingMine)
-            buildingsPanelTitle: "Buildings", buildingHouse: "House", buildingFarm: "Farm", buildingMine: "Mine", buildingHouseDesc: "Increases Worker capacity by 1.", buildingFarmDesc: "Requires Worker. Produces Wheat over time.", buildingMineDesc: "Requires Worker. Produces Coal over time.", noBuildingsAvailable: "No buildings available to build yet. Research technology first.",
-            // Units Panel (Keys: unitPawn, unitWorker)
-            unitsPanelTitle: "Available Units", deployWorkerButton: "Deploy Worker", deployWorkerRequiresHouse: "Deploy Worker (Requires House)", deployWorkerMax: "Max", unitPawn: "Pawn", unitWorker: "Worker",
-            // Logs Panel
-            logsPanelTitle: "Event Logs", logSearchPlaceholder: "Search logs...", logFilterLabel: "Hide gather/cost messages",
-            // Alerts & Prompts (Keys for alerts)
-            alertWelcome: "Welcome to {0}!", alertGameStarted: "Game started for colony: {0}", alertGathered: "Gathered 1 {0}!", alertNotEnoughResources: "Not enough resources for {0}!", alertCannotBuildEmpty: "Cannot build: Tile is not empty!", alertCannotBuildNonEmpty: "Cannot build: Tile is not empty!", alertCannotBuildExists: "Cannot build: {0} already exists here!", alertCannotBuildOnResource: "Cannot build on a {0}!", alertBuildSelected: "Selected: {0}. Click an empty tile to build.", alertBuildingBuilt: "{0} built!", alertSelectUnitToBuild: "No unit selected to perform build action.", alertUnitCannotBuild: "{0} cannot build {1}s!", alertResearchStarted: "Started researching {0}.", alertAlreadyResearching: "Already researching: {0}!", alertWorkerDeployed: "Worker deployed!", alertMaxWorkers: "Maximum Worker capacity reached. Build more Houses.", alertNoSpaceForWorker: "No available space near any House to deploy Worker!", alertGameSaved: "Game Saved!", alertSaveError: "Error saving game. See console for details.", alertLoadSuccess: "Game loaded successfully for colony: {0}!", alertLoadError: "Error loading game: {0}.", alertLoadInvalidFormat: "Invalid save file format.", alertReadFileError: "Error reading file.", alertUnitMoveOccupied: "Cannot move unit: Tile is occupied!", alertMoveInvalid: "Cannot move there.", alertSelectedUnit: "Selected Unit: {0} ({1})", promptColonyName: "Welcome to Tiny Civilization! Please name your colony:", defaultColonyName: "New Colony", logGameSaved: "Game state saved to file.", logNewGame: "New game started for colony:"
-        };
-         translations.fr = { gameTitle: "Mini Civilisation", switchLanguageTooltip: "Changer de langue / Switch Language", switchToFrench: "Français", switchToEnglish: "English", colonyLabel: "Colonie :", inventoryTitle: "Inventaire", researchButton: "Recherche", buildingsButton: "Bâtiments", unitsButton: "Unités", logsButton: "Journaux", saveButton: "Sauvegarder", loadButton: "Charger", wood: "Bois", pebble: "Cailloux", flint: "Silex", wheat: "Blé", coal: "Charbon", gatherButton: "Récolter Ressource", noUnitSelected: "Aucune unité sélectionnée", onTile: "Sur la case :", emptyTile: "Vide", unknownTile: "Inconnu", tileResourceTree: "Arbre (Bois)", tileResourceStone: "Roche (Cailloux)", tileResourceFlint: "Silex", biomeForest: "Forêt", biomeDesert: "Désert", biomeJungle: "Jungle", researchPointsLabel: "Points de Recherche :", researchPanelTitle: "Arbre Technologique", primitiveAge: "Âge Primitif", researchSettlement: "Colonisation", researchSettlementDesc: "Débloque les Maisons.", researchAgriculture: "Agriculture", researchAgricultureDesc: "Débloque les Fermes.", researchMining: "Minage", researchMiningDesc: "Débloque les Mines (nécessite Agriculture).", researchStatusResearching: "⏳ Recherche en cours", researchStatusComplete: "✅", researchStatusCompleteSettlement: "Colonisation terminée ! Maisons débloquées.", researchStatusCompleteAgriculture: "Agriculture terminée ! Fermes débloquées.", researchStatusCompleteMining: "Minage terminé ! Mines débloquées.", researchStatusInitial: "Commencez votre voyage ! Sélectionnez les unités via la barre supérieure et déplacez-les sur la grille.", buildingsPanelTitle: "Bâtiments", buildingHouse: "Maison", buildingFarm: "Ferme", buildingMine: "Mine", buildingHouseDesc: "Augmente la capacité d'Ouvriers de 1.", buildingFarmDesc: "Nécessite Ouvrier. Produit du Blé périodiquement.", buildingMineDesc: "Nécessite Ouvrier. Produit du Charbon périodiquement.", noBuildingsAvailable: "Aucun bâtiment à construire pour le moment. Recherchez d'abord une technologie.", unitsPanelTitle: "Unités Disponibles", deployWorkerButton: "Déployer Ouvrier", deployWorkerRequiresHouse: "Déployer Ouvrier (Maison requise)", deployWorkerMax: "Max", unitPawn: "Colon", unitWorker: "Ouvrier", logsPanelTitle: "Journal des Événements", logSearchPlaceholder: "Rechercher dans les journaux...", logFilterLabel: "Masquer messages récolte/coût", alertWelcome: "Bienvenue à {0} !", alertGameStarted: "Partie démarrée pour la colonie : {0}", alertGathered: "Récolté 1 {0} !", alertNotEnoughResources: "Pas assez de ressources pour {0} !", alertCannotBuildEmpty: "Construction impossible : La case n'est pas vide !", alertCannotBuildNonEmpty: "Construction impossible : La case n'est pas vide !", alertCannotBuildExists: "Construction impossible : {0} existe déjà ici !", alertCannotBuildOnResource: "Construction impossible sur un(e) {0} !", alertBuildSelected: "Sélectionné : {0}. Cliquez une case vide pour construire.", alertBuildingBuilt: "{0} construit(e) !", alertSelectUnitToBuild: "Aucune unité sélectionnée pour construire.", alertUnitCannotBuild: "{0} ne peut pas construire de {1}s !", alertResearchStarted: "Recherche commencée pour {0}.", alertAlreadyResearching: "Recherche déjà en cours : {0} !", alertWorkerDeployed: "Ouvrier déployé !", alertMaxWorkers: "Capacité maximale d'Ouvriers atteinte. Construisez plus de Maisons.", alertNoSpaceForWorker: "Aucun espace disponible près d'une Maison pour déployer l'Ouvrier !", alertGameSaved: "Partie Sauvegardée !", alertSaveError: "Erreur lors de la sauvegarde. Voir la console pour détails.", alertLoadSuccess: "Partie chargée avec succès pour la colonie : {0} !", alertLoadError: "Erreur lors du chargement : {0}.", alertLoadInvalidFormat: "Format de sauvegarde invalide.", alertReadFileError: "Erreur de lecture du fichier.", alertUnitMoveOccupied: "Déplacement impossible : Case occupée !", alertMoveInvalid: "Déplacement impossible.", alertSelectedUnit: "Unité sélectionnée : {0} ({1})", promptColonyName: "Bienvenue dans Mini Civilisation ! Veuillez nommer votre colonie :", defaultColonyName: "Nouvelle Colonie", logGameSaved: "État de la partie sauvegardé dans un fichier.", logNewGame: "Nouvelle partie démarrée pour la colonie :" };
+    <!-- === GRID AREA === -->
+    <div id="grid-area">
+        <div id="grid" class="grid"></div>
+        <div id="alert-message"></div>
+    </div>
 
+    <!-- === RIGHT CONTAINER === -->
+    <div id="right-panel">
+       <div id="unit-coords-display-container">Coords: <span id="unit-coords">(-, -)</span></div>
+       <div id="research-points-display-container">Research Points: <span id="research-points">0</span></div>
+       <div id="research-status-display"></div>
+       <div id="tech-tree" style="display: none;">
+         <h2>Tech Tree</h2>
+         <h3>Primitive Age</h3>
+         <ul>
+           <li class="research-item">
+             <button id="settlement-research">Settlement</button>
+             <div id="settlement-research-progress" class="research-progress-container"><div id="settlement-research-bar" class="research-progress-bar" style="background-color: #8e44ad;"></div></div>
+             <span id="settlement-research-percent">0%</span> <p>Unlocks Houses.</p>
+           </li>
+           <li class="research-item">
+             <button id="agriculture-research">Agriculture</button>
+             <div id="agriculture-research-progress" class="research-progress-container"><div id="agriculture-research-bar" class="research-progress-bar" style="background-color: #aed581;"></div></div>
+             <span id="agriculture-research-percent">0%</span> <p>Unlocks Farms.</p>
+           </li>
+           <li class="research-item">
+             <button id="mining-research" disabled>Mining</button>
+             <div id="mining-research-progress" class="research-progress-container"><div id="mining-research-bar" class="research-progress-bar" style="background-color: #7f8c8d;"></div></div>
+             <span id="mining-research-percent">0%</span> <p>Unlocks Mines (requires Agriculture).</p>
+           </li>
+         </ul>
+       </div>
+       <div id="buildings-list" style="display: none;">
+           <h2>Buildings</h2>
+           <ul></ul>
+       </div>
+       <div id="units-panel" style="display: none;">
+           <h2>Available Units</h2>
+           <ul id="units-list">
+               <li><button id="deploy-worker-button" disabled>Deploy Worker</button></li>
+           </ul>
+       </div>
+    </div>
+  </div>
+
+
+  <script>
+    // --- DOM Element References ---
+    const grid = document.getElementById('grid'); const actionButton = document.getElementById('action-button');
+    const woodCountDisplay = document.getElementById('wood-count'); const pebbleCountDisplay = document.getElementById('pebble-count'); const flintCountDisplay = document.getElementById('flint-count'); const wheatCountDisplay = document.getElementById('wheat-count'); const coalCountDisplay = document.getElementById('coal-count');
+    const inventoryDisplay = document.getElementById('inventory'); const researchButton = document.getElementById('research-button'); const buildingsButton = document.getElementById('buildings-button'); const unitsButton = document.getElementById('units-button'); const logsButton = document.getElementById('logs-button');
+    const techTree = document.getElementById('tech-tree'); const buildingsList = document.getElementById('buildings-list'); const unitsPanel = document.getElementById('units-panel'); const unitsList = document.getElementById('units-list'); const logsPanel = document.getElementById('logs-panel'); const logsList = document.getElementById('logs-list');
+    const logSearchInput = document.getElementById('log-search-input'); const logFilterCheckbox = document.getElementById('log-filter-checkbox'); const resourceNameDisplay = document.getElementById('resource-name');
+    const researchPointsDisplay = document.getElementById('research-points'); const researchStatusDisplay = document.getElementById('research-status-display'); const colonyNameDisplay = document.getElementById('colony-name-display');
+    const alertMessageElement = document.getElementById('alert-message'); const unitDisplayBar = document.getElementById('unit-display-bar');
+    const unitCoordsDisplay = document.getElementById('unit-coords');
+    const settlementResearchBtn = document.getElementById('settlement-research'); const settlementResearchProgress = document.getElementById('settlement-research-progress'); const settlementResearchProgressBar = document.getElementById('settlement-research-bar'); const settlementResearchPercent = document.getElementById('settlement-research-percent');
+    const agricultureResearchBtn = document.getElementById('agriculture-research'); const agricultureResearchProgress = document.getElementById('agriculture-research-progress'); const agricultureResearchProgressBar = document.getElementById('agriculture-research-bar'); const agricultureResearchPercent = document.getElementById('agriculture-research-percent');
+    const miningResearchBtn = document.getElementById('mining-research'); const miningResearchProgress = document.getElementById('mining-research-progress'); const miningResearchProgressBar = document.getElementById('mining-research-bar'); const miningResearchPercent = document.getElementById('mining-research-percent');
+    const deployWorkerButton = document.getElementById('deploy-worker-button');
+    const saveButton = document.getElementById('save-button');
+    const loadButton = document.getElementById('load-button');
+    const loadFileInput = document.getElementById('load-file-input');
+    const languageSwitchButton = document.getElementById('language-switch-button');
+
+    // --- Game State Variables ---
+    const gridSize = 10; let units = []; let nextUnitId = 0; let selectedUnitId = null;
+    let inventory = { wood: 0, pebble: 0, flint: 0, wheat: 0, coal: 0 };
+    let researchPoints = 0; let activeResearch = null;
+    let settlementCompleted = false; let agricultureCompleted = false; let miningCompleted = false;
+    let maxWorkers = 0; let selectedBuilding = null; let moveCount = 0; let movesSinceLastCoal = 0;
+    let viewOffsetX = 0; let viewOffsetY = 0; let worldData = {};
+    let revealedTiles = new Set(); // REMOVED currentlyVisibleTiles
+    let colonyName = "New Colony"; let highlightEnabled = false; let alertTimeout; let eventLogs = []; const maxLogEntries = 50; let currentLanguage = 'en';
+
+    // --- Game Constants ---
+    const settlementResearchCost = 15; const agricultureResearchCost = 10; const miningResearchCost = 15;
+    const houseCost = { wood: 10, pebble: 5 }; const farmCost = { wood: 3 }; const mineCost = { pebble: 5, wood: 2 };
+    const wheatProductionInterval = 5; const coalProductionInterval = 7;
+    const unitCapabilities = { pawn: { canBuild: ['house'] }, worker: { canBuild: ['farm', 'mine'] } };
+    const REVEAL_RADIUS = 2; // REMOVED VISIBILITY_RADIUS
+    const VIEW_CENTER_OFFSET = Math.floor(gridSize / 2);
+
+    // --- Translations ---
+    // ... (Translations object - no changes) ...
+    const translations = {
+        en: { gameTitle: "Tiny Civilization", switchLanguageTooltip: "Switch Language / Changer de langue", switchToFrench: "Français", switchToEnglish: "English", colonyLabel: "Colony:", inventoryTitle: "Inventory", researchButton: "Research", buildingsButton: "Buildings", unitsButton: "Units", logsButton: "Logs", saveButton: "Save Game", loadButton: "Load Game", wood: "Wood", pebble: "Pebbles", flint: "Flint", wheat: "Wheat", coal: "Coal", gatherButton: "Gather Resource", noUnitSelected: "No unit selected", onTile: "On Tile:", emptyTile: "Empty", unknownTile: "Unknown", tileResourceTree: "Tree (Wood)", tileResourceStone: "Stone (Pebbles)", tileResourceFlint: "Flint", researchPointsLabel: "Research Points:", researchPanelTitle: "Tech Tree", primitiveAge: "Primitive Age", researchSettlement: "Settlement", researchSettlementDesc: "Unlocks Houses.", researchAgriculture: "Agriculture", researchAgricultureDesc: "Unlocks Farms.", researchMining: "Mining", researchMiningDesc: "Unlocks Mines (requires Agriculture).", researchStatusResearching: "⏳ Researching", researchStatusComplete: "✅", researchStatusCompleteSettlement: "Settlement Complete! Houses unlocked.", researchStatusCompleteAgriculture: "Agriculture Complete! Farms unlocked.", researchStatusCompleteMining: "Mining Complete! Mines unlocked.", researchStatusInitial: "Begin your journey! Select units via the top bar and move them on the grid.", buildingsPanelTitle: "Buildings", buildingHouse: "House", buildingFarm: "Farm", buildingMine: "Mine", buildingHouseDesc: "Increases Worker capacity by 1.", buildingFarmDesc: "Requires Worker. Produces Wheat over time.", buildingMineDesc: "Requires Worker. Produces Coal over time.", noBuildingsAvailable: "No buildings available to build yet. Research technology first.", unitsPanelTitle: "Available Units", deployWorkerButton: "Deploy Worker", deployWorkerRequiresHouse: "Deploy Worker (Requires House)", deployWorkerMax: "Max", unitPawn: "Pawn", unitWorker: "Worker", logsPanelTitle: "Event Logs", logSearchPlaceholder: "Search logs...", logFilterLabel: "Hide gather/cost messages", alertWelcome: "Welcome to {0}!", alertGameStarted: "Game started for colony: {0}", alertGathered: "Gathered 1 {0}!", alertNotEnoughResources: "Not enough resources for {0}!", alertCannotBuildEmpty: "Cannot build: Tile is not empty!", alertCannotBuildNonEmpty: "Cannot build: Tile is not empty!", alertCannotBuildExists: "Cannot build: {0} already exists here!", alertCannotBuildOnResource: "Cannot build on a {0}!", alertBuildSelected: "Selected: {0}. Click an empty tile to build.", alertBuildingBuilt: "{0} built!", alertSelectUnitToBuild: "No unit selected to perform build action.", alertUnitCannotBuild: "{0} cannot build {1}s!", alertResearchStarted: "Started researching {0}.", alertAlreadyResearching: "Already researching: {0}!", alertWorkerDeployed: "Worker deployed!", alertMaxWorkers: "Maximum Worker capacity reached. Build more Houses.", alertNoSpaceForWorker: "No available space near any House to deploy Worker!", alertGameSaved: "Game Saved!", alertSaveError: "Error saving game. See console for details.", alertLoadSuccess: "Game loaded successfully for colony: {0}!", alertLoadError: "Error loading game: {0}.", alertLoadInvalidFormat: "Invalid save file format.", alertReadFileError: "Error reading file.", alertUnitMoveOccupied: "Cannot move unit: Tile is occupied!", alertMoveInvalid: "Cannot move there.", alertSelectedUnit: "Selected Unit: {0} ({1})", promptColonyName: "Welcome to Tiny Civilization! Please name your colony:", defaultColonyName: "New Colony", logGameSaved: "Game state saved to file.", logNewGame: "New game started for colony:" },
+        fr: { gameTitle: "Mini Civilisation", switchLanguageTooltip: "Changer de langue / Switch Language", switchToFrench: "Français", switchToEnglish: "English", colonyLabel: "Colonie :", inventoryTitle: "Inventaire", researchButton: "Recherche", buildingsButton: "Bâtiments", unitsButton: "Unités", logsButton: "Journaux", saveButton: "Sauvegarder", loadButton: "Charger", wood: "Bois", pebble: "Cailloux", flint: "Silex", wheat: "Blé", coal: "Charbon", gatherButton: "Récolter Ressource", noUnitSelected: "Aucune unité sélectionnée", onTile: "Sur la case :", emptyTile: "Vide", unknownTile: "Inconnu", tileResourceTree: "Arbre (Bois)", tileResourceStone: "Roche (Cailloux)", tileResourceFlint: "Silex", researchPointsLabel: "Points de Recherche :", researchPanelTitle: "Arbre Technologique", primitiveAge: "Âge Primitif", researchSettlement: "Colonisation", researchSettlementDesc: "Débloque les Maisons.", researchAgriculture: "Agriculture", researchAgricultureDesc: "Débloque les Fermes.", researchMining: "Minage", researchMiningDesc: "Débloque les Mines (nécessite Agriculture).", researchStatusResearching: "⏳ Recherche en cours", researchStatusComplete: "✅", researchStatusCompleteSettlement: "Colonisation terminée ! Maisons débloquées.", researchStatusCompleteAgriculture: "Agriculture terminée ! Fermes débloquées.", researchStatusCompleteMining: "Minage terminé ! Mines débloquées.", researchStatusInitial: "Commencez votre voyage ! Sélectionnez les unités via la barre supérieure et déplacez-les sur la grille.", buildingsPanelTitle: "Bâtiments", buildingHouse: "Maison", buildingFarm: "Ferme", buildingMine: "Mine", buildingHouseDesc: "Augmente la capacité d'Ouvriers de 1.", buildingFarmDesc: "Nécessite Ouvrier. Produit du Blé périodiquement.", buildingMineDesc: "Nécessite Ouvrier. Produit du Charbon périodiquement.", noBuildingsAvailable: "Aucun bâtiment à construire pour le moment. Recherchez d'abord une technologie.", unitsPanelTitle: "Unités Disponibles", deployWorkerButton: "Déployer Ouvrier", deployWorkerRequiresHouse: "Déployer Ouvrier (Maison requise)", deployWorkerMax: "Max", unitPawn: "Colon", unitWorker: "Ouvrier", logsPanelTitle: "Journal des Événements", logSearchPlaceholder: "Rechercher dans les journaux...", logFilterLabel: "Masquer messages récolte/coût", alertWelcome: "Bienvenue à {0} !", alertGameStarted: "Partie démarrée pour la colonie : {0}", alertGathered: "Récolté 1 {0} !", alertNotEnoughResources: "Pas assez de ressources pour {0} !", alertCannotBuildEmpty: "Construction impossible : La case n'est pas vide !", alertCannotBuildNonEmpty: "Construction impossible : La case n'est pas vide !", alertCannotBuildExists: "Construction impossible : {0} existe déjà ici !", alertCannotBuildOnResource: "Construction impossible sur un(e) {0} !", alertBuildSelected: "Sélectionné : {0}. Cliquez une case vide pour construire.", alertBuildingBuilt: "{0} construit(e) !", alertSelectUnitToBuild: "Aucune unité sélectionnée pour construire.", alertUnitCannotBuild: "{0} ne peut pas construire de {1}s !", alertResearchStarted: "Recherche commencée pour {0}.", alertAlreadyResearching: "Recherche déjà en cours : {0} !", alertWorkerDeployed: "Ouvrier déployé !", alertMaxWorkers: "Capacité maximale d'Ouvriers atteinte. Construisez plus de Maisons.", alertNoSpaceForWorker: "Aucun espace disponible près d'une Maison pour déployer l'Ouvrier !", alertGameSaved: "Partie Sauvegardée !", alertSaveError: "Erreur lors de la sauvegarde. Voir la console pour détails.", alertLoadSuccess: "Partie chargée avec succès pour la colonie : {0} !", alertLoadError: "Erreur lors du chargement : {0}.", alertLoadInvalidFormat: "Format de sauvegarde invalide.", alertReadFileError: "Erreur de lecture du fichier.", alertUnitMoveOccupied: "Déplacement impossible : Case occupée !", alertMoveInvalid: "Déplacement impossible.", alertSelectedUnit: "Unité sélectionnée : {0} ({1})", promptColonyName: "Bienvenue dans Mini Civilisation ! Veuillez nommer votre colonie :", defaultColonyName: "Nouvelle Colonie", logGameSaved: "État de la partie sauvegardé dans un fichier.", logNewGame: "Nouvelle partie démarrée pour la colonie :" }
+    };
 
     // --- Helper Function for Time Formatting ---
     function getFormattedTime() { const now = new Date(); const hours = now.getHours().toString().padStart(2, '0'); const minutes = now.getMinutes().toString().padStart(2, '0'); return `${hours}:${minutes}`; }
@@ -186,65 +248,19 @@
     // --- World Generation & Visibility ---
     function getTileData(worldX, worldY) { return worldData[worldY]?.[worldX]; }
     function setTileData(worldX, worldY, data) { if (!worldData[worldY]) { worldData[worldY] = {}; } worldData[worldY][worldX] = data; }
-
-    function generateTileContent(worldX, worldY) { // <<< MODIFIED for Biomes
-        const coordString = `${worldX},${worldY}`;
-        if (revealedTiles.has(coordString)) {
-            return getTileData(worldX, worldY); // Already generated
-        }
-        revealedTiles.add(coordString);
-
-        // --- Biome Determination ---
-        let biome = 'forest'; // Default
-        // Use seeded Perlin noise
-        const noiseValue = perlin.get(worldX * PERLIN_FREQUENCY, worldY * PERLIN_FREQUENCY);
-        if (noiseValue < -0.1) { // Adjust threshold as needed
-            biome = 'desert';
-        } else if (noiseValue > 0.25) { // Adjust threshold
-            biome = 'jungle';
-        } else {
-            biome = 'forest';
-        }
-
-         // --- Force Start Biome ---
-         // Slightly larger override for a smoother start
-         const startX = 5, startY = 5; // Make these constants?
-         if (Math.abs(worldX - startX) <= 1 && Math.abs(worldY - startY) <= 1) {
-             biome = 'forest';
-         }
-
-
-        // --- Resource Generation based on Biome ---
-        let type = 'empty';
-        const rand = Math.random(); // Use standard random for resource placement within biome
-
-        if (biome === 'forest') {
-            if (rand < 0.15) { type = 'tree'; } // High chance
-            else if (rand < 0.22) { type = 'stone'; }
-            else if (rand < 0.25) { type = 'flint'; }
-        } else if (biome === 'desert') {
-            if (rand < 0.01) { type = 'tree'; } // Very low chance
-            else if (rand < 0.15) { type = 'stone'; } // High chance
-            else if (rand < 0.25) { type = 'flint'; } // Medium chance
-        } else if (biome === 'jungle') {
-             if (rand < 0.25) { type = 'tree'; } // Very high chance
-             else if (rand < 0.28) { type = 'stone'; } // Low chance
-             else if (rand < 0.30) { type = 'flint'; } // Low chance
-        }
-
-        const data = { type: type, building: null, biome: biome }; // Store biome
-        setTileData(worldX, worldY, data);
-        return data;
-    }
-
-    function revealArea(centerX, centerY, radius) { /* ... */ let newlyRevealed = false; for (let dy = -radius; dy <= radius; dy++) { for (let dx = -radius; dx <= radius; dx++) { const wx = centerX + dx; const wy = centerY + dy; const coordString = `${wx},${wy}`; if (!revealedTiles.has(coordString)) { generateTileContent(wx, wy); newlyRevealed = true; } } } return newlyRevealed; }
+    function generateTileContent(worldX, worldY) { const coordString = `${worldX},${worldY}`; if (revealedTiles.has(coordString)) { return getTileData(worldX, worldY); } revealedTiles.add(coordString); let type = 'empty'; const rand = Math.random(); if (rand < 0.08) { type = 'tree'; } else if (rand < 0.13) { type = 'stone'; } else if (rand < 0.16) { type = 'flint'; } const data = { type: type, building: null }; setTileData(worldX, worldY, data); return data; }
+    function revealArea(centerX, centerY, radius) { let newlyRevealed = false; for (let dy = -radius; dy <= radius; dy++) { for (let dx = -radius; dx <= radius; dx++) { const wx = centerX + dx; const wy = centerY + dy; const coordString = `${wx},${wy}`; if (!revealedTiles.has(coordString)) { generateTileContent(wx, wy); newlyRevealed = true; } } } return newlyRevealed; }
     // REMOVED calculateVisibility function
 
     // --- Update Functions ---
     function updateGrid() { // <<< SIMPLIFIED (Removed visibility logic)
+        // No need to calculate visibility anymore
+        // calculateVisibility();
+
         const tiles = grid.querySelectorAll('.tile');
         const lang = translations[currentLanguage];
 
+        // Update tile appearance based only on revealed status
         tiles.forEach(tile => {
             const gx = parseInt(tile.dataset.gridX); const gy = parseInt(tile.dataset.gridY);
             const worldX = gx + viewOffsetX; const worldY = gy + viewOffsetY;
@@ -253,11 +269,9 @@
 
             const existingMarker = tile.querySelector('.unit-marker');
             if (existingMarker) existingMarker.remove();
-            tile.className = 'tile'; // Reset classes first
+            tile.className = 'tile'; // Reset classes
             tile.textContent = '';
-            tile.classList.remove('highlight', 'unknown');
-            // Remove old biome classes before adding new one
-            tile.classList.remove('biome-forest', 'biome-desert', 'biome-jungle');
+            tile.classList.remove('highlight', 'unknown'); // Removed 'revealed-dimmed'
 
             if (!isRevealed) {
                 tile.classList.add('unknown');
@@ -265,11 +279,6 @@
             } else { // Tile is revealed - show normally
                 const data = getTileData(worldX, worldY); let tileTitle = lang.emptyTile;
                 if (data) {
-                    // Add biome class first for background
-                    if (data.biome) {
-                        tile.classList.add(`biome-${data.biome}`);
-                    }
-                    // Add type/building class (will override biome background visually if not transparent)
                     tile.classList.add(data.type);
                     if (data.building) {
                         tile.classList.add(data.building); tile.textContent = data.building.substring(0, 4).toUpperCase();
@@ -279,28 +288,26 @@
                          if (data.type === 'tree') resourceKey = 'tileResourceTree'; else if (data.type === 'stone') resourceKey = 'tileResourceStone'; else if (data.type === 'flint') resourceKey = 'tileResourceFlint';
                          tileTitle = lang[resourceKey] || data.type;
                     }
-                    // Append biome name to tooltip for revealed tiles
-                    const biomeName = lang[`biome${data.biome.charAt(0).toUpperCase() + data.biome.slice(1)}`] || data.biome;
-                    tileTitle += ` (${biomeName})`;
-
                 } else { tile.classList.add('empty'); tileTitle = lang.emptyTile; }
                  tile.title = tileTitle;
+                 // No dimming class added
             }
         });
 
         // Place unit markers on revealed tiles
         units.forEach(unit => {
             const unitGridX = unit.worldX - viewOffsetX; const unitGridY = unit.worldY - viewOffsetY;
+            // Check if unit is within grid bounds
             if (unitGridX >= 0 && unitGridX < gridSize && unitGridY >= 0 && unitGridY < gridSize) {
                 const tile = grid.querySelector(`.tile[data-grid-x="${unitGridX}"][data-grid-y="${unitGridY}"]`);
-                if (tile && !tile.classList.contains('unknown')) { // Only on revealed tiles
+                // Place marker if tile exists and is revealed (not unknown)
+                if (tile && !tile.classList.contains('unknown')) {
                     const marker = document.createElement('div'); marker.classList.add('unit-marker', unit.type);
                     const unitTypeKey = `unit${unit.type.charAt(0).toUpperCase() + unit.type.slice(1)}`;
                     const translatedUnitType = lang[unitTypeKey] || unit.type;
                     marker.textContent = translatedUnitType.charAt(0).toUpperCase();
                     if (unit.id === selectedUnitId) { marker.classList.add('selected'); }
                     tile.appendChild(marker);
-                    // Prepend unit info to tooltip
                     tile.title = `${translatedUnitType} (${unit.id}) - ${tile.title}`;
                 }
             }
@@ -314,8 +321,11 @@
                 tiles.forEach(tile => {
                     const targetGridX = parseInt(tile.dataset.gridX); const targetGridY = parseInt(tile.dataset.gridY);
                     const targetWorldX = targetGridX + viewOffsetX; const targetWorldY = targetGridY + viewOffsetY;
+                    // Check adjacency
                     const dx = Math.abs(targetGridX - unitGridX); const dy = Math.abs(targetGridY - unitGridY);
-                    if (dx <= 1 && dy <= 1 && !(dx === 0 && dy === 0) && !tile.classList.contains('unknown')) { // Check revealed
+                    // Highlight if adjacent AND revealed (not unknown)
+                    if (dx <= 1 && dy <= 1 && !(dx === 0 && dy === 0) &&
+                        !tile.classList.contains('unknown')) { // Check if revealed
                         const targetOccupied = units.some(u => u.worldX === targetWorldX && u.worldY === targetWorldY && u.id !== selectedUnitId);
                         if (!targetOccupied) { tile.classList.add('highlight'); }
                     }
@@ -335,7 +345,7 @@
 
     // --- Gameplay Functions ---
     function checkResource() { /* ... */ const selectedUnit = units.find(u => u.id === selectedUnitId); let canGather = false; let tileInfo = null; if (selectedUnit) { const unitWorldX = selectedUnit.worldX; const unitWorldY = selectedUnit.worldY; const data = getTileData(unitWorldX, unitWorldY); tileInfo = data; if (data && !data.building) { if (data.type === 'tree' || data.type === 'stone' || data.type === 'flint') { canGather = true; } } } actionButton.style.display = canGather ? 'inline-block' : 'none'; displayTileInfo(selectedUnit, tileInfo); }
-    function displayTileInfo(unit, tileData) { /* ... */ const lang = translations[currentLanguage]; if (!unit) { resourceNameDisplay.textContent = lang.noUnitSelected; return; } let nameToShow = lang.unknownTile; if (tileData) { if (tileData.building) { const buildingKey = `building${tileData.building.charAt(0).toUpperCase() + tileData.building.slice(1)}`; nameToShow = `${lang.onTile} ${lang[buildingKey] || tileData.building}`; } else if (tileData.type === 'tree') { nameToShow = `${lang.onTile} ${lang.tileResourceTree}`; } else if (tileData.type === 'stone') { nameToShow = `${lang.onTile} ${lang.tileResourceStone}`; } else if (tileData.type === 'flint') { nameToShow = `${lang.onTile} ${lang.tileResourceFlint}`; } else { nameToShow = `${lang.onTile} ${lang.emptyTile}`; } if(tileData.biome){ const biomeName = lang[`biome${tileData.biome.charAt(0).toUpperCase() + tileData.biome.slice(1)}`] || tileData.biome; nameToShow += ` (${biomeName})`}} resourceNameDisplay.textContent = nameToShow; }
+    function displayTileInfo(unit, tileData) { /* ... */ const lang = translations[currentLanguage]; if (!unit) { resourceNameDisplay.textContent = lang.noUnitSelected; return; } let nameToShow = lang.unknownTile; if (tileData) { if (tileData.building) { const buildingKey = `building${tileData.building.charAt(0).toUpperCase() + tileData.building.slice(1)}`; nameToShow = `${lang.onTile} ${lang[buildingKey] || tileData.building}`; } else if (tileData.type === 'tree') { nameToShow = `${lang.onTile} ${lang.tileResourceTree}`; } else if (tileData.type === 'stone') { nameToShow = `${lang.onTile} ${lang.tileResourceStone}`; } else if (tileData.type === 'flint') { nameToShow = `${lang.onTile} ${lang.tileResourceFlint}`; } else { nameToShow = `${lang.onTile} ${lang.emptyTile}`; } } resourceNameDisplay.textContent = nameToShow; }
     function moveUnit(targetGridX, targetGridY) { /* ... */ const selectedUnit = units.find(u => u.id === selectedUnitId); if (!selectedUnit) return; const targetWorldX = targetGridX + viewOffsetX; const targetWorldY = targetGridY + viewOffsetY; const dx = Math.abs(targetWorldX - selectedUnit.worldX); const dy = Math.abs(targetWorldY - selectedUnit.worldY); if (!(dx <= 1 && dy <= 1 && (dx !== 0 || dy !== 0))) { return; } if (!revealedTiles.has(`${targetWorldX},${targetWorldY}`)) { return; } const targetOccupied = units.some(u => u.worldX === targetWorldX && u.worldY === targetWorldY && u.id !== selectedUnitId); if (targetOccupied) { showAlert("alertUnitMoveOccupied", 2000, false); return; } selectedUnit.worldX = targetWorldX; selectedUnit.worldY = targetWorldY; revealArea(targetWorldX, targetWorldY, REVEAL_RADIUS); if (activeResearch) { researchPoints++; updateResearchPointsDisplay(); updateResearchProgress(); } moveCount++; movesSinceLastCoal++; if (moveCount >= wheatProductionInterval) { produceWheat(); moveCount = 0; } if (movesSinceLastCoal >= coalProductionInterval) { produceCoal(); movesSinceLastCoal = 0; } const unitStillSelected = selectedUnit.id === selectedUnitId; if (unitStillSelected) { focusOnUnit(selectedUnit.id); } else { updateGrid(); } }
     function gatherResource() { /* ... */ const selectedUnit = units.find(u => u.id === selectedUnitId); if (!selectedUnit) { showAlert("noUnitSelected", 2000); return; } const unitWorldX = selectedUnit.worldX; const unitWorldY = selectedUnit.worldY; const data = getTileData(unitWorldX, unitWorldY); if (data && !data.building) { let gatheredResourceKey = ''; if (data.type === 'tree') { inventory.wood++; gatheredResourceKey = 'wood'; data.type = 'empty'; } else if (data.type === 'stone') { inventory.pebble++; gatheredResourceKey = 'pebble'; data.type = 'empty'; } else if (data.type === 'flint') { inventory.flint++; gatheredResourceKey = 'flint'; data.type = 'empty'; } if (gatheredResourceKey) { showAlert('alertGathered', 1500, true, [gatheredResourceKey]); setTileData(unitWorldX, unitWorldY, data); updateInventoryDisplay(); updateGrid(); } } }
     function produceWheat() { /* ... */ let wheatProduced = 0; revealedTiles.forEach(coordString => { const [x, y] = coordString.split(',').map(Number); const data = getTileData(x, y); if (data && data.building === 'farm') { wheatProduced++; } }); if (wheatProduced > 0) { inventory.wheat += wheatProduced; updateInventoryDisplay(); } }
@@ -347,9 +357,10 @@
 
     // --- Event Listeners ---
     grid.addEventListener('click', (event) => { // <<< SIMPLIFIED (removed visibility check)
-        if (event.target.classList.contains('tile') && !event.target.classList.contains('unknown')) {
+        if (event.target.classList.contains('tile') && !event.target.classList.contains('unknown')) { // Can only interact with revealed tiles
             const gridX = parseInt(event.target.dataset.gridX); const gridY = parseInt(event.target.dataset.gridY);
             const worldX = gridX + viewOffsetX; const worldY = gridY + viewOffsetY;
+
             const clickedUnit = units.find(u => u.worldX === worldX && u.worldY === worldY);
             const lang = translations[currentLanguage];
 
@@ -357,7 +368,8 @@
             else if (selectedBuilding) { // Build action
                 const builderUnit = units.find(u => u.id === selectedUnitId); if (!builderUnit) { showAlert("alertSelectUnitToBuild", 2500); selectedBuilding = null; return; }
                 const tileData = getTileData(worldX, worldY);
-                // Check if tile exists, is empty, has no building (No visibility check)
+
+                // Check if tile exists, is empty, has no building (No visibility check needed)
                 if (tileData && tileData.type === 'empty' && !tileData.building) {
                    const capabilities = unitCapabilities[builderUnit.type]; const buildingKey = `building${selectedBuilding.charAt(0).toUpperCase() + selectedBuilding.slice(1)}`;
                    if (!capabilities || !capabilities.canBuild.includes(selectedBuilding)) { const unitTypeKey = `unit${builderUnit.type.charAt(0).toUpperCase() + builderUnit.type.slice(1)}`; showAlert('alertUnitCannotBuild', 3000, true, [unitTypeKey, buildingKey]); selectedBuilding = null; return; }
@@ -373,7 +385,7 @@
                      else if (tileData && tileData.type !== 'empty') { let resourceNameKey = ''; if (tileData.type === 'tree') resourceNameKey = 'tileResourceTree'; else if (tileData.type === 'stone') resourceNameKey = 'tileResourceStone'; else if (tileData.type === 'flint') resourceNameKey = 'tileResourceFlint'; reasonKey = 'alertCannotBuildOnResource'; reasonArgs = [resourceNameKey || tileData.type]; }
                      showAlert(reasonKey, 3000, true, reasonArgs); selectedBuilding = null;
                 }
-            } else { // Move action to revealed tile
+            } else { // Move action (Can move to any revealed adjacent tile)
                  moveUnit(gridX, gridY);
             }
         }
@@ -404,22 +416,9 @@
     grid.addEventListener('mouseout', (event) => { /* ... */ if (highlightEnabled && (!event.relatedTarget || !event.relatedTarget.closest || !event.relatedTarget.closest('#grid'))) { highlightEnabled = false; updateGrid(); } });
 
     // --- Save/Load Functions ---
-    function gatherSaveData() { // Added worldSeed
-        return { units: units, nextUnitId: nextUnitId, selectedUnitId: selectedUnitId, inventory: inventory, researchPoints: researchPoints, activeResearch: activeResearch, settlementCompleted: settlementCompleted, agricultureCompleted: agricultureCompleted, miningCompleted: miningCompleted, maxWorkers: maxWorkers, moveCount: moveCount, movesSinceLastCoal: movesSinceLastCoal, colonyName: colonyName, currentLanguage: currentLanguage, eventLogs: eventLogs.map(log => ({ time: log.time, messageKey: log.messageKey || null, args: log.args || [] })), viewOffsetX: viewOffsetX, viewOffsetY: viewOffsetY, worldData: worldData, revealedTiles: Array.from(revealedTiles), worldSeed: worldSeed }; // SAVE SEED
-    }
+    function gatherSaveData() { /* ... */ return { units: units, nextUnitId: nextUnitId, selectedUnitId: selectedUnitId, inventory: inventory, researchPoints: researchPoints, activeResearch: activeResearch, settlementCompleted: settlementCompleted, agricultureCompleted: agricultureCompleted, miningCompleted: miningCompleted, maxWorkers: maxWorkers, moveCount: moveCount, movesSinceLastCoal: movesSinceLastCoal, colonyName: colonyName, currentLanguage: currentLanguage, eventLogs: eventLogs.map(log => ({ time: log.time, messageKey: log.messageKey || null, args: log.args || [] })), viewOffsetX: viewOffsetX, viewOffsetY: viewOffsetY, worldData: worldData, revealedTiles: Array.from(revealedTiles) }; }
     function saveGame() { /* ... */ try { const saveData = gatherSaveData(); const saveDataJson = JSON.stringify(saveData); const blob = new Blob([saveDataJson], { type: 'application/json' }); const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; const safeColonyName = colonyName.replace(/[^a-z0-9]/gi, '_').toLowerCase(); link.download = `tinyciv_${safeColonyName}_save.json`; document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url); showAlert('alertGameSaved', 2000); const timeString = getFormattedTime(); eventLogs.push({ time: timeString, messageKey: 'logGameSaved', args: [], rendered: translations[currentLanguage].logGameSaved }); if (logsPanel.style.display === 'block') { updateLogsDisplay(); } } catch (error) { console.error("Error saving game:", error); if (error instanceof RangeError) { showAlert('alertSaveError', 6000, true, ["Save data too large!"]); } else { showAlert('alertSaveError', 4000); } } }
-
-    function applyLoadedData(data) { // Restore worldSeed
-        units = data.units || []; nextUnitId = data.nextUnitId || 0; inventory = data.inventory || { wood: 0, pebble: 0, flint: 0, wheat: 0, coal: 0 }; researchPoints = data.researchPoints || 0; activeResearch = data.activeResearch || null; settlementCompleted = data.settlementCompleted || false; agricultureCompleted = data.agricultureCompleted || false; miningCompleted = data.miningCompleted || false; maxWorkers = data.maxWorkers || 0; moveCount = data.moveCount || 0; movesSinceLastCoal = data.movesSinceLastCoal || 0; colonyName = data.colonyName || "Loaded Colony"; currentLanguage = data.currentLanguage || 'en';
-        viewOffsetX = data.viewOffsetX || 0; viewOffsetY = data.viewOffsetY || 0; worldData = data.worldData || {}; revealedTiles = new Set(data.revealedTiles || []);
-        worldSeed = data.worldSeed || Date.now(); // Restore seed or generate new if missing
-        perlin.seed(worldSeed); // << RE-SEED PERLIN NOISE
-        selectedUnitId = data.selectedUnitId !== undefined ? data.selectedUnitId : (units.length > 0 ? units[0].id : null);
-         eventLogs = (data.eventLogs || []).map(log => { let renderedMessage = translations[currentLanguage][log.messageKey] || log.messageKey || "?"; if (log.args && log.args.length > 0) { log.args.forEach((arg, index) => { const translatedArg = translations[currentLanguage][arg] || arg; renderedMessage = renderedMessage.replace(`{${index}}`, translatedArg); }); } return { time: log.time, messageKey: log.messageKey, args: log.args, rendered: renderedMessage }; });
-        selectedBuilding = null; highlightEnabled = false; hideAllPanels(); updateLanguageUI(); updateInventoryDisplay(); updateResearchPointsDisplay(); updateUnitDisplayBar(); updateUnitCoordsDisplay(); updateGrid(); updateResearchProgress(); updateBuildingsList(); updateUnitsPanel();
-        settlementResearchBtn.disabled = settlementCompleted || !!activeResearch; agricultureResearchBtn.disabled = agricultureCompleted || !!activeResearch; miningResearchBtn.disabled = miningCompleted || !agricultureCompleted || !!activeResearch;
-        showAlert('alertLoadSuccess', 3000, false, [colonyName]);
-    }
+    function applyLoadedData(data) { /* ... */ units = data.units || []; nextUnitId = data.nextUnitId || 0; inventory = data.inventory || { wood: 0, pebble: 0, flint: 0, wheat: 0, coal: 0 }; researchPoints = data.researchPoints || 0; activeResearch = data.activeResearch || null; settlementCompleted = data.settlementCompleted || false; agricultureCompleted = data.agricultureCompleted || false; miningCompleted = data.miningCompleted || false; maxWorkers = data.maxWorkers || 0; moveCount = data.moveCount || 0; movesSinceLastCoal = data.movesSinceLastCoal || 0; colonyName = data.colonyName || "Loaded Colony"; currentLanguage = data.currentLanguage || 'en'; viewOffsetX = data.viewOffsetX || 0; viewOffsetY = data.viewOffsetY || 0; worldData = data.worldData || {}; revealedTiles = new Set(data.revealedTiles || []); selectedUnitId = data.selectedUnitId !== undefined ? data.selectedUnitId : (units.length > 0 ? units[0].id : null); eventLogs = (data.eventLogs || []).map(log => { let renderedMessage = translations[currentLanguage][log.messageKey] || log.messageKey || "?"; if (log.args && log.args.length > 0) { log.args.forEach((arg, index) => { const translatedArg = translations[currentLanguage][arg] || arg; renderedMessage = renderedMessage.replace(`{${index}}`, translatedArg); }); } return { time: log.time, messageKey: log.messageKey, args: log.args, rendered: renderedMessage }; }); selectedBuilding = null; highlightEnabled = false; hideAllPanels(); updateLanguageUI(); updateInventoryDisplay(); updateResearchPointsDisplay(); updateUnitDisplayBar(); updateUnitCoordsDisplay(); updateGrid(); updateResearchProgress(); updateBuildingsList(); updateUnitsPanel(); settlementResearchBtn.disabled = settlementCompleted || !!activeResearch; agricultureResearchBtn.disabled = agricultureCompleted || !!activeResearch; miningResearchBtn.disabled = miningCompleted || !agricultureCompleted || !!activeResearch; showAlert('alertLoadSuccess', 3000, false, [colonyName]); }
     function loadGame(event) { /* ... */ const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(e) { try { const fileContent = e.target.result; const loadedData = JSON.parse(fileContent); if (!loadedData || typeof loadedData.colonyName === 'undefined' || typeof loadedData.units === 'undefined' || typeof loadedData.worldData === 'undefined') { throw new Error(translations[currentLanguage].alertLoadInvalidFormat); } applyLoadedData(loadedData); } catch (error) { console.error("Error loading game:", error); showAlert('alertLoadError', 5000, true, [error.message]); } finally { loadFileInput.value = null; } }; reader.onerror = function() { showAlert('alertReadFileError', 3000); loadFileInput.value = null; }; reader.readAsText(file); }
 
     // --- Event Listeners for Save/Load ---
@@ -432,17 +431,16 @@
     languageSwitchButton.addEventListener('click', () => { /* ... */ currentLanguage = (currentLanguage === 'en') ? 'fr' : 'en'; eventLogs.forEach(log => { if (log.messageKey) { let renderedMessage = translations[currentLanguage][log.messageKey] || log.messageKey; if (log.args && log.args.length > 0) { log.args.forEach((arg, index) => { const translatedArg = translations[currentLanguage][arg] || arg; renderedMessage = renderedMessage.replace(`{${index}}`, translatedArg); }); } log.rendered = renderedMessage; } }); updateLanguageUI(); });
 
     // --- Game Start ---
-    function startGame() { // <<< MODIFIED initial reveal logic
+    function startGame() { // <<< MODIFIED initial reveal radius
         currentLanguage = 'en'; const lang = translations[currentLanguage];
         colonyName = prompt(lang.promptColonyName, lang.defaultColonyName); if (!colonyName || colonyName.trim() === "") { colonyName = lang.defaultColonyName; }
         // Reset state
-        nextUnitId = 0; inventory = { wood: 0, pebble: 0, flint: 0, wheat: 0, coal: 0 }; researchPoints = 0; activeResearch = null; settlementCompleted = false; agricultureCompleted = false; miningCompleted = false; maxWorkers = 0; selectedBuilding = null; moveCount = 0; movesSinceLastCoal = 0; highlightEnabled = false; eventLogs = [{ time: getFormattedTime(), messageKey: 'logNewGame', args:[colonyName], rendered: lang.logNewGame.replace('{0}', colonyName) }]; worldData = {}; revealedTiles = new Set();
-        worldSeed = Date.now(); // Generate seed for new game
-        perlin.seed(worldSeed); // Seed the noise generator
+        nextUnitId = 0; inventory = { wood: 0, pebble: 0, flint: 0, wheat: 0, coal: 0 }; researchPoints = 0; activeResearch = null; settlementCompleted = false; agricultureCompleted = false; miningCompleted = false; maxWorkers = 0; selectedBuilding = null; moveCount = 0; movesSinceLastCoal = 0; highlightEnabled = false; eventLogs = [{ time: getFormattedTime(), messageKey: 'logNewGame', args:[colonyName], rendered: lang.logNewGame.replace('{0}', colonyName) }]; worldData = {}; revealedTiles = new Set(); // REMOVED currentlyVisibleTiles init
         const startWorldX = 5; const startWorldY = 5; units = [{ id: `unit-${nextUnitId++}`, type: 'pawn', worldX: startWorldX, worldY: startWorldY }]; selectedUnitId = units[0].id; viewOffsetX = startWorldX - VIEW_CENTER_OFFSET; viewOffsetY = startWorldY - VIEW_CENTER_OFFSET;
         // Init UI & World
         initializeGridDOM();
-        revealArea(startWorldX, startWorldY, REVEAL_RADIUS); // Use REVEAL_RADIUS for initial discovery area
+        // Use REVEAL_RADIUS for initial reveal now, as visibility concept is removed
+        revealArea(startWorldX, startWorldY, REVEAL_RADIUS);
         hideAllPanels();
         updateLanguageUI(); updateInventoryDisplay(); updateResearchPointsDisplay(); updateUnitDisplayBar(); updateUnitCoordsDisplay(); updateGrid(); updateResearchProgress(); updateBuildingsList(); updateUnitsPanel();
         // Init buttons
