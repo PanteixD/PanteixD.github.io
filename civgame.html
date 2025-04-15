@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Tiny Civilization</title>
-<meta charset="UTF-8"> <!-- Added for better character support -->
+<title>Tiny Civilization - Procedural</title> <!-- Changed Title -->
+<meta charset="UTF-8">
 <style>
   /* --- General Styles --- */
   body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; display: flex; flex-direction: column; align-items: center; background-color: #e8eff5; margin: 0; padding: 20px; color: #333; }
@@ -29,33 +29,35 @@
   /* --- Unit Display Bar --- */
   #unit-display-bar { display: flex; justify-content: center; align-items: center; gap: 10px; padding: 10px; margin-bottom: 15px; min-height: 40px; background-color: #dde8f0; border-radius: 8px; border: 1px solid #c8d6e1; flex-wrap: wrap; }
   .unit-icon { width: 35px; height: 35px; border: 2px solid #adb5bd; background-color: #ced4da; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; cursor: pointer; transition: all 0.2s ease; position: relative; }
-  .unit-icon:hover { border-color: #495057; background-color: #e9ecef; }
+  .unit-icon:hover { border-color: #495057; background-color: #e9ecef; transform: scale(1.05); } /* Added scale */
   .unit-icon.selected { border-color: #007bff; box-shadow: 0 0 8px rgba(0, 123, 255, 0.5); transform: scale(1.1); }
   .unit-icon[data-unit-type="pawn"] { background-color: #3498db; color: white; }
   .unit-icon[data-unit-type="worker"] { background-color: #e67e22; color: white; }
 
   /* --- Alert Message --- */
-  #alert-message { padding: 10px 20px; margin-top: 10px; border-radius: 8px; background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; font-weight: bold; text-align: center; opacity: 0; transition: opacity 0.5s ease-in-out; max-width: 550px; width: 90%; box-sizing: border-box; position: relative; left: 50%; transform: translateX(-50%); display: none; }
+  #alert-message { padding: 10px 20px; margin-top: 10px; border-radius: 8px; background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; font-weight: bold; text-align: center; opacity: 0; transition: opacity 0.5s ease-in-out; max-width: 550px; width: 90%; box-sizing: border-box; position: relative; left: 50%; transform: translateX(-50%); display: none; z-index: 20; /* Ensure alert is on top */}
   #alert-message.show { display: block; opacity: 1; }
 
   /* --- Game Layout --- */
   #game-container { display: flex; justify-content: center; align-items: flex-start; margin-top: 20px; flex-wrap: wrap; gap: 30px; background-color: #ffffff; padding: 30px; border-radius: 16px; box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1); max-width: 1200px; width: 100%; position: relative; }
   #left-container, #right-panel { display: flex; flex-direction: column; align-items: stretch; gap: 20px; flex: 1; min-width: 250px; }
   #grid-area { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; min-width: 585px; }
-  #grid { display: grid; grid-template-columns: repeat(10, 55px); grid-template-rows: repeat(10, 55px); gap: 5px; padding: 15px; background-color: #f0f4f8; border-radius: 12px; border: 1px solid #d6dde4; margin-bottom: 10px; }
+  #grid { display: grid; grid-template-columns: repeat(10, 55px); grid-template-rows: repeat(10, 55px); gap: 5px; padding: 15px; background-color: #b0bec5; /* Changed background to indicate potential unknown */ border-radius: 12px; border: 1px solid #90a4ae; margin-bottom: 10px; position: relative; /* Needed for absolute positioning of markers? */ }
 
   /* --- Tiles --- */
-  .tile { width: 55px; height: 55px; border: 1px solid #d6dde4; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; cursor: pointer; overflow: hidden; border-radius: 8px; transition: all 0.2s ease-in-out; background-color: #ffffff; color: #555; position: relative; }
-  .tile:hover { transform: scale(1.05); box-shadow: 0 0 8px rgba(0, 0, 0, 0.1); z-index: 1; }
+  .tile { width: 55px; height: 55px; border: 1px solid #cfd8dc; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; cursor: pointer; overflow: hidden; border-radius: 8px; transition: all 0.2s ease-in-out; background-color: #eceff1; /* Default empty/revealed color */ color: #555; position: relative; }
+  .tile.unknown { background-color: #b0bec5; cursor: default; } /* Style for unrevealed tiles */
+  .tile:not(.unknown):hover { transform: scale(1.05); box-shadow: 0 0 8px rgba(0, 0, 0, 0.1); z-index: 1; }
   .unit-marker { border-radius: 50%; width: 70%; height: 70%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; color: white; position: absolute; z-index: 2; box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.3); pointer-events: none; }
   .unit-marker.pawn { background-color: #3498db; } .unit-marker.worker { background-color: #e67e22; }
   .unit-marker.selected { outline: 3px solid #007bff; outline-offset: 2px; }
 
   /* Resource & Building Styles */
-  .tree { background-color: #2ecc71; color: #fff; } .stone { background-color: #95a5a6; color: #fff; } .flint { background-color: #7f8c8d; color: #fff; }
-  .farm, .mine, .house { text-align: center; line-height: 55px; font-weight: bold; }
-  .farm { background-color: #f1c40f; color: #333; font-size: 11px; } .mine { background-color: #607d8b; color: white; font-size: 11px; } .house { background-color: #8e44ad; color: white; font-size: 11px; }
-  .highlight { background-color: rgba(52, 152, 219, 0.2); border: 1px solid #3498db; }
+  .tile.tree { background-color: #2ecc71; color: #fff; } .tile.stone { background-color: #95a5a6; color: #fff; } .tile.flint { background-color: #7f8c8d; color: #fff; }
+  /* Building styles applied as classes */
+  .tile.house, .tile.farm, .tile.mine { text-align: center; line-height: 55px; font-weight: bold; }
+  .tile.farm { background-color: #f1c40f; color: #333; font-size: 11px; } .tile.mine { background-color: #607d8b; color: white; font-size: 11px; } .tile.house { background-color: #8e44ad; color: white; font-size: 11px; }
+  .highlight { background-color: rgba(52, 152, 219, 0.2) !important; border: 1px solid #3498db !important; } /* Use !important to override base styles */
 
   /* --- Buttons --- */
   button { padding: 12px 20px; font-size: 16px; cursor: pointer; border: none; border-radius: 8px; background-color: #3498db; color: white; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); font-weight: 600; margin-top: 5px; }
@@ -78,8 +80,9 @@
 
   /* --- Panels --- */
   #inventory, #tech-tree, #buildings-list, #units-panel, #logs-panel { text-align: left; background-color: #fdfefe; padding: 20px; border-radius: 12px; border: 1px solid #e4e9ed; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05); }
-  #inventory { display: block; } #tech-tree, #buildings-list, #units-panel, #logs-panel { display: none; }
-  #tech-tree, #buildings-list, #units-panel, #logs-panel { max-height: 300px; overflow-y: auto; }
+  #inventory { display: block; } /* Inventory always visible */
+  #tech-tree, #buildings-list, #units-panel, #logs-panel { display: none; } /* Others hidden by default */
+  #tech-tree, #buildings-list, #units-panel, #logs-panel { max-height: 300px; overflow-y: auto; } /* Add scroll for panels */
   #logs-list { list-style-type: none; padding: 0; margin: 0; font-size: 14px; line-height: 1.5; color: #555; margin-top: 10px; }
   #logs-list li { padding: 4px 0; border-bottom: 1px dashed #eee; white-space: pre-wrap; } #logs-list li:last-child { border-bottom: none; }
   #logs-list .log-time { display: inline-block; width: 50px; color: #888; margin-right: 5px; }
@@ -119,9 +122,10 @@
   <div id="unit-display-bar"></div>
 
   <div id="game-container">
+    <!-- === LEFT CONTAINER === -->
     <div id="left-container">
       <div id="colony-name-display">Colony Name</div>
-      <div id="inventory">
+      <div id="inventory"> <!-- Inventory always visible -->
         <h2>Inventory</h2>
         <p>Wood: <span id="wood-count">0</span></p>
         <p>Pebbles: <span id="pebble-count">0</span></p>
@@ -131,20 +135,18 @@
       </div>
       <button id="action-button" style="display: none;">Gather Resource</button>
       <div id="resource-name"></div>
+
+      <!-- Control Buttons -->
        <button id="research-button">Research</button>
        <button id="buildings-button">Buildings</button>
        <button id="units-button">Units</button>
        <button id="logs-button">Logs</button>
-       <button id="save-button">Save Game</button> <!-- Added Save Button -->
-       <button id="load-button">Load Game</button> <!-- Added Load Button -->
-       <input type="file" id="load-file-input" accept=".json" style="display: none;"> <!-- Hidden File Input -->
-       <div id="units-panel">
-           <h2>Available Units</h2>
-           <ul id="units-list">
-               <li><button id="deploy-worker-button" disabled>Deploy Worker</button></li>
-               </ul>
-       </div>
-       <div id="logs-panel">
+       <button id="save-button">Save Game</button>
+       <button id="load-button">Load Game</button>
+       <input type="file" id="load-file-input" accept=".json" style="display: none;">
+
+       <!-- Hidden Logs Panel (Stays in Left) -->
+       <div id="logs-panel" style="display: none;">
            <h2>Event Logs</h2>
            <input type="text" id="log-search-input" placeholder="Search logs...">
            <div id="log-filter-container">
@@ -157,55 +159,68 @@
        </div>
     </div>
 
+    <!-- === GRID AREA === -->
     <div id="grid-area">
         <div id="grid" class="grid"></div>
         <div id="alert-message"></div>
     </div>
 
-
+    <!-- === RIGHT CONTAINER === -->
     <div id="right-panel">
        <div id="research-points-display-container">Research Points: <span id="research-points">0</span></div>
        <div id="research-status-display"></div>
-      <div id="tech-tree">
-        <h2>Tech Tree</h2>
-        <h3>Primitive Age</h3>
-        <ul>
-          <li class="research-item">
-            <button id="settlement-research">Settlement</button>
-            <div id="settlement-research-progress" class="research-progress-container">
-              <div id="settlement-research-bar" class="research-progress-bar" style="background-color: #8e44ad;"></div>
-            </div>
-            <span id="settlement-research-percent">0%</span>
-            <p>Unlocks Houses.</p>
-          </li>
-          <li class="research-item">
-            <button id="agriculture-research">Agriculture</button>
-            <div id="agriculture-research-progress" class="research-progress-container">
-              <div id="agriculture-research-bar" class="research-progress-bar" style="background-color: #aed581;"></div>
-            </div>
-            <span id="agriculture-research-percent">0%</span>
-            <p>Unlocks Farms.</p>
-          </li>
-          <li class="research-item">
-            <button id="mining-research" disabled>Mining</button>
-            <div id="mining-research-progress" class="research-progress-container">
-              <div id="mining-research-bar" class="research-progress-bar" style="background-color: #7f8c8d;"></div>
-            </div>
-            <span id="mining-research-percent">0%</span>
-            <p>Unlocks Mines (requires Agriculture).</p>
-          </li>
-        </ul>
-      </div>
-      <div id="buildings-list">
-        <h2>Buildings</h2>
-        <ul></ul>
-      </div>
+
+       <!-- Hidden Panels (Order Matters for Display) -->
+       <div id="tech-tree" style="display: none;">
+         <h2>Tech Tree</h2>
+         <h3>Primitive Age</h3>
+         <ul>
+           <li class="research-item">
+             <button id="settlement-research">Settlement</button>
+             <div id="settlement-research-progress" class="research-progress-container">
+               <div id="settlement-research-bar" class="research-progress-bar" style="background-color: #8e44ad;"></div>
+             </div>
+             <span id="settlement-research-percent">0%</span>
+             <p>Unlocks Houses.</p>
+           </li>
+           <li class="research-item">
+             <button id="agriculture-research">Agriculture</button>
+             <div id="agriculture-research-progress" class="research-progress-container">
+               <div id="agriculture-research-bar" class="research-progress-bar" style="background-color: #aed581;"></div>
+             </div>
+             <span id="agriculture-research-percent">0%</span>
+             <p>Unlocks Farms.</p>
+           </li>
+           <li class="research-item">
+             <button id="mining-research" disabled>Mining</button>
+             <div id="mining-research-progress" class="research-progress-container">
+               <div id="mining-research-bar" class="research-progress-bar" style="background-color: #7f8c8d;"></div>
+             </div>
+             <span id="mining-research-percent">0%</span>
+             <p>Unlocks Mines (requires Agriculture).</p>
+           </li>
+         </ul>
+       </div>
+
+       <div id="buildings-list" style="display: none;">
+           <h2>Buildings</h2>
+           <ul></ul>
+       </div>
+
+       <div id="units-panel" style="display: none;">
+           <h2>Available Units</h2>
+           <ul id="units-list">
+               <li><button id="deploy-worker-button" disabled>Deploy Worker</button></li>
+           </ul>
+       </div>
+
     </div>
   </div>
 
 
   <script>
     // --- DOM Element References ---
+    // (Keep existing refs, they are still correct)
     const grid = document.getElementById('grid'); const actionButton = document.getElementById('action-button');
     const woodCountDisplay = document.getElementById('wood-count'); const pebbleCountDisplay = document.getElementById('pebble-count'); const flintCountDisplay = document.getElementById('flint-count'); const wheatCountDisplay = document.getElementById('wheat-count'); const coalCountDisplay = document.getElementById('coal-count');
     const inventoryDisplay = document.getElementById('inventory'); const researchButton = document.getElementById('research-button'); const buildingsButton = document.getElementById('buildings-button'); const unitsButton = document.getElementById('units-button'); const logsButton = document.getElementById('logs-button');
@@ -213,39 +228,59 @@
     const logSearchInput = document.getElementById('log-search-input'); const logFilterCheckbox = document.getElementById('log-filter-checkbox'); const resourceNameDisplay = document.getElementById('resource-name');
     const researchPointsDisplay = document.getElementById('research-points'); const researchStatusDisplay = document.getElementById('research-status-display'); const colonyNameDisplay = document.getElementById('colony-name-display');
     const alertMessageElement = document.getElementById('alert-message'); const unitDisplayBar = document.getElementById('unit-display-bar');
-
-    // Research Elements
     const settlementResearchBtn = document.getElementById('settlement-research'); const settlementResearchProgress = document.getElementById('settlement-research-progress'); const settlementResearchProgressBar = document.getElementById('settlement-research-bar'); const settlementResearchPercent = document.getElementById('settlement-research-percent');
     const agricultureResearchBtn = document.getElementById('agriculture-research'); const agricultureResearchProgress = document.getElementById('agriculture-research-progress'); const agricultureResearchProgressBar = document.getElementById('agriculture-research-bar'); const agricultureResearchPercent = document.getElementById('agriculture-research-percent');
     const miningResearchBtn = document.getElementById('mining-research'); const miningResearchProgress = document.getElementById('mining-research-progress'); const miningResearchProgressBar = document.getElementById('mining-research-bar'); const miningResearchPercent = document.getElementById('mining-research-percent');
-    // Unit Deployment Elements
     const deployWorkerButton = document.getElementById('deploy-worker-button');
-    // Save/Load Elements
     const saveButton = document.getElementById('save-button');
     const loadButton = document.getElementById('load-button');
     const loadFileInput = document.getElementById('load-file-input');
-    // Language Element
     const languageSwitchButton = document.getElementById('language-switch-button');
 
 
     // --- Game State Variables ---
-    const gridSize = 10; let units = []; let nextUnitId = 0; let selectedUnitId = null;
-    let resources = []; let placedBuildings = {}; let currentResourceTile = null;
+    const gridSize = 10; // Size of the visible grid
+    let units = [];
+    let nextUnitId = 0;
+    let selectedUnitId = null;
+    // let resources = []; // Replaced by worldData
+    // let placedBuildings = {}; // Replaced by worldData
     let inventory = { wood: 0, pebble: 0, flint: 0, wheat: 0, coal: 0 };
-    let researchPoints = 0; let activeResearch = null;
-    let settlementCompleted = false; let agricultureCompleted = false; let miningCompleted = false;
-    let maxWorkers = 0; // Max workers based on houses
-    let selectedBuilding = null; let moveCount = 0; let movesSinceLastCoal = 0; let movesSinceLastResource = 0;
-    let colonyName = "New Colony"; let highlightEnabled = false; let alertTimeout; let eventLogs = []; const maxLogEntries = 50;
-    let currentLanguage = 'en'; // 'en' or 'fr'
+    let researchPoints = 0;
+    let activeResearch = null;
+    let settlementCompleted = false;
+    let agricultureCompleted = false;
+    let miningCompleted = false;
+    let maxWorkers = 0;
+    let selectedBuilding = null; // Stores 'house', 'farm', 'mine'
+    let moveCount = 0;
+    let movesSinceLastCoal = 0;
+    // let movesSinceLastResource = 0; // Generation is now explicit on reveal
+
+    // -- World State --
+    let viewOffsetX = 0; // World X coordinate of the top-left grid tile
+    let viewOffsetY = 0; // World Y coordinate of the top-left grid tile
+    let worldData = {}; // Stores generated tile data: { y: { x: { type: 'empty'|'tree'|'stone'|'flint', building: null|'house'|'farm'|'mine' } } }
+    let revealedTiles = new Set(); // Stores revealed world coordinates as "x,y" strings
+
+    // -- Other State --
+    let colonyName = "New Colony";
+    let highlightEnabled = false;
+    let alertTimeout;
+    let eventLogs = [];
+    const maxLogEntries = 50;
+    let currentLanguage = 'en';
 
     // --- Game Constants ---
     const settlementResearchCost = 15; const agricultureResearchCost = 10; const miningResearchCost = 15;
     const houseCost = { wood: 10, pebble: 5 }; const farmCost = { wood: 3 }; const mineCost = { pebble: 5, wood: 2 };
-    const wheatProductionInterval = 5; const coalProductionInterval = 7; const resourceSpawnInterval = 5;
+    const wheatProductionInterval = 5; const coalProductionInterval = 7;
     const unitCapabilities = { pawn: { canBuild: ['house'] }, worker: { canBuild: ['farm', 'mine'] } };
+    const REVEAL_RADIUS = 2; // How many tiles around a unit are revealed (e.g., 2 = 5x5 area)
+    const VIEW_CENTER_OFFSET = Math.floor(gridSize / 2); // = 5 for 10x10 grid
 
     // --- Translations ---
+    // (Keep the existing translations object - no changes needed here)
     const translations = {
         en: {
             // General UI
@@ -273,6 +308,7 @@
             noUnitSelected: "No unit selected",
             onTile: "On Tile:",
             emptyTile: "Empty",
+            unknownTile: "Unknown", // Added for unrevealed areas
             tileResourceTree: "Tree (Wood)",
             tileResourceStone: "Stone (Pebbles)",
             tileResourceFlint: "Flint",
@@ -317,9 +353,10 @@
             alertGameStarted: "Game started for colony: {0}",
             alertGathered: "Gathered 1 {0}!",
             alertNotEnoughResources: "Not enough resources for {0}!",
-            alertCannotBuildEmpty: "Cannot build: Tile is not empty!",
-            alertCannotBuildExists: "Cannot build: {0} already exists here!",
-            alertCannotBuildOnResource: "Cannot build on a {0}!",
+            alertCannotBuildEmpty: "Cannot build: Tile is not empty!", // Now checks worldData.type != 'empty'
+            alertCannotBuildNonEmpty: "Cannot build: Tile is not empty!", // Generic non-empty reason
+            alertCannotBuildExists: "Cannot build: {0} already exists here!", // Checks worldData.building
+            alertCannotBuildOnResource: "Cannot build on a {0}!", // Checks worldData.type == resource
             alertBuildSelected: "Selected: {0}. Click an empty tile to build.",
             alertBuildingBuilt: "{0} built!",
             alertSelectUnitToBuild: "No unit selected to perform build action.",
@@ -336,6 +373,7 @@
             alertLoadInvalidFormat: "Invalid save file format.",
             alertReadFileError: "Error reading file.",
             alertUnitMoveOccupied: "Cannot move unit: Tile is occupied!",
+            alertMoveInvalid: "Cannot move there.", // Generic invalid move
             alertSelectedUnit: "Selected Unit: {0} ({1})", // {0}=Type, {1}=ID
             promptColonyName: "Welcome to Tiny Civilization! Please name your colony:",
             defaultColonyName: "New Colony",
@@ -359,7 +397,7 @@
             loadButton: "Charger",
             // Inventory Items (also used as keys for costs/alerts)
             wood: "Bois",
-            pebble: "Cailloux", // Changed from 'Pebbles' for consistency
+            pebble: "Cailloux",
             flint: "Silex",
             wheat: "Blé",
             coal: "Charbon",
@@ -368,6 +406,7 @@
             noUnitSelected: "Aucune unité sélectionnée",
             onTile: "Sur la case :",
             emptyTile: "Vide",
+            unknownTile: "Inconnu", // Added
             tileResourceTree: "Arbre (Bois)",
             tileResourceStone: "Roche (Cailloux)",
             tileResourceFlint: "Silex",
@@ -401,8 +440,8 @@
             deployWorkerButton: "Déployer Ouvrier",
             deployWorkerRequiresHouse: "Déployer Ouvrier (Maison requise)",
             deployWorkerMax: "Max", // As in "(1/2 Max)"
-            unitPawn: "Colon",   // <<< UPDATED
-            unitWorker: "Ouvrier", // <<< UPDATED
+            unitPawn: "Colon",
+            unitWorker: "Ouvrier",
             // Logs Panel
             logsPanelTitle: "Journal des Événements",
             logSearchPlaceholder: "Rechercher dans les journaux...",
@@ -412,7 +451,8 @@
             alertGameStarted: "Partie démarrée pour la colonie : {0}",
             alertGathered: "Récolté 1 {0} !",
             alertNotEnoughResources: "Pas assez de ressources pour {0} !",
-            alertCannotBuildEmpty: "Construction impossible : La case n'est pas vide !",
+            alertCannotBuildEmpty: "Construction impossible : La case n'est pas vide !", // Might need review depending on check
+            alertCannotBuildNonEmpty: "Construction impossible : La case n'est pas vide !",
             alertCannotBuildExists: "Construction impossible : {0} existe déjà ici !",
             alertCannotBuildOnResource: "Construction impossible sur un(e) {0} !",
             alertBuildSelected: "Sélectionné : {0}. Cliquez une case vide pour construire.",
@@ -431,6 +471,7 @@
             alertLoadInvalidFormat: "Format de sauvegarde invalide.",
             alertReadFileError: "Erreur de lecture du fichier.",
             alertUnitMoveOccupied: "Déplacement impossible : Case occupée !",
+            alertMoveInvalid: "Déplacement impossible.",
             alertSelectedUnit: "Unité sélectionnée : {0} ({1})", // {0}=Type, {1}=ID
             promptColonyName: "Bienvenue dans Mini Civilisation ! Veuillez nommer votre colonie :",
             defaultColonyName: "Nouvelle Colonie",
@@ -529,75 +570,163 @@
     }
 
     // --- Initialization Functions ---
-    function generateGrid() { grid.innerHTML = ''; for (let y = 0; y < gridSize; y++) { for (let x = 0; x < gridSize; x++) { const tile = document.createElement('div'); tile.classList.add('tile'); tile.dataset.x = x; tile.dataset.y = y; grid.appendChild(tile); } } }
-    function generateResources() { const treeCount = 10; const stoneCount = 5; const flintCount = 5; resources = []; function placeResource(type, count) { for (let i = 0; i < count; i++) { let x, y; let attempts = 0; do { x = Math.floor(Math.random() * gridSize); y = Math.floor(Math.random() * gridSize); attempts++; } while ((units.some(u => u.x === x && u.y === y) || resources.some(res => res.x === x && res.y === y) || placedBuildings[`${x},${y}`]) && attempts < 100); if (attempts < 100) { resources.push({ x, y, type: type }); } else { console.warn(`Could not place resource type ${type} after 100 attempts.`); } } } placeResource('tree', treeCount); placeResource('stone', stoneCount); placeResource('flint', flintCount); }
+    function initializeGridDOM() { // Renamed from generateGrid
+        grid.innerHTML = '';
+        for (let gy = 0; gy < gridSize; gy++) {
+            for (let gx = 0; gx < gridSize; gx++) {
+                const tile = document.createElement('div');
+                tile.classList.add('tile');
+                tile.dataset.gridX = gx; // Store grid coords for click events
+                tile.dataset.gridY = gy;
+                grid.appendChild(tile);
+            }
+        }
+    }
+
+    // --- World Generation ---
+    function getTileData(worldX, worldY) {
+        return worldData[worldY]?.[worldX]; // Safely access nested data
+    }
+
+    function setTileData(worldX, worldY, data) {
+        if (!worldData[worldY]) {
+            worldData[worldY] = {};
+        }
+        worldData[worldY][worldX] = data;
+    }
+
+    function generateTileContent(worldX, worldY) {
+        const coordString = `${worldX},${worldY}`;
+        if (revealedTiles.has(coordString)) {
+            return getTileData(worldX, worldY); // Already generated
+        }
+
+        revealedTiles.add(coordString);
+
+        // Simple Procedural Generation Logic (Example)
+        let type = 'empty';
+        const rand = Math.random();
+        if (rand < 0.05) { type = 'tree'; }
+        else if (rand < 0.08) { type = 'stone'; }
+        else if (rand < 0.10) { type = 'flint'; }
+        // Add more complex logic later (Perlin noise, biomes, etc.)
+
+        const data = { type: type, building: null };
+        setTileData(worldX, worldY, data);
+        return data;
+    }
+
+    function revealArea(centerX, centerY, radius) {
+        for (let dy = -radius; dy <= radius; dy++) {
+            for (let dx = -radius; dx <= radius; dx++) {
+                generateTileContent(centerX + dx, centerY + dy);
+            }
+        }
+    }
 
     // --- Update Functions ---
     function updateGrid() {
-        const tiles = document.querySelectorAll('.tile');
+        const tiles = grid.querySelectorAll('.tile');
         const lang = translations[currentLanguage];
+
+        // 1. Clear existing markers and update tiles based on worldData
         tiles.forEach(tile => {
-            tile.classList.remove('highlight');
+            const gx = parseInt(tile.dataset.gridX);
+            const gy = parseInt(tile.dataset.gridY);
+            const worldX = gx + viewOffsetX;
+            const worldY = gy + viewOffsetY;
+            const coordString = `${worldX},${worldY}`;
+
+            // Clear previous state
             const existingMarker = tile.querySelector('.unit-marker');
-            if (existingMarker) { existingMarker.remove(); }
-
-            const x = parseInt(tile.dataset.x);
-            const y = parseInt(tile.dataset.y);
-            const buildingType = placedBuildings[`${x},${y}`];
-            const resource = resources.find(res => res.x === x && res.y === y);
-
+            if (existingMarker) existingMarker.remove();
             tile.className = 'tile'; // Reset classes
             tile.textContent = '';
+            tile.classList.remove('highlight'); // Remove highlight explicitly
 
-            let tileTitle = lang.emptyTile; // Default title
-            if (buildingType) {
-                tile.classList.add(buildingType);
-                tile.textContent = buildingType.substring(0, 4).toUpperCase();
-                const buildingKey = `building${buildingType.charAt(0).toUpperCase() + buildingType.slice(1)}`;
-                tileTitle = lang[buildingKey] || buildingType;
-            } else if (resource) {
-                tile.classList.add(resource.type);
-                let resourceKey = '';
-                 if (resource.type === 'tree') resourceKey = 'tileResourceTree';
-                 else if (resource.type === 'stone') resourceKey = 'tileResourceStone';
-                 else if (resource.type === 'flint') resourceKey = 'tileResourceFlint';
-                tileTitle = lang[resourceKey] || resource.type;
-            }
-            tile.title = tileTitle; // Set translated title
-        });
+            if (revealedTiles.has(coordString)) {
+                const data = getTileData(worldX, worldY);
+                let tileTitle = lang.emptyTile; // Default for empty revealed
 
-        units.forEach(unit => {
-            const tile = grid.querySelector(`.tile[data-x="${unit.x}"][data-y="${unit.y}"]`);
-            if (tile) {
-                const marker = document.createElement('div');
-                marker.classList.add('unit-marker', unit.type);
-                const unitTypeKey = `unit${unit.type.charAt(0).toUpperCase() + unit.type.slice(1)}`;
-                const translatedUnitType = lang[unitTypeKey] || unit.type;
-                marker.textContent = translatedUnitType.charAt(0).toUpperCase(); // Use first letter of translated name
-                if (unit.id === selectedUnitId) {
-                    marker.classList.add('selected');
+                if (data) {
+                    tile.classList.add(data.type); // Add 'empty', 'tree', 'stone', 'flint' class
+                    if (data.building) {
+                        tile.classList.add(data.building); // Add 'house', 'farm', 'mine' class
+                        tile.textContent = data.building.substring(0, 4).toUpperCase();
+                        tileTitle = lang[`building${data.building.charAt(0).toUpperCase() + data.building.slice(1)}`] || data.building;
+                    } else if (data.type !== 'empty') {
+                         let resourceKey = '';
+                         if (data.type === 'tree') resourceKey = 'tileResourceTree';
+                         else if (data.type === 'stone') resourceKey = 'tileResourceStone';
+                         else if (data.type === 'flint') resourceKey = 'tileResourceFlint';
+                         tileTitle = lang[resourceKey] || data.type;
+                    }
+                } else {
+                    // Should not happen if reveal logic is correct, but handle as empty
+                    tile.classList.add('empty');
+                     tileTitle = lang.emptyTile;
                 }
-                tile.appendChild(marker);
-                tile.title = `${translatedUnitType} (${unit.id})`; // Update unit tile tooltip
+                 tile.title = tileTitle;
+
+            } else {
+                // Tile not revealed yet
+                tile.classList.add('unknown');
+                tile.title = lang.unknownTile;
             }
         });
 
+        // 2. Place unit markers for units currently in view
+        units.forEach(unit => {
+            const unitGridX = unit.worldX - viewOffsetX;
+            const unitGridY = unit.worldY - viewOffsetY;
+
+            // Check if the unit is within the visible grid boundaries
+            if (unitGridX >= 0 && unitGridX < gridSize && unitGridY >= 0 && unitGridY < gridSize) {
+                const tile = grid.querySelector(`.tile[data-grid-x="${unitGridX}"][data-grid-y="${unitGridY}"]`);
+                if (tile && !tile.classList.contains('unknown')) { // Don't place marker on unknown tiles (shouldn't happen)
+                    const marker = document.createElement('div');
+                    marker.classList.add('unit-marker', unit.type); // 'pawn' or 'worker'
+                    const unitTypeKey = `unit${unit.type.charAt(0).toUpperCase() + unit.type.slice(1)}`;
+                    const translatedUnitType = lang[unitTypeKey] || unit.type;
+                    marker.textContent = translatedUnitType.charAt(0).toUpperCase();
+                    if (unit.id === selectedUnitId) {
+                        marker.classList.add('selected');
+                    }
+                    tile.appendChild(marker);
+                    // Tooltip is already set by the tile update logic above, but we can refine it
+                     tile.title = `${translatedUnitType} (${unit.id}) - ${tile.title}`;
+                }
+            }
+        });
+
+        // 3. Apply movement highlighting
         const selectedUnit = units.find(u => u.id === selectedUnitId);
         if (highlightEnabled && selectedUnit) {
-            tiles.forEach(tile => {
-                const x = parseInt(tile.dataset.x);
-                const y = parseInt(tile.dataset.y);
-                const dx = Math.abs(x - selectedUnit.x);
-                const dy = Math.abs(y - selectedUnit.y);
-                if (dx <= 1 && dy <= 1 && !(dx === 0 && dy === 0)) {
-                    const targetOccupied = units.some(u => u.x === x && u.y === y && u.id !== selectedUnitId);
-                    if (!targetOccupied) {
-                        tile.classList.add('highlight');
+            const unitGridX = selectedUnit.worldX - viewOffsetX;
+            const unitGridY = selectedUnit.worldY - viewOffsetY;
+
+            // Only highlight if the selected unit is actually visible
+            if (unitGridX >= 0 && unitGridX < gridSize && unitGridY >= 0 && unitGridY < gridSize) {
+                tiles.forEach(tile => {
+                    const targetGridX = parseInt(tile.dataset.gridX);
+                    const targetGridY = parseInt(tile.dataset.gridY);
+                    const dx = Math.abs(targetGridX - unitGridX);
+                    const dy = Math.abs(targetGridY - unitGridY);
+
+                    if (dx <= 1 && dy <= 1 && !(dx === 0 && dy === 0) && !tile.classList.contains('unknown')) {
+                        // Check world coordinates for collision
+                        const targetWorldX = targetGridX + viewOffsetX;
+                        const targetWorldY = targetGridY + viewOffsetY;
+                        const targetOccupied = units.some(u => u.worldX === targetWorldX && u.worldY === targetWorldY && u.id !== selectedUnitId);
+                        if (!targetOccupied) {
+                             tile.classList.add('highlight');
+                        }
                     }
-                }
-            });
+                });
+            }
         }
     }
+
 
     function updateInventoryDisplay() {
         woodCountDisplay.textContent = inventory.wood;
@@ -634,10 +763,17 @@
              statusMsg = `${lang.researchStatusComplete} ${lang[completionKey]}`;
              showAlert(completionKey, 3500);
              researchCompletedThisTurn = true;
-             if (nextButtonElement) nextButtonElement.disabled = false; // Enable next if applicable
-             return true; // Indicate completion
+             if (nextButtonElement) {
+                 const nextResearchKey = nextButtonElement.id.replace('-research', '');
+                 const nextCompletionFlagName = `${nextResearchKey}Completed`;
+                 if (!window[nextCompletionFlagName]) {
+                      nextButtonElement.disabled = false;
+                 }
+             }
+             return true;
         }
 
+        // Logic for updating progress and checking completion
         if (activeResearch === 'settlement') {
             const progress = Math.min(100, settlementResearchCost > 0 ? (researchPoints / settlementResearchCost) * 100 : 100);
             updateProgressBar(settlementResearchProgressBar, settlementResearchPercent, settlementResearchProgress, progress);
@@ -650,7 +786,7 @@
             const progress = Math.min(100, agricultureResearchCost > 0 ? (researchPoints / agricultureResearchCost) * 100 : 100);
             updateProgressBar(agricultureResearchProgressBar, agricultureResearchPercent, agricultureResearchProgress, progress);
              if (researchPoints >= agricultureResearchCost && !agricultureCompleted) {
-                 agricultureCompleted = handleCompletion('Agriculture', agricultureCompleted, agricultureResearchProgress, agricultureResearchBtn, miningResearchBtn); // Enable mining
+                 agricultureCompleted = handleCompletion('Agriculture', agricultureCompleted, agricultureResearchProgress, agricultureResearchBtn, miningResearchBtn);
             } else if (activeResearch === 'agriculture') {
                  statusMsg = formatProgress('agriculture', researchPoints, agricultureResearchCost);
             }
@@ -662,18 +798,17 @@
             } else if (activeResearch === 'mining') {
                  statusMsg = formatProgress('mining', researchPoints, miningResearchCost);
             }
-        } else { // No active research or loaded state where it's null
+        } else { // No active research
             settlementResearchProgress.style.display = 'none';
             agricultureResearchProgress.style.display = 'none';
             miningResearchProgress.style.display = 'none';
              if (!researchCompletedThisTurn && !statusMsg.startsWith(lang.researchStatusComplete)) {
-                 // If no research active, and no completion just happened, clear status unless it's already a final completion message
-                 // Check if the current message IS a completion message before clearing
                  const isCompletionMsg = statusMsg === `${lang.researchStatusComplete} ${lang.researchStatusCompleteSettlement}` ||
                                          statusMsg === `${lang.researchStatusComplete} ${lang.researchStatusCompleteAgriculture}` ||
                                          statusMsg === `${lang.researchStatusComplete} ${lang.researchStatusCompleteMining}`;
                  if (!isCompletionMsg) {
-                     statusMsg = researchStatusDisplay.textContent.startsWith(lang.researchStatusInitial) ? researchStatusDisplay.textContent : ""; // Keep initial message if it's there
+                      const initialMsg = lang.researchStatusInitial || "";
+                      statusMsg = researchStatusDisplay.textContent.startsWith(initialMsg) ? researchStatusDisplay.textContent : "";
                  }
             }
         }
@@ -686,7 +821,8 @@
         researchStatusDisplay.style.display = statusMsg ? 'block' : 'none';
     }
 
-    function updateBuildingsList() {
+
+    function updateBuildingsList() { // Updates content of the building panel
         const buildingsListElement = buildingsList.querySelector('ul');
         buildingsListElement.innerHTML = '';
         const lang = translations[currentLanguage];
@@ -701,7 +837,7 @@
             const listItem = document.createElement('li');
             const button = document.createElement('button');
             button.textContent = `${buildingName} (${costString})`;
-            const buildingTypeSimple = buildingKey.replace('building','').toLowerCase(); // 'house', 'farm', 'mine'
+            const buildingTypeSimple = buildingKey.replace('building','').toLowerCase();
             button.dataset.building = buildingTypeSimple;
 
             button.addEventListener('click', () => {
@@ -738,52 +874,52 @@
         }
     }
 
-    function updateUnitDisplayBar() {
+    function updateUnitDisplayBar() { // Updates the top bar with unit icons
         unitDisplayBar.innerHTML = '';
         const lang = translations[currentLanguage];
         units.forEach(unit => {
             const icon = document.createElement('div');
             icon.classList.add('unit-icon');
             icon.dataset.unitId = unit.id;
-            icon.dataset.unitType = unit.type; // Keep original type for logic
+            icon.dataset.unitType = unit.type;
             const unitTypeKey = `unit${unit.type.charAt(0).toUpperCase() + unit.type.slice(1)}`;
             const translatedUnitType = lang[unitTypeKey] || unit.type;
-            icon.textContent = translatedUnitType.charAt(0).toUpperCase(); // First letter of translated name
-            icon.title = `${translatedUnitType} (${unit.id})`; // Tooltip with translated name
+            icon.textContent = translatedUnitType.charAt(0).toUpperCase();
+            icon.title = `${translatedUnitType} (${unit.id})`;
             if (unit.id === selectedUnitId) {
                 icon.classList.add('selected');
             }
             icon.addEventListener('click', () => {
-                selectedUnitId = unit.id;
-                selectedBuilding = null; // Deselect building when selecting unit
-                updateUnitDisplayBar();
-                updateGrid();
-                checkResource();
+                selectedUnitId = unit.id; // Select the unit
+                focusOnUnit(unit.id); // Focus the view on the unit
+                // updateUnitDisplayBar(); // focusOnUnit calls updateGrid which updates selection
+                // checkResource(); // updateGrid -> checkResource called after move/focus
             });
             unitDisplayBar.appendChild(icon);
         });
     }
 
-    function updateUnitsPanel() {
+    function updateUnitsPanel() { // Updates content of the units panel
         const currentWorkers = units.filter(u => u.type === 'worker').length;
         const lang = translations[currentLanguage];
 
         let buttonText = lang.deployWorkerButton;
+        let isDisabled = false;
 
-        if (!settlementCompleted) { // Need houses unlocked first
-             deployWorkerButton.disabled = true;
-             // Maybe add a specific message like "Requires Settlement research"?
-             // For now, relying on house requirement check below.
+        if (!settlementCompleted) {
+             isDisabled = true;
         } else if (maxWorkers <= 0) {
-            deployWorkerButton.disabled = true;
-            buttonText = lang.deployWorkerRequiresHouse; // Need at least one house built
+             isDisabled = true;
+            buttonText = lang.deployWorkerRequiresHouse;
         } else if (currentWorkers >= maxWorkers) {
-            deployWorkerButton.disabled = true;
+             isDisabled = true;
             buttonText = `${lang.deployWorkerButton} (${currentWorkers}/${maxWorkers} ${lang.deployWorkerMax})`;
         } else {
-            deployWorkerButton.disabled = false;
+            isDisabled = false;
             buttonText = `${lang.deployWorkerButton} (${currentWorkers}/${maxWorkers})`;
         }
+
+        deployWorkerButton.disabled = isDisabled;
         deployWorkerButton.textContent = buttonText;
 
         // Ensure the button is correctly placed in the list
@@ -791,7 +927,7 @@
         if (workerLi) {
              workerLi.innerHTML = '';
              workerLi.appendChild(deployWorkerButton);
-        } else { // If list was somehow empty
+        } else {
             const newLi = document.createElement('li');
             newLi.appendChild(deployWorkerButton);
             unitsList.appendChild(newLi);
@@ -799,237 +935,362 @@
     }
 
     // --- Gameplay Functions ---
-    function checkResource() {
+    function checkResource() { // Checks resource at selected unit's location
         const selectedUnit = units.find(u => u.id === selectedUnitId);
-        currentResourceTile = null; // Reset check
-        if (!selectedUnit) {
-            actionButton.style.display = 'none';
-            displayResourceName(); // Update display to show "no unit selected"
-            return;
+        let canGather = false;
+        let tileInfo = null;
+
+        if (selectedUnit) {
+            const unitWorldX = selectedUnit.worldX;
+            const unitWorldY = selectedUnit.worldY;
+            const data = getTileData(unitWorldX, unitWorldY);
+            tileInfo = data; // Store for display function
+
+            if (data && !data.building) { // Can only gather if no building is present
+                 if (data.type === 'tree' || data.type === 'stone' || data.type === 'flint') {
+                    canGather = true;
+                 }
+            }
         }
-        const buildingAtLocation = placedBuildings[`${selectedUnit.x},${selectedUnit.y}`];
-        if (!buildingAtLocation) { // Can only gather from resource tiles, not buildings
-            currentResourceTile = resources.find(res => res.x === selectedUnit.x && res.y === selectedUnit.y);
-        }
-        actionButton.style.display = currentResourceTile ? 'inline-block' : 'none';
-        displayResourceName(); // Update display based on findings
+
+        actionButton.style.display = canGather ? 'inline-block' : 'none';
+        displayTileInfo(selectedUnit, tileInfo); // Update display
     }
 
-    function displayResourceName() {
-        const selectedUnit = units.find(u => u.id === selectedUnitId);
+    function displayTileInfo(unit, tileData) { // Renamed from displayResourceName
         const lang = translations[currentLanguage];
-
-        if (!selectedUnit) {
+        if (!unit) {
             resourceNameDisplay.textContent = lang.noUnitSelected;
             return;
         }
 
-        let nameToShow = '';
-        const buildingAtLocation = placedBuildings[`${selectedUnit.x},${selectedUnit.y}`];
-        // Use currentResourceTile which is updated in checkResource()
-        // const currentResourceTile = resources.find(res => res.x === selectedUnit.x && res.y === selectedUnit.y);
-
-        if (buildingAtLocation) {
-             const buildingKey = `building${buildingAtLocation.charAt(0).toUpperCase() + buildingAtLocation.slice(1)}`;
-             nameToShow = `${lang.onTile} ${lang[buildingKey] || buildingAtLocation}`;
-        } else if (currentResourceTile) {
-            let resourceKey = '';
-            if (currentResourceTile.type === 'tree') resourceKey = 'tileResourceTree';
-            else if (currentResourceTile.type === 'stone') resourceKey = 'tileResourceStone';
-            else if (currentResourceTile.type === 'flint') resourceKey = 'tileResourceFlint';
-             nameToShow = `${lang.onTile} ${lang[resourceKey] || currentResourceTile.type}`;
-        } else {
-            nameToShow = `${lang.onTile} ${lang.emptyTile}`;
+        let nameToShow = lang.unknownTile; // Default if tileData is null/undefined
+        if (tileData) {
+            if (tileData.building) {
+                const buildingKey = `building${tileData.building.charAt(0).toUpperCase() + tileData.building.slice(1)}`;
+                nameToShow = `${lang.onTile} ${lang[buildingKey] || tileData.building}`;
+            } else if (tileData.type === 'tree') {
+                nameToShow = `${lang.onTile} ${lang.tileResourceTree}`;
+            } else if (tileData.type === 'stone') {
+                nameToShow = `${lang.onTile} ${lang.tileResourceStone}`;
+            } else if (tileData.type === 'flint') {
+                nameToShow = `${lang.onTile} ${lang.tileResourceFlint}`;
+            } else { // 'empty'
+                nameToShow = `${lang.onTile} ${lang.emptyTile}`;
+            }
         }
         resourceNameDisplay.textContent = nameToShow;
     }
 
-    function moveUnit(targetX, targetY) {
+    function moveUnit(targetGridX, targetGridY) {
         const selectedUnit = units.find(u => u.id === selectedUnitId);
         if (!selectedUnit) return;
 
-        const dx = Math.abs(targetX - selectedUnit.x);
-        const dy = Math.abs(targetY - selectedUnit.y);
-        const targetOccupied = units.some(u => u.x === targetX && u.y === targetY && u.id !== selectedUnitId);
+        const targetWorldX = targetGridX + viewOffsetX;
+        const targetWorldY = targetGridY + viewOffsetY;
 
-        if (dx <= 1 && dy <= 1 && (dx !== 0 || dy !== 0) && !targetOccupied) {
-            selectedUnit.x = targetX;
-            selectedUnit.y = targetY;
-
-            if (activeResearch) {
-                researchPoints++;
-                updateResearchPointsDisplay();
-                updateResearchProgress();
-            }
-            moveCount++;
-            movesSinceLastCoal++;
-            movesSinceLastResource++;
-
-            if (moveCount >= wheatProductionInterval) { produceWheat(); moveCount = 0; }
-            if (movesSinceLastCoal >= coalProductionInterval) { produceCoal(); movesSinceLastCoal = 0; }
-            if (movesSinceLastResource >= resourceSpawnInterval) { spawnSingleResource(); movesSinceLastResource = 0; }
-
-            updateGrid();
-            checkResource(); // Check resource at new location
-        } else if (targetOccupied) {
-            showAlert("alertUnitMoveOccupied", 2000, false); // Use key
+        // --- Validation ---
+        // 1. Is target adjacent?
+        const dx = Math.abs(targetWorldX - selectedUnit.worldX);
+        const dy = Math.abs(targetWorldY - selectedUnit.worldY);
+        if (!(dx <= 1 && dy <= 1 && (dx !== 0 || dy !== 0))) {
+            console.warn("Move rejected: Target not adjacent.");
+            showAlert('alertMoveInvalid', 1500, false);
+            return; // Not adjacent
         }
+
+        // 2. Is target revealed? (Should be if highlighting works, but double check)
+        if (!revealedTiles.has(`${targetWorldX},${targetWorldY}`)) {
+             console.warn("Move rejected: Target tile not revealed.");
+             showAlert('alertMoveInvalid', 1500, false); // Or specific message?
+             return; // Cannot move to unrevealed (shouldn't be possible via click)
+        }
+
+        // 3. Is target occupied by another unit?
+        const targetOccupied = units.some(u => u.worldX === targetWorldX && u.worldY === targetWorldY && u.id !== selectedUnitId);
+        if (targetOccupied) {
+            showAlert("alertUnitMoveOccupied", 2000, false);
+            return;
+        }
+
+        // 4. Is target passable? (Optional - could add mountains, water later)
+        // const targetData = getTileData(targetWorldX, targetWorldY);
+        // if (targetData && targetData.type === 'water') { return; }
+
+        // --- Execute Move ---
+        selectedUnit.worldX = targetWorldX;
+        selectedUnit.worldY = targetWorldY;
+
+        // Reveal area around new location
+        revealArea(targetWorldX, targetWorldY, REVEAL_RADIUS);
+
+        // Game progress ticks
+        if (activeResearch) {
+            researchPoints++;
+            updateResearchPointsDisplay();
+            updateResearchProgress();
+        }
+        moveCount++;
+        movesSinceLastCoal++;
+
+        if (moveCount >= wheatProductionInterval) { produceWheat(); moveCount = 0; }
+        if (movesSinceLastCoal >= coalProductionInterval) { produceCoal(); movesSinceLastCoal = 0; }
+        // Resource spawning removed - happens on reveal now
+
+        // Update UI
+        updateGrid();
+        checkResource(); // Check resource at new location
     }
+
 
     function gatherResource() {
         const selectedUnit = units.find(u => u.id === selectedUnitId);
-        // Ensure currentResourceTile is valid and unit is on it
-        if (currentResourceTile && selectedUnit && selectedUnit.x === currentResourceTile.x && selectedUnit.y === currentResourceTile.y) {
-            let gatheredResourceKey = ''; // Use key for translation
-            if (currentResourceTile.type === 'tree') { inventory.wood++; gatheredResourceKey = 'wood';}
-            else if (currentResourceTile.type === 'stone') { inventory.pebble++; gatheredResourceKey = 'pebble'; }
-            else if (currentResourceTile.type === 'flint') { inventory.flint++; gatheredResourceKey = 'flint'; }
-
-            if (gatheredResourceKey) {
-                showAlert('alertGathered', 1500, true, [gatheredResourceKey]); // Use key for alert & arg
-                const index = resources.findIndex(res => res.x === currentResourceTile.x && res.y === currentResourceTile.y);
-                if (index > -1) {
-                    resources.splice(index, 1);
-                }
-                currentResourceTile = null; // Resource is gone
-                actionButton.style.display = 'none'; // Hide button
-                updateGrid(); // Remove resource from grid visually
-                updateInventoryDisplay();
-                displayResourceName(); // Update tile display name
-            }
-        } else if (!selectedUnit){
-             showAlert("noUnitSelected", 2000); // Use existing key
+        if (!selectedUnit) {
+             showAlert("noUnitSelected", 2000);
+             return;
         }
-        // Implicit else: unit not on resource or no resource - do nothing.
+
+        const unitWorldX = selectedUnit.worldX;
+        const unitWorldY = selectedUnit.worldY;
+        const data = getTileData(unitWorldX, unitWorldY);
+
+        if (data && !data.building) { // Check if tile exists and has no building
+             let gatheredResourceKey = '';
+             if (data.type === 'tree') { inventory.wood++; gatheredResourceKey = 'wood'; data.type = 'empty'; }
+             else if (data.type === 'stone') { inventory.pebble++; gatheredResourceKey = 'pebble'; data.type = 'empty'; }
+             else if (data.type === 'flint') { inventory.flint++; gatheredResourceKey = 'flint'; data.type = 'empty'; }
+
+             if (gatheredResourceKey) {
+                 showAlert('alertGathered', 1500, true, [gatheredResourceKey]);
+                 setTileData(unitWorldX, unitWorldY, data); // Update worldData with 'empty' type
+                 updateInventoryDisplay();
+                 updateGrid(); // Redraw the grid to show the change
+                 checkResource(); // Update button and tile info display
+             }
+             // else: tile is empty or has ungatherable type - do nothing
+        }
+        // else: tile doesn't exist? (Shouldn't happen) or has building - do nothing
     }
-    function produceWheat() { let farmCount = 0; for (const tileKey in placedBuildings) { if (placedBuildings[tileKey] === 'farm') { farmCount++; } } if (farmCount > 0) { inventory.wheat += farmCount; updateInventoryDisplay(); } }
-    function produceCoal() { let mineCount = 0; for (const tileKey in placedBuildings) { if (placedBuildings[tileKey] === 'mine') { mineCount++; } } if (mineCount > 0) { inventory.coal += mineCount; updateInventoryDisplay(); } }
-    function spawnSingleResource() { const resourceTypes = ['tree', 'stone', 'flint']; const typeToSpawn = resourceTypes[Math.floor(Math.random() * resourceTypes.length)]; let attempts = 0; let x, y; let placed = false; do { x = Math.floor(Math.random() * gridSize); y = Math.floor(Math.random() * gridSize); const occupied = units.some(u => u.x === x && u.y === y) || resources.some(res => res.x === x && res.y === y) || placedBuildings[`${x},${y}`]; if (!occupied) { resources.push({ x, y, type: typeToSpawn }); placed = true; console.log(`Spawned ${typeToSpawn} at ${x},${y}`); updateGrid(); } attempts++; } while (!placed && attempts < 50); if (!placed) { console.log("Could not find empty spot to spawn resource."); } }
+
+    function produceWheat() {
+        let wheatProduced = 0;
+        // Iterate through *revealed* tiles only, checking for farms
+        revealedTiles.forEach(coordString => {
+            const [x, y] = coordString.split(',').map(Number);
+            const data = getTileData(x, y);
+            if (data && data.building === 'farm') {
+                wheatProduced++;
+            }
+        });
+        if (wheatProduced > 0) {
+            inventory.wheat += wheatProduced;
+            updateInventoryDisplay();
+        }
+    }
+
+    function produceCoal() {
+        let coalProduced = 0;
+        revealedTiles.forEach(coordString => {
+            const [x, y] = coordString.split(',').map(Number);
+            const data = getTileData(x, y);
+            if (data && data.building === 'mine') {
+                coalProduced++;
+            }
+        });
+        if (coalProduced > 0) {
+            inventory.coal += coalProduced;
+            updateInventoryDisplay();
+        }
+    }
+    // spawnSingleResource removed - generation happens on reveal
 
     // --- Find Spawn Point near House ---
     function findSpawnPointNearHouse() {
-        const houses = Object.entries(placedBuildings).filter(([key, type]) => type === 'house');
-        if (houses.length === 0) return null;
+        // Find houses based on units or known worldData? Let's try units first.
+         const workers = units.filter(u => u.type === 'worker');
+         if (workers.length === 0 && units.length > 0) {
+             // No workers yet, spawn near the first unit (pawn)
+             const pawn = units[0];
+             for (let dy = -1; dy <= 1; dy++) {
+                 for (let dx = -1; dx <= 1; dx++) {
+                     if (dx === 0 && dy === 0) continue;
+                     const sx = pawn.worldX + dx;
+                     const sy = pawn.worldY + dy;
+                     const sData = getTileData(sx, sy);
+                     // Ensure tile is revealed and empty (no resource, no building, no unit)
+                     if (revealedTiles.has(`${sx},${sy}`) && sData && sData.type === 'empty' && !sData.building && !units.some(u => u.worldX === sx && u.worldY === sy)) {
+                         return { worldX: sx, worldY: sy };
+                     }
+                 }
+             }
+             return null; // No empty spot near pawn
+         }
 
-        for (const [key, type] of houses) {
-            const [hx, hy] = key.split(',').map(Number);
-            const offsets = [ {dx: 0, dy: 1}, {dx: 0, dy: -1}, {dx: -1, dy: 0}, {dx: 1, dy: 0}, {dx: 1, dy: 1}, {dx: -1, dy: 1}, {dx: 1, dy: -1}, {dx: -1, dy: -1} ];
+        // Find based on existing houses in worldData
+        const houseCoords = [];
+        revealedTiles.forEach(coordString => {
+             const [x, y] = coordString.split(',').map(Number);
+             const data = getTileData(x,y);
+             if(data && data.building === 'house') {
+                 houseCoords.push({worldX: x, worldY: y});
+             }
+        });
 
-            for (const offset of offsets) {
-                const sx = hx + offset.dx;
-                const sy = hy + offset.dy;
-                if (sx >= 0 && sx < gridSize && sy >= 0 && sy < gridSize) {
-                    const isOccupied = units.some(u => u.x === sx && u.y === sy) || resources.some(r => r.x === sx && r.y === sy) || placedBuildings[`${sx},${sy}`];
-                    if (!isOccupied) {
-                        return { x: sx, y: sy };
+        if (houseCoords.length === 0) return null; // No houses built
+
+        for (const houseCoord of houseCoords) {
+            for (let dy = -1; dy <= 1; dy++) {
+                 for (let dx = -1; dx <= 1; dx++) {
+                    if (dx === 0 && dy === 0) continue;
+                    const sx = houseCoord.worldX + dx;
+                    const sy = houseCoord.worldY + dy;
+                    const sData = getTileData(sx, sy);
+                    // Check if tile revealed, empty, no building, no unit
+                     if (revealedTiles.has(`${sx},${sy}`) && sData && sData.type === 'empty' && !sData.building && !units.some(u => u.worldX === sx && u.worldY === sy)) {
+                         return { worldX: sx, worldY: sy }; // Found a spot
                     }
+                 }
+             }
+        }
+        return null; // No empty spot found near any house
+    }
+
+    // --- Unit Focusing ---
+    function focusOnUnit(unitId) {
+        const unit = units.find(u => u.id === unitId);
+        if (!unit) return;
+
+        // Calculate new view offset to center the unit
+        const newViewOffsetX = unit.worldX - VIEW_CENTER_OFFSET;
+        const newViewOffsetY = unit.worldY - VIEW_CENTER_OFFSET;
+
+        // Only update if the offset actually changes
+        if (newViewOffsetX !== viewOffsetX || newViewOffsetY !== viewOffsetY) {
+            viewOffsetX = newViewOffsetX;
+            viewOffsetY = newViewOffsetY;
+
+            // Reveal the newly visible area
+            for (let gy = 0; gy < gridSize; gy++) {
+                for (let gx = 0; gx < gridSize; gx++) {
+                    generateTileContent(gx + viewOffsetX, gy + viewOffsetY);
                 }
             }
+            // Redraw the grid with the new offset
+            updateGrid();
+            // Re-check resource availability for the potentially re-selected unit
+             checkResource();
         }
-        return null;
+         // Ensure the unit is selected visually (updateGrid handles marker)
+        selectedUnitId = unitId;
+        updateUnitDisplayBar(); // Update selection highlight on the bar
     }
+
 
     // --- Event Listeners ---
     grid.addEventListener('click', (event) => {
-        if (event.target.classList.contains('tile')) {
-            const x = parseInt(event.target.dataset.x);
-            const y = parseInt(event.target.dataset.y);
-            const clickedUnit = units.find(u => u.x === x && u.y === y);
+        if (event.target.classList.contains('tile') && !event.target.classList.contains('unknown')) {
+            const gridX = parseInt(event.target.dataset.gridX);
+            const gridY = parseInt(event.target.dataset.gridY);
+            const worldX = gridX + viewOffsetX;
+            const worldY = gridY + viewOffsetY;
+
+            const clickedUnit = units.find(u => u.worldX === worldX && u.worldY === worldY);
             const lang = translations[currentLanguage];
 
-            if (clickedUnit) {
+            if (clickedUnit) { // Clicked on a unit
                 selectedUnitId = clickedUnit.id;
-                selectedBuilding = null; // Deselect building if unit is clicked
+                selectedBuilding = null;
                 updateUnitDisplayBar();
-                updateGrid();
+                updateGrid(); // Update selection visuals
                 checkResource();
                 const unitTypeKey = `unit${clickedUnit.type.charAt(0).toUpperCase() + clickedUnit.type.slice(1)}`;
-                showAlert('alertSelectedUnit', 1500, false, [unitTypeKey, clickedUnit.id]); // Use key
+                showAlert('alertSelectedUnit', 1500, false, [unitTypeKey, clickedUnit.id]);
             } else if (selectedBuilding) { // Build action
                 const builderUnit = units.find(u => u.id === selectedUnitId);
                 if (!builderUnit) {
-                    showAlert("alertSelectUnitToBuild", 2500); // Use key
+                    showAlert("alertSelectUnitToBuild", 2500);
                     selectedBuilding = null; return;
                 }
-                const resourceOnTile = resources.find(res => res.x === x && res.y === y);
-                const buildingOnTile = placedBuildings[`${x},${y}`];
-                const tileIsEmpty = !resourceOnTile && !buildingOnTile;
 
-                if (tileIsEmpty) {
+                const tileData = getTileData(worldX, worldY);
+                // Can only build on revealed, empty tiles with no buildings
+                if (tileData && tileData.type === 'empty' && !tileData.building) {
                     const capabilities = unitCapabilities[builderUnit.type];
-                    const buildingKey = `building${selectedBuilding.charAt(0).toUpperCase() + selectedBuilding.slice(1)}`; // e.g., buildingHouse
+                    const buildingKey = `building${selectedBuilding.charAt(0).toUpperCase() + selectedBuilding.slice(1)}`;
 
                     if (!capabilities || !capabilities.canBuild.includes(selectedBuilding)) {
                          const unitTypeKey = `unit${builderUnit.type.charAt(0).toUpperCase() + builderUnit.type.slice(1)}`;
-                         showAlert('alertUnitCannotBuild', 3000, true, [unitTypeKey, buildingKey]); // Use keys
+                         showAlert('alertUnitCannotBuild', 3000, true, [unitTypeKey, buildingKey]);
                          selectedBuilding = null; return;
                     }
 
-                    let buildingPlaced = false;
                     let costMet = false;
-                    let cost; // Store cost for potential messages
+                    let cost;
 
                     if (selectedBuilding === 'house') {
                         cost = houseCost;
                         if (inventory.wood >= cost.wood && inventory.pebble >= cost.pebble) {
-                            inventory.wood -= cost.wood; inventory.pebble -= cost.pebble; costMet = true; maxWorkers++; updateUnitsPanel(); // Update capacity display immediately
+                            inventory.wood -= cost.wood; inventory.pebble -= cost.pebble; costMet = true; maxWorkers++; updateUnitsPanel();
                         }
                     } else if (selectedBuilding === 'farm') {
                         cost = farmCost;
-                        if (inventory.wood >= cost.wood) {
-                            inventory.wood -= cost.wood; costMet = true;
-                        }
+                        if (inventory.wood >= cost.wood) { inventory.wood -= cost.wood; costMet = true; }
                     } else if (selectedBuilding === 'mine') {
                         cost = mineCost;
-                        if (inventory.pebble >= cost.pebble && inventory.wood >= cost.wood) {
-                            inventory.pebble -= cost.pebble; inventory.wood -= cost.wood; costMet = true;
-                        }
+                        if (inventory.pebble >= cost.pebble && inventory.wood >= cost.wood) { inventory.pebble -= cost.pebble; inventory.wood -= cost.wood; costMet = true; }
                     }
 
                     if(costMet) {
-                        placedBuildings[`${x},${y}`] = selectedBuilding;
-                        buildingPlaced = true;
-                        showAlert('alertBuildingBuilt', 2500, true, [buildingKey]); // Use key
-                        selectedBuilding = null; // Clear selection after successful build
+                        tileData.building = selectedBuilding; // Update worldData
+                        setTileData(worldX, worldY, tileData);
+                        showAlert('alertBuildingBuilt', 2500, true, [buildingKey]);
+                        selectedBuilding = null;
                         updateInventoryDisplay();
                         updateGrid();
-                        checkResource(); // Update resource display for the tile
-                        updateBuildingsList(); // Refresh build options (maybe costs changed)
+                        checkResource(); // Update tile info display
+                        updateBuildingsList();
                     } else {
-                         showAlert('alertNotEnoughResources', 3000, true, [buildingKey]); // Use key
-                         // Keep building selected so user can try again later? Or clear it? Let's clear it.
-                         // selectedBuilding = null;
+                         showAlert('alertNotEnoughResources', 3000, true, [buildingKey]);
+                         selectedBuilding = null;
                     }
-                } else { // Tile not empty
-                    let reasonKey = 'alertCannotBuildEmpty';
-                    let reasonArgs = [];
-                    if (buildingOnTile) {
-                        reasonKey = 'alertCannotBuildExists';
-                        reasonArgs = [`building${buildingOnTile.charAt(0).toUpperCase() + buildingOnTile.slice(1)}`];
-                    } else if (resourceOnTile) {
-                        let resourceNameKey = '';
-                         if (resourceOnTile.type === 'tree') resourceNameKey = 'tileResourceTree';
-                         else if (resourceOnTile.type === 'stone') resourceNameKey = 'tileResourceStone';
-                         else if (resourceOnTile.type === 'flint') resourceNameKey = 'tileResourceFlint';
-                        reasonKey = 'alertCannotBuildOnResource';
-                        reasonArgs = [resourceNameKey || resourceOnTile.type]; // Pass key or fallback
-                    }
-                    showAlert(reasonKey, 3000, true, reasonArgs);
-                    selectedBuilding = null; // Deselect building on failed attempt
+                } else { // Tile not suitable for building
+                     let reasonKey = 'alertCannotBuildNonEmpty'; // Generic reason
+                     let reasonArgs = [];
+                     if (tileData && tileData.building) {
+                         reasonKey = 'alertCannotBuildExists';
+                         reasonArgs = [`building${tileData.building.charAt(0).toUpperCase() + tileData.building.slice(1)}`];
+                     } else if (tileData && tileData.type !== 'empty') {
+                         let resourceNameKey = '';
+                         if (tileData.type === 'tree') resourceNameKey = 'tileResourceTree';
+                         else if (tileData.type === 'stone') resourceNameKey = 'tileResourceStone';
+                         else if (tileData.type === 'flint') resourceNameKey = 'tileResourceFlint';
+                         reasonKey = 'alertCannotBuildOnResource';
+                         reasonArgs = [resourceNameKey || tileData.type];
+                     }
+                     showAlert(reasonKey, 3000, true, reasonArgs);
+                     selectedBuilding = null;
                 }
-            } else { // Empty tile clicked, no unit, no build selected -> Move action
-                moveUnit(x, y);
+            } else { // Clicked on empty tile with no unit and no build selected -> Move action
+                moveUnit(gridX, gridY);
             }
+        } else if (event.target.classList.contains('unknown')) {
+            // Clicked on unrevealed tile - do nothing? Or maybe provide feedback?
+            // console.log("Clicked on unknown tile.");
         }
     });
     actionButton.addEventListener('click', gatherResource);
 
     // --- Panel Toggling ---
-    function hideAllLeftPanels() { techTree.style.display = 'none'; buildingsList.style.display = 'none'; unitsPanel.style.display = 'none'; logsPanel.style.display = 'none'; }
-    researchButton.addEventListener('click', () => { const isVisible = techTree.style.display === 'block'; hideAllLeftPanels(); if (!isVisible) techTree.style.display = 'block'; });
-    buildingsButton.addEventListener('click', () => { const isVisible = buildingsList.style.display === 'block'; hideAllLeftPanels(); if (!isVisible) { updateBuildingsList(); buildingsList.style.display = 'block'; } });
-    unitsButton.addEventListener('click', () => { const isVisible = unitsPanel.style.display === 'block'; hideAllLeftPanels(); if (!isVisible) { updateUnitsPanel(); unitsPanel.style.display = 'block'; } });
-    logsButton.addEventListener('click', () => { const isVisible = logsPanel.style.display === 'block'; hideAllLeftPanels(); if (!isVisible) { updateLogsDisplay(); logsPanel.style.display = 'block'; } });
+    function hideAllPanels() {
+        techTree.style.display = 'none';
+        buildingsList.style.display = 'none';
+        unitsPanel.style.display = 'none';
+        logsPanel.style.display = 'none';
+    }
+    researchButton.addEventListener('click', () => { const isVisible = techTree.style.display === 'block'; hideAllPanels(); if (!isVisible) techTree.style.display = 'block'; });
+    buildingsButton.addEventListener('click', () => { const isVisible = buildingsList.style.display === 'block'; hideAllPanels(); if (!isVisible) { updateBuildingsList(); buildingsList.style.display = 'block'; } });
+    unitsButton.addEventListener('click', () => { const isVisible = unitsPanel.style.display === 'block'; hideAllPanels(); if (!isVisible) { updateUnitsPanel(); unitsPanel.style.display = 'block'; } });
+    logsButton.addEventListener('click', () => { const isVisible = logsPanel.style.display === 'block'; hideAllPanels(); if (!isVisible) { updateLogsDisplay(); logsPanel.style.display = 'block'; } });
 
     // --- Log Filter/Search Listeners ---
     logSearchInput.addEventListener('input', updateLogsDisplay);
@@ -1043,54 +1304,61 @@
              activeResearch = researchType.toLowerCase();
              progressContainer.style.display = 'flex';
              updateResearchPointsDisplay();
-             updateResearchProgress(); // Update progress bar & status message
-             showAlert("alertResearchStarted", 2500, true, [researchKey]); // Use key
+             updateResearchProgress();
+             showAlert("alertResearchStarted", 2500, true, [researchKey]);
          } else {
              const activeResearchKey = `research${activeResearch.charAt(0).toUpperCase() + activeResearch.slice(1)}`;
-             showAlert("alertAlreadyResearching", 3000, true, [activeResearchKey]); // Use key
+             showAlert("alertAlreadyResearching", 3000, true, [activeResearchKey]);
          }
      }
     settlementResearchBtn.addEventListener('click', () => handleResearchClick('Settlement', settlementResearchBtn, settlementCompleted, settlementResearchProgress));
     agricultureResearchBtn.addEventListener('click', () => handleResearchClick('Agriculture', agricultureResearchBtn, agricultureCompleted, agricultureResearchProgress));
     miningResearchBtn.addEventListener('click', () => handleResearchClick('Mining', miningResearchBtn, miningCompleted, miningResearchProgress));
 
-
     // --- Deploy Worker Listener ---
     deployWorkerButton.addEventListener('click', () => {
-        const currentWorkers = units.filter(u => u.type === 'worker').length;
-        // Check maxWorkers condition again (button state might be slightly delayed)
-        if (currentWorkers < maxWorkers) {
-            const spawnPoint = findSpawnPointNearHouse();
-            if (spawnPoint) {
-                const newWorker = { id: `unit-${nextUnitId++}`, type: 'worker', x: spawnPoint.x, y: spawnPoint.y };
-                units.push(newWorker);
-                showAlert("alertWorkerDeployed", 2000); // Use key
-                updateGrid();
-                updateUnitDisplayBar();
-                updateUnitsPanel(); // Update button state after deployment
-            } else {
-                showAlert("alertNoSpaceForWorker", 3000); // Use key
-            }
+        if (deployWorkerButton.disabled) return; // Extra check
+
+        const spawnDetails = findSpawnPointNearHouse();
+        if (spawnDetails) {
+            const newWorker = {
+                id: `unit-${nextUnitId++}`,
+                type: 'worker',
+                worldX: spawnDetails.worldX,
+                worldY: spawnDetails.worldY
+            };
+            units.push(newWorker);
+            revealArea(newWorker.worldX, newWorker.worldY, REVEAL_RADIUS); // Reveal around new worker
+            showAlert("alertWorkerDeployed", 2000);
+            updateGrid();
+            updateUnitDisplayBar();
+            updateUnitsPanel();
+            // Optionally focus on the new worker?
+            // focusOnUnit(newWorker.id);
         } else {
-             // This condition should technically be covered by the button's disabled state, but check anyway.
-             showAlert("alertMaxWorkers", 3000); // Use key
+            showAlert("alertNoSpaceForWorker", 3000);
         }
     });
 
     // --- Grid Hover Highlights ---
-    grid.addEventListener('mouseover', (event) => { if (event.target.classList.contains('tile') && !selectedBuilding && selectedUnitId != null) { highlightEnabled = true; updateGrid(); } });
-    grid.addEventListener('mouseout', (event) => { if (highlightEnabled && (!event.relatedTarget || !event.relatedTarget.closest || !event.relatedTarget.closest('#grid'))) { highlightEnabled = false; updateGrid(); } });
+    grid.addEventListener('mouseover', (event) => {
+        if (event.target.classList.contains('tile') && !event.target.classList.contains('unknown') && !selectedBuilding && selectedUnitId != null) {
+            highlightEnabled = true; updateGrid();
+        }
+    });
+    grid.addEventListener('mouseout', (event) => {
+         if (highlightEnabled && (!event.relatedTarget || !event.relatedTarget.closest || !event.relatedTarget.closest('#grid'))) {
+             highlightEnabled = false; updateGrid();
+         }
+     });
 
 
     // --- Save/Load Functions ---
-
     function gatherSaveData() {
         return {
             units: units,
             nextUnitId: nextUnitId,
             selectedUnitId: selectedUnitId,
-            resources: resources,
-            placedBuildings: placedBuildings,
             inventory: inventory,
             researchPoints: researchPoints,
             activeResearch: activeResearch,
@@ -1100,52 +1368,48 @@
             maxWorkers: maxWorkers,
             moveCount: moveCount,
             movesSinceLastCoal: movesSinceLastCoal,
-            movesSinceLastResource: movesSinceLastResource,
             colonyName: colonyName,
-            eventLogs: eventLogs.map(log => ({ // Store key/args, not rendered message
-                time: log.time,
-                messageKey: log.messageKey || null, // Store the key
-                args: log.args || [], // Store args
-                // Don't store 'rendered'
-            })),
-            currentLanguage: currentLanguage // Save language
+            eventLogs: eventLogs.map(log => ({ time: log.time, messageKey: log.messageKey || null, args: log.args || [] })),
+            currentLanguage: currentLanguage,
+            // World state
+            viewOffsetX: viewOffsetX,
+            viewOffsetY: viewOffsetY,
+            worldData: worldData,
+            revealedTiles: Array.from(revealedTiles) // Convert Set to Array for JSON
         };
     }
 
     function saveGame() {
         try {
             const saveData = gatherSaveData();
-            const saveDataJson = JSON.stringify(saveData, null, 2);
+            // Add check for large worldData? Maybe warn user?
+            const saveDataJson = JSON.stringify(saveData); // No pretty print for potentially large data
             const blob = new Blob([saveDataJson], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
             const safeColonyName = colonyName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
             link.download = `tinyciv_${safeColonyName}_save.json`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            document.body.appendChild(link); link.click(); document.body.removeChild(link);
             URL.revokeObjectURL(url);
-
-            showAlert('alertGameSaved', 2000); // Use key
-            // Log the save action using key
+            showAlert('alertGameSaved', 2000);
             const timeString = getFormattedTime();
             eventLogs.push({ time: timeString, messageKey: 'logGameSaved', args: [], rendered: translations[currentLanguage].logGameSaved });
             if (logsPanel.style.display === 'block') { updateLogsDisplay(); }
-
         } catch (error) {
             console.error("Error saving game:", error);
-            showAlert('alertSaveError', 4000); // Use key
+             if (error instanceof RangeError) { // Potential JSON size error
+                showAlert('alertSaveError', 6000, true, ["Save data too large!"]);
+             } else {
+                 showAlert('alertSaveError', 4000);
+             }
         }
     }
 
     function applyLoadedData(data) {
-        // Restore state
+        // Restore basic state
         units = data.units || [];
         nextUnitId = data.nextUnitId || 0;
-        selectedUnitId = data.selectedUnitId !== undefined ? data.selectedUnitId : (units.length > 0 ? units[0].id : null);
-        resources = data.resources || [];
-        placedBuildings = data.placedBuildings || {};
         inventory = data.inventory || { wood: 0, pebble: 0, flint: 0, wheat: 0, coal: 0 };
         researchPoints = data.researchPoints || 0;
         activeResearch = data.activeResearch || null;
@@ -1155,43 +1419,53 @@
         maxWorkers = data.maxWorkers || 0;
         moveCount = data.moveCount || 0;
         movesSinceLastCoal = data.movesSinceLastCoal || 0;
-        movesSinceLastResource = data.movesSinceLastResource || 0;
         colonyName = data.colonyName || "Loaded Colony";
-        currentLanguage = data.currentLanguage || 'en'; // Restore language
-         // Restore logs - need to re-render messages based on loaded language potentially
+        currentLanguage = data.currentLanguage || 'en';
+        // Restore world state
+        viewOffsetX = data.viewOffsetX || 0;
+        viewOffsetY = data.viewOffsetY || 0;
+        worldData = data.worldData || {};
+        revealedTiles = new Set(data.revealedTiles || []); // Convert array back to Set
+        selectedUnitId = data.selectedUnitId !== undefined ? data.selectedUnitId : (units.length > 0 ? units[0].id : null); // Select after units are loaded
+
+         // Restore logs and render messages
          eventLogs = (data.eventLogs || []).map(log => {
-             // Re-render message on load based on the restored language
-             let renderedMessage = translations[currentLanguage][log.messageKey] || log.messageKey || "Log message unavailable";
+             let renderedMessage = translations[currentLanguage][log.messageKey] || log.messageKey || "?";
              if (log.args && log.args.length > 0) {
                  log.args.forEach((arg, index) => {
                      const translatedArg = translations[currentLanguage][arg] || arg;
                      renderedMessage = renderedMessage.replace(`{${index}}`, translatedArg);
                  });
              }
-             return {
-                 time: log.time,
-                 messageKey: log.messageKey,
-                 args: log.args,
-                 rendered: renderedMessage // Store the message rendered in the current language
-             };
+             return { time: log.time, messageKey: log.messageKey, args: log.args, rendered: renderedMessage };
          });
 
         // --- Refresh UI ---
-        selectedBuilding = null; // Reset build selection
-        highlightEnabled = false; // Reset highlight
+        selectedBuilding = null;
+        highlightEnabled = false;
+        hideAllPanels();
 
-        updateLanguageUI(); // Update all UI based on loaded language and state
+        updateLanguageUI(); // Updates static text first
 
-        // Ensure research buttons reflect loaded state (updateLanguageUI calls updateResearchProgress which should handle this)
-        // but explicit check might be safer after state load
+        // Explicitly update dynamic parts AFTER language is set
+        updateInventoryDisplay();
+        updateResearchPointsDisplay();
+        updateUnitDisplayBar(); // Update icons and selection
+        updateGrid(); // Crucial: redraw grid based on loaded worldData & viewOffset
+        checkResource(); // Check resource at selected unit's new pos
+        updateResearchProgress(); // Update research UI
+        updateBuildingsList(); // Update build options
+        updateUnitsPanel(); // Update unit options
+
+        // Ensure research buttons reflect loaded state
         settlementResearchBtn.disabled = settlementCompleted || !!activeResearch;
         agricultureResearchBtn.disabled = agricultureCompleted || !!activeResearch;
-        miningResearchBtn.disabled = miningCompleted || !agricultureCompleted || !!activeResearch; // Check dependency too
+        miningResearchBtn.disabled = miningCompleted || !agricultureCompleted || !!activeResearch;
 
-        showAlert('alertLoadSuccess', 3000, false, [colonyName]); // Use key
+        showAlert('alertLoadSuccess', 3000, false, [colonyName]);
     }
 
-    function loadGame(event) {
+    function loadGame(event) { // --- No changes needed here ---
         const file = event.target.files[0];
         if (!file) return;
         const reader = new FileReader();
@@ -1199,20 +1473,19 @@
             try {
                 const fileContent = e.target.result;
                 const loadedData = JSON.parse(fileContent);
-                if (!loadedData || typeof loadedData.colonyName === 'undefined' || typeof loadedData.units === 'undefined') {
-                     // Get translated error message before throwing
+                if (!loadedData || typeof loadedData.colonyName === 'undefined' || typeof loadedData.units === 'undefined' || typeof loadedData.worldData === 'undefined') { // Added worldData check
                      throw new Error(translations[currentLanguage].alertLoadInvalidFormat);
                 }
                 applyLoadedData(loadedData);
             } catch (error) {
                 console.error("Error loading game:", error);
-                showAlert('alertLoadError', 5000, true, [error.message]); // Use key, pass error message as arg
+                showAlert('alertLoadError', 5000, true, [error.message]);
             } finally {
                 loadFileInput.value = null;
             }
         };
         reader.onerror = function() {
-            showAlert('alertReadFileError', 3000); // Use key
+            showAlert('alertReadFileError', 3000);
             loadFileInput.value = null;
         };
         reader.readAsText(file);
@@ -1224,7 +1497,7 @@
     loadFileInput.addEventListener('change', loadGame);
 
     // --- UI Language Update Function ---
-    function updateLanguageUI() {
+    function updateLanguageUI() { // --- No changes needed here ---
         const lang = translations[currentLanguage];
 
         // Update static elements
@@ -1236,7 +1509,7 @@
         // Left Panel
         inventoryDisplay.querySelector('h2').textContent = lang.inventoryTitle;
         inventoryDisplay.querySelector('p:nth-of-type(1)').childNodes[0].nodeValue = `${lang.wood}: `;
-        inventoryDisplay.querySelector('p:nth-of-type(2)').childNodes[0].nodeValue = `${lang.pebble}: `; // Use 'pebble' key
+        inventoryDisplay.querySelector('p:nth-of-type(2)').childNodes[0].nodeValue = `${lang.pebble}: `;
         inventoryDisplay.querySelector('p:nth-of-type(3)').childNodes[0].nodeValue = `${lang.flint}: `;
         inventoryDisplay.querySelector('p:nth-of-type(4)').childNodes[0].nodeValue = `${lang.wheat}: `;
         inventoryDisplay.querySelector('p:nth-of-type(5)').childNodes[0].nodeValue = `${lang.coal}: `;
@@ -1247,47 +1520,46 @@
         logsButton.textContent = lang.logsButton;
         saveButton.textContent = lang.saveButton;
         loadButton.textContent = lang.loadButton;
-        unitsPanel.querySelector('h2').textContent = lang.unitsPanelTitle;
-        logsPanel.querySelector('h2').textContent = lang.logsPanelTitle;
-        logSearchInput.placeholder = lang.logSearchPlaceholder;
-        // Find the label text node more reliably
-        const filterLabel = logFilterCheckbox.parentElement;
-        if (filterLabel && filterLabel.lastChild.nodeType === Node.TEXT_NODE) {
-             filterLabel.lastChild.nodeValue = ` ${lang.logFilterLabel}`;
-        } else { // Fallback if structure changes
-             filterLabel.appendChild(document.createTextNode(` ${lang.logFilterLabel}`));
+        if(logsPanel) {
+            logsPanel.querySelector('h2').textContent = lang.logsPanelTitle;
+            logSearchInput.placeholder = lang.logSearchPlaceholder;
+             const filterLabel = logFilterCheckbox.parentElement;
+            if (filterLabel && filterLabel.lastChild.nodeType === Node.TEXT_NODE) {
+                 filterLabel.lastChild.nodeValue = ` ${lang.logFilterLabel}`;
+            } else if (filterLabel) {
+                 filterLabel.appendChild(document.createTextNode(` ${lang.logFilterLabel}`));
+            }
         }
-
 
         // Right Panel
         researchPointsDisplay.parentElement.childNodes[0].nodeValue = `${lang.researchPointsLabel} `;
-        techTree.querySelector('h2').textContent = lang.researchPanelTitle;
-        techTree.querySelector('h3').textContent = lang.primitiveAge;
-        settlementResearchBtn.textContent = lang.researchSettlement;
-        settlementResearchBtn.parentElement.querySelector('p').textContent = lang.researchSettlementDesc;
-        agricultureResearchBtn.textContent = lang.researchAgriculture;
-        agricultureResearchBtn.parentElement.querySelector('p').textContent = lang.researchAgricultureDesc;
-        miningResearchBtn.textContent = lang.researchMining;
-        miningResearchBtn.parentElement.querySelector('p').textContent = lang.researchMiningDesc;
-        buildingsList.querySelector('h2').textContent = lang.buildingsPanelTitle;
-
-        // Trigger dynamic updates
-        updateGrid(); // Tile tooltips, unit markers
-        updateUnitDisplayBar(); // Unit icon tooltips
-        updateBuildingsList(); // Building names, costs, descriptions
-        updateUnitsPanel(); // Worker button text
-        updateResearchProgress(); // Status message
-        displayResourceName(); // "On Tile:" text
-        if (logsPanel.style.display === 'block') { // Update logs only if visible
-            updateLogsDisplay();
+        if(techTree) {
+            techTree.querySelector('h2').textContent = lang.researchPanelTitle;
+            techTree.querySelector('h3').textContent = lang.primitiveAge;
+            settlementResearchBtn.textContent = lang.researchSettlement;
+            settlementResearchBtn.parentElement.querySelector('p').textContent = lang.researchSettlementDesc;
+            agricultureResearchBtn.textContent = lang.researchAgriculture;
+            agricultureResearchBtn.parentElement.querySelector('p').textContent = lang.researchAgricultureDesc;
+            miningResearchBtn.textContent = lang.researchMining;
+            miningResearchBtn.parentElement.querySelector('p').textContent = lang.researchMiningDesc;
         }
+        if(buildingsList) buildingsList.querySelector('h2').textContent = lang.buildingsPanelTitle;
+        if(unitsPanel) unitsPanel.querySelector('h2').textContent = lang.unitsPanelTitle;
+
+        // Trigger dynamic updates relevant to language change
+        updateGrid(); // Update tooltips
+        updateUnitDisplayBar(); // Update tooltips
+        updateBuildingsList(); // Update button text/desc
+        updateUnitsPanel(); // Update button text
+        updateResearchProgress(); // Update status text
+        checkResource(); // Update tile info display
+        if (logsPanel.style.display === 'block') { updateLogsDisplay(); }
     }
 
 
     // --- Event Listener for Language Switch ---
-    languageSwitchButton.addEventListener('click', () => {
+    languageSwitchButton.addEventListener('click', () => { // --- No changes needed here ---
         currentLanguage = (currentLanguage === 'en') ? 'fr' : 'en';
-        // Re-render logs with new language if needed (important if keys/args are stored)
         eventLogs.forEach(log => {
             if (log.messageKey) {
                 let renderedMessage = translations[currentLanguage][log.messageKey] || log.messageKey;
@@ -1297,31 +1569,23 @@
                          renderedMessage = renderedMessage.replace(`{${index}}`, translatedArg);
                      });
                  }
-                 log.rendered = renderedMessage; // Update rendered message
+                 log.rendered = renderedMessage;
             }
         });
-        updateLanguageUI(); // Update the rest of the UI
+        updateLanguageUI();
     });
 
 
     // --- Game Start ---
     function startGame() {
-        // Determine initial language (e.g., from browser, or default to 'en')
-        // currentLanguage = navigator.language.startsWith('fr') ? 'fr' : 'en'; // Optional: Detect browser language
-        currentLanguage = 'en'; // Default to English for now
+        currentLanguage = 'en'; // Default
         const lang = translations[currentLanguage];
 
         colonyName = prompt(lang.promptColonyName, lang.defaultColonyName);
-        if (!colonyName || colonyName.trim() === "") {
-            colonyName = lang.defaultColonyName;
-        }
+        if (!colonyName || colonyName.trim() === "") { colonyName = lang.defaultColonyName; }
 
         // Reset state variables
         nextUnitId = 0;
-        units = [{ id: `unit-${nextUnitId++}`, type: 'pawn', x: 4, y: 4 }];
-        selectedUnitId = units[0].id;
-        resources = [];
-        placedBuildings = {};
         inventory = { wood: 0, pebble: 0, flint: 0, wheat: 0, coal: 0 };
         researchPoints = 0;
         activeResearch = null;
@@ -1332,29 +1596,47 @@
         selectedBuilding = null;
         moveCount = 0;
         movesSinceLastCoal = 0;
-        movesSinceLastResource = 0;
         highlightEnabled = false;
-        // Log using key and initial language's rendered message
         eventLogs = [{ time: getFormattedTime(), messageKey: 'logNewGame', args:[colonyName], rendered: lang.logNewGame.replace('{0}', colonyName) }];
 
-        // Initialize Grid & Resources
-        generateGrid();
-        generateResources();
+        // Reset world state
+        worldData = {};
+        revealedTiles = new Set();
+        // Place starting unit and set initial view
+        const startWorldX = 5; // Arbitrary starting world coord
+        const startWorldY = 5;
+        units = [{ id: `unit-${nextUnitId++}`, type: 'pawn', worldX: startWorldX, worldY: startWorldY }];
+        selectedUnitId = units[0].id;
+        viewOffsetX = startWorldX - VIEW_CENTER_OFFSET; // Center view on start unit
+        viewOffsetY = startWorldY - VIEW_CENTER_OFFSET;
 
-        // Update ALL UI elements using the new state AND initial language
-        updateLanguageUI(); // This updates static text and triggers dynamic updates
+        // Initialize Grid DOM & Reveal Starting Area
+        initializeGridDOM();
+        revealArea(startWorldX, startWorldY, REVEAL_RADIUS); // Generate initial area
 
-        // Set initial research button states explicitly after potential state resets
+        // --- Update UI ---
+        hideAllPanels(); // Ensure panels start hidden
+        updateLanguageUI(); // Updates static text, calls sub-updates
+
+        // Explicitly set initial dynamic UI states
+        updateInventoryDisplay();
+        updateResearchPointsDisplay();
+        updateUnitDisplayBar(); // Add unit icon
+        updateGrid(); // Draw the initial view
+        checkResource(); // Check resource at start location
+        updateResearchProgress(); // Set initial status
+        updateBuildingsList();
+        updateUnitsPanel();
+
+        // Set initial research button states
         settlementResearchBtn.disabled = false;
         agricultureResearchBtn.disabled = false;
-        miningResearchBtn.disabled = true; // Requires agriculture
+        miningResearchBtn.disabled = true;
 
-        // Set initial status message via updateResearchProgress called by updateLanguageUI
         researchStatusDisplay.textContent = lang.researchStatusInitial;
         researchStatusDisplay.style.display = 'block';
 
-
-        showAlert('alertWelcome', 4000, false, [colonyName]); // Use key
+        showAlert('alertWelcome', 4000, false, [colonyName]);
     }
 
     // Start the game when the script loads
