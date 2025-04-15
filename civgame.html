@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Tiny Civilization - Procedural</title> <!-- Changed Title -->
+<title>Tiny Civilization - Procedural</title>
 <meta charset="UTF-8">
 <style>
   /* --- General Styles --- */
@@ -220,7 +220,6 @@
 
   <script>
     // --- DOM Element References ---
-    // (Keep existing refs, they are still correct)
     const grid = document.getElementById('grid'); const actionButton = document.getElementById('action-button');
     const woodCountDisplay = document.getElementById('wood-count'); const pebbleCountDisplay = document.getElementById('pebble-count'); const flintCountDisplay = document.getElementById('flint-count'); const wheatCountDisplay = document.getElementById('wheat-count'); const coalCountDisplay = document.getElementById('coal-count');
     const inventoryDisplay = document.getElementById('inventory'); const researchButton = document.getElementById('research-button'); const buildingsButton = document.getElementById('buildings-button'); const unitsButton = document.getElementById('units-button'); const logsButton = document.getElementById('logs-button');
@@ -243,8 +242,6 @@
     let units = [];
     let nextUnitId = 0;
     let selectedUnitId = null;
-    // let resources = []; // Replaced by worldData
-    // let placedBuildings = {}; // Replaced by worldData
     let inventory = { wood: 0, pebble: 0, flint: 0, wheat: 0, coal: 0 };
     let researchPoints = 0;
     let activeResearch = null;
@@ -255,7 +252,6 @@
     let selectedBuilding = null; // Stores 'house', 'farm', 'mine'
     let moveCount = 0;
     let movesSinceLastCoal = 0;
-    // let movesSinceLastResource = 0; // Generation is now explicit on reveal
 
     // -- World State --
     let viewOffsetX = 0; // World X coordinate of the top-left grid tile
@@ -280,7 +276,6 @@
     const VIEW_CENTER_OFFSET = Math.floor(gridSize / 2); // = 5 for 10x10 grid
 
     // --- Translations ---
-    // (Keep the existing translations object - no changes needed here)
     const translations = {
         en: {
             // General UI
@@ -489,10 +484,8 @@
         const lang = translations[currentLanguage];
         let message = lang[messageKey] || messageKey; // Fallback to key if not found
 
-        // Simple argument replacement (replace {0}, {1}, etc.)
         if (args && args.length > 0) {
             args.forEach((arg, index) => {
-                // Try to translate argument if it's a known resource/building/unit key
                 const translatedArg = lang[arg] || arg;
                 message = message.replace(`{${index}}`, translatedArg);
             });
@@ -500,13 +493,12 @@
 
         if (logMessage) {
             const timeString = getFormattedTime();
-            // Log the raw key and args for potential debugging or later re-translation if needed
             eventLogs.push({ time: timeString, messageKey: messageKey, args: args, rendered: message });
             if (eventLogs.length > maxLogEntries) { eventLogs.shift(); }
-            if (logsPanel.style.display === 'block') { updateLogsDisplay(); } // Render the log now
+            if (logsPanel.style.display === 'block') { updateLogsDisplay(); }
         }
 
-        alertMessageElement.textContent = message; // Show the rendered message
+        alertMessageElement.textContent = message;
         alertMessageElement.style.display = 'block';
         requestAnimationFrame(() => { requestAnimationFrame(() => { alertMessageElement.classList.add('show'); }); });
         alertTimeout = setTimeout(() => {
@@ -524,20 +516,19 @@
         logsList.innerHTML = '';
         const searchTerm = logSearchInput.value.toLowerCase();
         const hideFilteredMessages = logFilterCheckbox.checked;
-        const lang = translations[currentLanguage]; // Get current language pack
+        const lang = translations[currentLanguage];
 
         const filteredLogs = eventLogs.filter(log => {
-             // Re-render message for searching/filtering if it has a key
-            let messageToSearch = log.rendered || log.message; // Use pre-rendered first
-            if(log.messageKey && !log.rendered) { // If not pre-rendered (e.g. loaded save)
+            let messageToSearch = log.rendered || log.message;
+            if(log.messageKey && !log.rendered) {
                  messageToSearch = lang[log.messageKey] || log.messageKey;
                  if (log.args && log.args.length > 0) {
                     log.args.forEach((arg, index) => {
-                        const translatedArg = lang[arg] || arg; // Translate args again if needed
+                        const translatedArg = lang[arg] || arg;
                         messageToSearch = messageToSearch.replace(`{${index}}`, translatedArg);
                     });
                  }
-                 log.rendered = messageToSearch; // Cache rendering
+                 log.rendered = messageToSearch;
             }
 
             const messageLower = messageToSearch.toLowerCase();
@@ -545,7 +536,6 @@
             if (!searchMatch) return false;
 
             if (hideFilteredMessages) {
-                // Use keys for more reliable filtering
                 const isGather = log.messageKey === 'alertGathered';
                 const isCost = log.messageKey === 'alertNotEnoughResources';
                  if (isGather || isCost) {
@@ -561,8 +551,7 @@
             const timeSpan = document.createElement('span');
             timeSpan.className = 'log-time';
             timeSpan.textContent = `[${log.time}]`;
-            // Use the rendered message
-            const messageText = document.createTextNode(` ${log.rendered || log.message}`); // Ensure rendered is available
+            const messageText = document.createTextNode(` ${log.rendered || log.message}`);
             logEntry.appendChild(timeSpan);
             logEntry.appendChild(messageText);
             logsList.appendChild(logEntry);
@@ -570,13 +559,13 @@
     }
 
     // --- Initialization Functions ---
-    function initializeGridDOM() { // Renamed from generateGrid
+    function initializeGridDOM() {
         grid.innerHTML = '';
         for (let gy = 0; gy < gridSize; gy++) {
             for (let gx = 0; gx < gridSize; gx++) {
                 const tile = document.createElement('div');
                 tile.classList.add('tile');
-                tile.dataset.gridX = gx; // Store grid coords for click events
+                tile.dataset.gridX = gx;
                 tile.dataset.gridY = gy;
                 grid.appendChild(tile);
             }
@@ -585,7 +574,7 @@
 
     // --- World Generation ---
     function getTileData(worldX, worldY) {
-        return worldData[worldY]?.[worldX]; // Safely access nested data
+        return worldData[worldY]?.[worldX];
     }
 
     function setTileData(worldX, worldY, data) {
@@ -598,18 +587,16 @@
     function generateTileContent(worldX, worldY) {
         const coordString = `${worldX},${worldY}`;
         if (revealedTiles.has(coordString)) {
-            return getTileData(worldX, worldY); // Already generated
+            return getTileData(worldX, worldY);
         }
 
         revealedTiles.add(coordString);
 
-        // Simple Procedural Generation Logic (Example)
         let type = 'empty';
         const rand = Math.random();
-        if (rand < 0.05) { type = 'tree'; }
-        else if (rand < 0.08) { type = 'stone'; }
-        else if (rand < 0.10) { type = 'flint'; }
-        // Add more complex logic later (Perlin noise, biomes, etc.)
+        if (rand < 0.08) { type = 'tree'; } // Increased density slightly
+        else if (rand < 0.13) { type = 'stone'; }
+        else if (rand < 0.16) { type = 'flint'; }
 
         const data = { type: type, building: null };
         setTileData(worldX, worldY, data);
@@ -617,19 +604,27 @@
     }
 
     function revealArea(centerX, centerY, radius) {
+        let newlyRevealed = false;
         for (let dy = -radius; dy <= radius; dy++) {
             for (let dx = -radius; dx <= radius; dx++) {
-                generateTileContent(centerX + dx, centerY + dy);
+                 const wx = centerX + dx;
+                 const wy = centerY + dy;
+                 const coordString = `${wx},${wy}`;
+                 if (!revealedTiles.has(coordString)) {
+                     generateTileContent(wx, wy);
+                     newlyRevealed = true;
+                 }
             }
         }
+        return newlyRevealed; // Indicate if any new tiles were actually revealed
     }
+
 
     // --- Update Functions ---
     function updateGrid() {
         const tiles = grid.querySelectorAll('.tile');
         const lang = translations[currentLanguage];
 
-        // 1. Clear existing markers and update tiles based on worldData
         tiles.forEach(tile => {
             const gx = parseInt(tile.dataset.gridX);
             const gy = parseInt(tile.dataset.gridY);
@@ -637,21 +632,20 @@
             const worldY = gy + viewOffsetY;
             const coordString = `${worldX},${worldY}`;
 
-            // Clear previous state
             const existingMarker = tile.querySelector('.unit-marker');
             if (existingMarker) existingMarker.remove();
-            tile.className = 'tile'; // Reset classes
+            tile.className = 'tile';
             tile.textContent = '';
-            tile.classList.remove('highlight'); // Remove highlight explicitly
+            tile.classList.remove('highlight');
 
             if (revealedTiles.has(coordString)) {
                 const data = getTileData(worldX, worldY);
-                let tileTitle = lang.emptyTile; // Default for empty revealed
+                let tileTitle = lang.emptyTile;
 
                 if (data) {
-                    tile.classList.add(data.type); // Add 'empty', 'tree', 'stone', 'flint' class
+                    tile.classList.add(data.type);
                     if (data.building) {
-                        tile.classList.add(data.building); // Add 'house', 'farm', 'mine' class
+                        tile.classList.add(data.building);
                         tile.textContent = data.building.substring(0, 4).toUpperCase();
                         tileTitle = lang[`building${data.building.charAt(0).toUpperCase() + data.building.slice(1)}`] || data.building;
                     } else if (data.type !== 'empty') {
@@ -662,30 +656,26 @@
                          tileTitle = lang[resourceKey] || data.type;
                     }
                 } else {
-                    // Should not happen if reveal logic is correct, but handle as empty
                     tile.classList.add('empty');
                      tileTitle = lang.emptyTile;
                 }
                  tile.title = tileTitle;
 
             } else {
-                // Tile not revealed yet
                 tile.classList.add('unknown');
                 tile.title = lang.unknownTile;
             }
         });
 
-        // 2. Place unit markers for units currently in view
         units.forEach(unit => {
             const unitGridX = unit.worldX - viewOffsetX;
             const unitGridY = unit.worldY - viewOffsetY;
 
-            // Check if the unit is within the visible grid boundaries
             if (unitGridX >= 0 && unitGridX < gridSize && unitGridY >= 0 && unitGridY < gridSize) {
                 const tile = grid.querySelector(`.tile[data-grid-x="${unitGridX}"][data-grid-y="${unitGridY}"]`);
-                if (tile && !tile.classList.contains('unknown')) { // Don't place marker on unknown tiles (shouldn't happen)
+                if (tile && !tile.classList.contains('unknown')) {
                     const marker = document.createElement('div');
-                    marker.classList.add('unit-marker', unit.type); // 'pawn' or 'worker'
+                    marker.classList.add('unit-marker', unit.type);
                     const unitTypeKey = `unit${unit.type.charAt(0).toUpperCase() + unit.type.slice(1)}`;
                     const translatedUnitType = lang[unitTypeKey] || unit.type;
                     marker.textContent = translatedUnitType.charAt(0).toUpperCase();
@@ -693,19 +683,17 @@
                         marker.classList.add('selected');
                     }
                     tile.appendChild(marker);
-                    // Tooltip is already set by the tile update logic above, but we can refine it
+                    // Update tooltip on the tile itself to include unit info
                      tile.title = `${translatedUnitType} (${unit.id}) - ${tile.title}`;
                 }
             }
         });
 
-        // 3. Apply movement highlighting
         const selectedUnit = units.find(u => u.id === selectedUnitId);
         if (highlightEnabled && selectedUnit) {
             const unitGridX = selectedUnit.worldX - viewOffsetX;
             const unitGridY = selectedUnit.worldY - viewOffsetY;
 
-            // Only highlight if the selected unit is actually visible
             if (unitGridX >= 0 && unitGridX < gridSize && unitGridY >= 0 && unitGridY < gridSize) {
                 tiles.forEach(tile => {
                     const targetGridX = parseInt(tile.dataset.gridX);
@@ -714,7 +702,6 @@
                     const dy = Math.abs(targetGridY - unitGridY);
 
                     if (dx <= 1 && dy <= 1 && !(dx === 0 && dy === 0) && !tile.classList.contains('unknown')) {
-                        // Check world coordinates for collision
                         const targetWorldX = targetGridX + viewOffsetX;
                         const targetWorldY = targetGridY + viewOffsetY;
                         const targetOccupied = units.some(u => u.worldX === targetWorldX && u.worldY === targetWorldY && u.id !== selectedUnitId);
@@ -725,6 +712,8 @@
                 });
             }
         }
+        // After redrawing grid, check resource availability for selected unit
+        checkResource();
     }
 
 
@@ -773,7 +762,6 @@
              return true;
         }
 
-        // Logic for updating progress and checking completion
         if (activeResearch === 'settlement') {
             const progress = Math.min(100, settlementResearchCost > 0 ? (researchPoints / settlementResearchCost) * 100 : 100);
             updateProgressBar(settlementResearchProgressBar, settlementResearchPercent, settlementResearchProgress, progress);
@@ -798,7 +786,7 @@
             } else if (activeResearch === 'mining') {
                  statusMsg = formatProgress('mining', researchPoints, miningResearchCost);
             }
-        } else { // No active research
+        } else {
             settlementResearchProgress.style.display = 'none';
             agricultureResearchProgress.style.display = 'none';
             miningResearchProgress.style.display = 'none';
@@ -822,7 +810,7 @@
     }
 
 
-    function updateBuildingsList() { // Updates content of the building panel
+    function updateBuildingsList() {
         const buildingsListElement = buildingsList.querySelector('ul');
         buildingsListElement.innerHTML = '';
         const lang = translations[currentLanguage];
@@ -874,7 +862,7 @@
         }
     }
 
-    function updateUnitDisplayBar() { // Updates the top bar with unit icons
+    function updateUnitDisplayBar() {
         unitDisplayBar.innerHTML = '';
         const lang = translations[currentLanguage];
         units.forEach(unit => {
@@ -890,16 +878,14 @@
                 icon.classList.add('selected');
             }
             icon.addEventListener('click', () => {
-                selectedUnitId = unit.id; // Select the unit
-                focusOnUnit(unit.id); // Focus the view on the unit
-                // updateUnitDisplayBar(); // focusOnUnit calls updateGrid which updates selection
-                // checkResource(); // updateGrid -> checkResource called after move/focus
+                selectedUnitId = unit.id;
+                focusOnUnit(unit.id); // <<<<<< Focus on click
             });
             unitDisplayBar.appendChild(icon);
         });
     }
 
-    function updateUnitsPanel() { // Updates content of the units panel
+    function updateUnitsPanel() {
         const currentWorkers = units.filter(u => u.type === 'worker').length;
         const lang = translations[currentLanguage];
 
@@ -922,7 +908,6 @@
         deployWorkerButton.disabled = isDisabled;
         deployWorkerButton.textContent = buttonText;
 
-        // Ensure the button is correctly placed in the list
         const workerLi = unitsList.querySelector('li');
         if (workerLi) {
              workerLi.innerHTML = '';
@@ -935,7 +920,7 @@
     }
 
     // --- Gameplay Functions ---
-    function checkResource() { // Checks resource at selected unit's location
+    function checkResource() {
         const selectedUnit = units.find(u => u.id === selectedUnitId);
         let canGather = false;
         let tileInfo = null;
@@ -944,9 +929,9 @@
             const unitWorldX = selectedUnit.worldX;
             const unitWorldY = selectedUnit.worldY;
             const data = getTileData(unitWorldX, unitWorldY);
-            tileInfo = data; // Store for display function
+            tileInfo = data;
 
-            if (data && !data.building) { // Can only gather if no building is present
+            if (data && !data.building) {
                  if (data.type === 'tree' || data.type === 'stone' || data.type === 'flint') {
                     canGather = true;
                  }
@@ -954,17 +939,17 @@
         }
 
         actionButton.style.display = canGather ? 'inline-block' : 'none';
-        displayTileInfo(selectedUnit, tileInfo); // Update display
+        displayTileInfo(selectedUnit, tileInfo);
     }
 
-    function displayTileInfo(unit, tileData) { // Renamed from displayResourceName
+    function displayTileInfo(unit, tileData) {
         const lang = translations[currentLanguage];
         if (!unit) {
             resourceNameDisplay.textContent = lang.noUnitSelected;
             return;
         }
 
-        let nameToShow = lang.unknownTile; // Default if tileData is null/undefined
+        let nameToShow = lang.unknownTile;
         if (tileData) {
             if (tileData.building) {
                 const buildingKey = `building${tileData.building.charAt(0).toUpperCase() + tileData.building.slice(1)}`;
@@ -975,7 +960,7 @@
                 nameToShow = `${lang.onTile} ${lang.tileResourceStone}`;
             } else if (tileData.type === 'flint') {
                 nameToShow = `${lang.onTile} ${lang.tileResourceFlint}`;
-            } else { // 'empty'
+            } else {
                 nameToShow = `${lang.onTile} ${lang.emptyTile}`;
             }
         }
@@ -989,72 +974,51 @@
         const targetWorldX = targetGridX + viewOffsetX;
         const targetWorldY = targetGridY + viewOffsetY;
 
-        // --- Validation ---
-        // 1. Is target adjacent?
+        // Validation
         const dx = Math.abs(targetWorldX - selectedUnit.worldX);
         const dy = Math.abs(targetWorldY - selectedUnit.worldY);
-        if (!(dx <= 1 && dy <= 1 && (dx !== 0 || dy !== 0))) {
-            console.warn("Move rejected: Target not adjacent.");
-            showAlert('alertMoveInvalid', 1500, false);
-            return; // Not adjacent
-        }
+        if (!(dx <= 1 && dy <= 1 && (dx !== 0 || dy !== 0))) { return; } // Not adjacent
+        if (!revealedTiles.has(`${targetWorldX},${targetWorldY}`)) { return; } // Not revealed
 
-        // 2. Is target revealed? (Should be if highlighting works, but double check)
-        if (!revealedTiles.has(`${targetWorldX},${targetWorldY}`)) {
-             console.warn("Move rejected: Target tile not revealed.");
-             showAlert('alertMoveInvalid', 1500, false); // Or specific message?
-             return; // Cannot move to unrevealed (shouldn't be possible via click)
-        }
-
-        // 3. Is target occupied by another unit?
         const targetOccupied = units.some(u => u.worldX === targetWorldX && u.worldY === targetWorldY && u.id !== selectedUnitId);
         if (targetOccupied) {
             showAlert("alertUnitMoveOccupied", 2000, false);
             return;
         }
 
-        // 4. Is target passable? (Optional - could add mountains, water later)
-        // const targetData = getTileData(targetWorldX, targetWorldY);
-        // if (targetData && targetData.type === 'water') { return; }
-
-        // --- Execute Move ---
+        // Execute Move
         selectedUnit.worldX = targetWorldX;
         selectedUnit.worldY = targetWorldY;
 
-        // Reveal area around new location
-        revealArea(targetWorldX, targetWorldY, REVEAL_RADIUS);
-
-        // Game progress ticks
-        if (activeResearch) {
-            researchPoints++;
-            updateResearchPointsDisplay();
-            updateResearchProgress();
-        }
-        moveCount++;
-        movesSinceLastCoal++;
-
+        // Reveal & Update Progress
+        const newlyRevealed = revealArea(targetWorldX, targetWorldY, REVEAL_RADIUS);
+        if (activeResearch) { researchPoints++; updateResearchPointsDisplay(); updateResearchProgress(); }
+        moveCount++; movesSinceLastCoal++;
         if (moveCount >= wheatProductionInterval) { produceWheat(); moveCount = 0; }
         if (movesSinceLastCoal >= coalProductionInterval) { produceCoal(); movesSinceLastCoal = 0; }
-        // Resource spawning removed - happens on reveal now
 
-        // Update UI
-        updateGrid();
-        checkResource(); // Check resource at new location
+        // Update View and Check Resources
+        const unitStillSelected = selectedUnit.id === selectedUnitId;
+        if (unitStillSelected) {
+            // <<<< FOCUS on the selected unit after move >>>>
+            focusOnUnit(selectedUnit.id);
+        } else {
+            // If selection changed during logic, just update grid without focus
+            updateGrid();
+            // checkResource(); // updateGrid calls checkResource now
+        }
     }
 
 
     function gatherResource() {
         const selectedUnit = units.find(u => u.id === selectedUnitId);
-        if (!selectedUnit) {
-             showAlert("noUnitSelected", 2000);
-             return;
-        }
+        if (!selectedUnit) { showAlert("noUnitSelected", 2000); return; }
 
         const unitWorldX = selectedUnit.worldX;
         const unitWorldY = selectedUnit.worldY;
         const data = getTileData(unitWorldX, unitWorldY);
 
-        if (data && !data.building) { // Check if tile exists and has no building
+        if (data && !data.building) {
              let gatheredResourceKey = '';
              if (data.type === 'tree') { inventory.wood++; gatheredResourceKey = 'wood'; data.type = 'empty'; }
              else if (data.type === 'stone') { inventory.pebble++; gatheredResourceKey = 'pebble'; data.type = 'empty'; }
@@ -1062,30 +1026,21 @@
 
              if (gatheredResourceKey) {
                  showAlert('alertGathered', 1500, true, [gatheredResourceKey]);
-                 setTileData(unitWorldX, unitWorldY, data); // Update worldData with 'empty' type
+                 setTileData(unitWorldX, unitWorldY, data);
                  updateInventoryDisplay();
-                 updateGrid(); // Redraw the grid to show the change
-                 checkResource(); // Update button and tile info display
+                 updateGrid(); // Redraw grid to show change and re-run checkResource
              }
-             // else: tile is empty or has ungatherable type - do nothing
         }
-        // else: tile doesn't exist? (Shouldn't happen) or has building - do nothing
     }
 
     function produceWheat() {
         let wheatProduced = 0;
-        // Iterate through *revealed* tiles only, checking for farms
         revealedTiles.forEach(coordString => {
             const [x, y] = coordString.split(',').map(Number);
             const data = getTileData(x, y);
-            if (data && data.building === 'farm') {
-                wheatProduced++;
-            }
+            if (data && data.building === 'farm') { wheatProduced++; }
         });
-        if (wheatProduced > 0) {
-            inventory.wheat += wheatProduced;
-            updateInventoryDisplay();
-        }
+        if (wheatProduced > 0) { inventory.wheat += wheatProduced; updateInventoryDisplay(); }
     }
 
     function produceCoal() {
@@ -1093,23 +1048,14 @@
         revealedTiles.forEach(coordString => {
             const [x, y] = coordString.split(',').map(Number);
             const data = getTileData(x, y);
-            if (data && data.building === 'mine') {
-                coalProduced++;
-            }
+            if (data && data.building === 'mine') { coalProduced++; }
         });
-        if (coalProduced > 0) {
-            inventory.coal += coalProduced;
-            updateInventoryDisplay();
-        }
+        if (coalProduced > 0) { inventory.coal += coalProduced; updateInventoryDisplay(); }
     }
-    // spawnSingleResource removed - generation happens on reveal
 
-    // --- Find Spawn Point near House ---
     function findSpawnPointNearHouse() {
-        // Find houses based on units or known worldData? Let's try units first.
          const workers = units.filter(u => u.type === 'worker');
          if (workers.length === 0 && units.length > 0) {
-             // No workers yet, spawn near the first unit (pawn)
              const pawn = units[0];
              for (let dy = -1; dy <= 1; dy++) {
                  for (let dx = -1; dx <= 1; dx++) {
@@ -1117,26 +1063,21 @@
                      const sx = pawn.worldX + dx;
                      const sy = pawn.worldY + dy;
                      const sData = getTileData(sx, sy);
-                     // Ensure tile is revealed and empty (no resource, no building, no unit)
                      if (revealedTiles.has(`${sx},${sy}`) && sData && sData.type === 'empty' && !sData.building && !units.some(u => u.worldX === sx && u.worldY === sy)) {
                          return { worldX: sx, worldY: sy };
                      }
                  }
              }
-             return null; // No empty spot near pawn
+             return null;
          }
 
-        // Find based on existing houses in worldData
         const houseCoords = [];
         revealedTiles.forEach(coordString => {
              const [x, y] = coordString.split(',').map(Number);
              const data = getTileData(x,y);
-             if(data && data.building === 'house') {
-                 houseCoords.push({worldX: x, worldY: y});
-             }
+             if(data && data.building === 'house') { houseCoords.push({worldX: x, worldY: y}); }
         });
-
-        if (houseCoords.length === 0) return null; // No houses built
+        if (houseCoords.length === 0) return null;
 
         for (const houseCoord of houseCoords) {
             for (let dy = -1; dy <= 1; dy++) {
@@ -1145,14 +1086,13 @@
                     const sx = houseCoord.worldX + dx;
                     const sy = houseCoord.worldY + dy;
                     const sData = getTileData(sx, sy);
-                    // Check if tile revealed, empty, no building, no unit
                      if (revealedTiles.has(`${sx},${sy}`) && sData && sData.type === 'empty' && !sData.building && !units.some(u => u.worldX === sx && u.worldY === sy)) {
-                         return { worldX: sx, worldY: sy }; // Found a spot
+                         return { worldX: sx, worldY: sy };
                     }
                  }
              }
         }
-        return null; // No empty spot found near any house
+        return null;
     }
 
     // --- Unit Focusing ---
@@ -1160,29 +1100,35 @@
         const unit = units.find(u => u.id === unitId);
         if (!unit) return;
 
-        // Calculate new view offset to center the unit
         const newViewOffsetX = unit.worldX - VIEW_CENTER_OFFSET;
         const newViewOffsetY = unit.worldY - VIEW_CENTER_OFFSET;
 
-        // Only update if the offset actually changes
-        if (newViewOffsetX !== viewOffsetX || newViewOffsetY !== viewOffsetY) {
-            viewOffsetX = newViewOffsetX;
-            viewOffsetY = newViewOffsetY;
+        const viewChanged = newViewOffsetX !== viewOffsetX || newViewOffsetY !== viewOffsetY;
 
-            // Reveal the newly visible area
-            for (let gy = 0; gy < gridSize; gy++) {
-                for (let gx = 0; gx < gridSize; gx++) {
-                    generateTileContent(gx + viewOffsetX, gy + viewOffsetY);
+        viewOffsetX = newViewOffsetX;
+        viewOffsetY = newViewOffsetY;
+
+        // Reveal the area now visible in the viewport
+        let newlyRevealed = false;
+        for (let gy = 0; gy < gridSize; gy++) {
+            for (let gx = 0; gx < gridSize; gx++) {
+                if(revealArea(gx + viewOffsetX, gy + viewOffsetY, 0)) { // Reveal just the tile itself if needed
+                    newlyRevealed = true;
                 }
             }
-            // Redraw the grid with the new offset
-            updateGrid();
-            // Re-check resource availability for the potentially re-selected unit
-             checkResource();
         }
-         // Ensure the unit is selected visually (updateGrid handles marker)
+
+        // Always update display bar selection
         selectedUnitId = unitId;
-        updateUnitDisplayBar(); // Update selection highlight on the bar
+        updateUnitDisplayBar();
+
+        // Redraw grid if view changed or new tiles were revealed by the focus shift itself
+        if (viewChanged || newlyRevealed) {
+            updateGrid(); // This will call checkResource
+        } else {
+            // If view didn't change, ensure selection highlight is updated on grid
+            updateGrid(); // Minimal redraw for selection change
+        }
     }
 
 
@@ -1197,23 +1143,19 @@
             const clickedUnit = units.find(u => u.worldX === worldX && u.worldY === worldY);
             const lang = translations[currentLanguage];
 
-            if (clickedUnit) { // Clicked on a unit
+            if (clickedUnit) {
                 selectedUnitId = clickedUnit.id;
                 selectedBuilding = null;
                 updateUnitDisplayBar();
-                updateGrid(); // Update selection visuals
-                checkResource();
+                updateGrid();
+                // checkResource(); // updateGrid calls this
                 const unitTypeKey = `unit${clickedUnit.type.charAt(0).toUpperCase() + clickedUnit.type.slice(1)}`;
                 showAlert('alertSelectedUnit', 1500, false, [unitTypeKey, clickedUnit.id]);
             } else if (selectedBuilding) { // Build action
                 const builderUnit = units.find(u => u.id === selectedUnitId);
-                if (!builderUnit) {
-                    showAlert("alertSelectUnitToBuild", 2500);
-                    selectedBuilding = null; return;
-                }
+                if (!builderUnit) { showAlert("alertSelectUnitToBuild", 2500); selectedBuilding = null; return; }
 
                 const tileData = getTileData(worldX, worldY);
-                // Can only build on revealed, empty tiles with no buildings
                 if (tileData && tileData.type === 'empty' && !tileData.building) {
                     const capabilities = unitCapabilities[builderUnit.type];
                     const buildingKey = `building${selectedBuilding.charAt(0).toUpperCase() + selectedBuilding.slice(1)}`;
@@ -1224,14 +1166,10 @@
                          selectedBuilding = null; return;
                     }
 
-                    let costMet = false;
-                    let cost;
-
+                    let costMet = false; let cost;
                     if (selectedBuilding === 'house') {
                         cost = houseCost;
-                        if (inventory.wood >= cost.wood && inventory.pebble >= cost.pebble) {
-                            inventory.wood -= cost.wood; inventory.pebble -= cost.pebble; costMet = true; maxWorkers++; updateUnitsPanel();
-                        }
+                        if (inventory.wood >= cost.wood && inventory.pebble >= cost.pebble) { inventory.wood -= cost.wood; inventory.pebble -= cost.pebble; costMet = true; maxWorkers++; updateUnitsPanel(); }
                     } else if (selectedBuilding === 'farm') {
                         cost = farmCost;
                         if (inventory.wood >= cost.wood) { inventory.wood -= cost.wood; costMet = true; }
@@ -1241,21 +1179,19 @@
                     }
 
                     if(costMet) {
-                        tileData.building = selectedBuilding; // Update worldData
+                        tileData.building = selectedBuilding;
                         setTileData(worldX, worldY, tileData);
                         showAlert('alertBuildingBuilt', 2500, true, [buildingKey]);
                         selectedBuilding = null;
                         updateInventoryDisplay();
                         updateGrid();
-                        checkResource(); // Update tile info display
                         updateBuildingsList();
                     } else {
                          showAlert('alertNotEnoughResources', 3000, true, [buildingKey]);
                          selectedBuilding = null;
                     }
-                } else { // Tile not suitable for building
-                     let reasonKey = 'alertCannotBuildNonEmpty'; // Generic reason
-                     let reasonArgs = [];
+                } else {
+                     let reasonKey = 'alertCannotBuildNonEmpty'; let reasonArgs = [];
                      if (tileData && tileData.building) {
                          reasonKey = 'alertCannotBuildExists';
                          reasonArgs = [`building${tileData.building.charAt(0).toUpperCase() + tileData.building.slice(1)}`];
@@ -1270,12 +1206,9 @@
                      showAlert(reasonKey, 3000, true, reasonArgs);
                      selectedBuilding = null;
                 }
-            } else { // Clicked on empty tile with no unit and no build selected -> Move action
+            } else { // Move action
                 moveUnit(gridX, gridY);
             }
-        } else if (event.target.classList.contains('unknown')) {
-            // Clicked on unrevealed tile - do nothing? Or maybe provide feedback?
-            // console.log("Clicked on unknown tile.");
         }
     });
     actionButton.addEventListener('click', gatherResource);
@@ -1317,24 +1250,17 @@
 
     // --- Deploy Worker Listener ---
     deployWorkerButton.addEventListener('click', () => {
-        if (deployWorkerButton.disabled) return; // Extra check
+        if (deployWorkerButton.disabled) return;
 
         const spawnDetails = findSpawnPointNearHouse();
         if (spawnDetails) {
-            const newWorker = {
-                id: `unit-${nextUnitId++}`,
-                type: 'worker',
-                worldX: spawnDetails.worldX,
-                worldY: spawnDetails.worldY
-            };
+            const newWorker = { id: `unit-${nextUnitId++}`, type: 'worker', worldX: spawnDetails.worldX, worldY: spawnDetails.worldY };
             units.push(newWorker);
-            revealArea(newWorker.worldX, newWorker.worldY, REVEAL_RADIUS); // Reveal around new worker
+            revealArea(newWorker.worldX, newWorker.worldY, REVEAL_RADIUS);
             showAlert("alertWorkerDeployed", 2000);
-            updateGrid();
-            updateUnitDisplayBar();
-            updateUnitsPanel();
-            // Optionally focus on the new worker?
-            // focusOnUnit(newWorker.id);
+            updateGrid(); // Show new worker
+            updateUnitDisplayBar(); // Add icon
+            updateUnitsPanel(); // Update count/button state
         } else {
             showAlert("alertNoSpaceForWorker", 3000);
         }
@@ -1356,34 +1282,20 @@
     // --- Save/Load Functions ---
     function gatherSaveData() {
         return {
-            units: units,
-            nextUnitId: nextUnitId,
-            selectedUnitId: selectedUnitId,
-            inventory: inventory,
-            researchPoints: researchPoints,
-            activeResearch: activeResearch,
-            settlementCompleted: settlementCompleted,
-            agricultureCompleted: agricultureCompleted,
-            miningCompleted: miningCompleted,
-            maxWorkers: maxWorkers,
-            moveCount: moveCount,
-            movesSinceLastCoal: movesSinceLastCoal,
-            colonyName: colonyName,
+            units: units, nextUnitId: nextUnitId, selectedUnitId: selectedUnitId,
+            inventory: inventory, researchPoints: researchPoints, activeResearch: activeResearch,
+            settlementCompleted: settlementCompleted, agricultureCompleted: agricultureCompleted, miningCompleted: miningCompleted,
+            maxWorkers: maxWorkers, moveCount: moveCount, movesSinceLastCoal: movesSinceLastCoal,
+            colonyName: colonyName, currentLanguage: currentLanguage,
             eventLogs: eventLogs.map(log => ({ time: log.time, messageKey: log.messageKey || null, args: log.args || [] })),
-            currentLanguage: currentLanguage,
-            // World state
-            viewOffsetX: viewOffsetX,
-            viewOffsetY: viewOffsetY,
-            worldData: worldData,
-            revealedTiles: Array.from(revealedTiles) // Convert Set to Array for JSON
+            viewOffsetX: viewOffsetX, viewOffsetY: viewOffsetY, worldData: worldData, revealedTiles: Array.from(revealedTiles)
         };
     }
 
     function saveGame() {
         try {
             const saveData = gatherSaveData();
-            // Add check for large worldData? Maybe warn user?
-            const saveDataJson = JSON.stringify(saveData); // No pretty print for potentially large data
+            const saveDataJson = JSON.stringify(saveData);
             const blob = new Blob([saveDataJson], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
@@ -1398,35 +1310,23 @@
             if (logsPanel.style.display === 'block') { updateLogsDisplay(); }
         } catch (error) {
             console.error("Error saving game:", error);
-             if (error instanceof RangeError) { // Potential JSON size error
-                showAlert('alertSaveError', 6000, true, ["Save data too large!"]);
-             } else {
-                 showAlert('alertSaveError', 4000);
-             }
+             if (error instanceof RangeError) { showAlert('alertSaveError', 6000, true, ["Save data too large!"]); }
+             else { showAlert('alertSaveError', 4000); }
         }
     }
 
     function applyLoadedData(data) {
         // Restore basic state
-        units = data.units || [];
-        nextUnitId = data.nextUnitId || 0;
+        units = data.units || []; nextUnitId = data.nextUnitId || 0;
         inventory = data.inventory || { wood: 0, pebble: 0, flint: 0, wheat: 0, coal: 0 };
-        researchPoints = data.researchPoints || 0;
-        activeResearch = data.activeResearch || null;
-        settlementCompleted = data.settlementCompleted || false;
-        agricultureCompleted = data.agricultureCompleted || false;
-        miningCompleted = data.miningCompleted || false;
-        maxWorkers = data.maxWorkers || 0;
-        moveCount = data.moveCount || 0;
-        movesSinceLastCoal = data.movesSinceLastCoal || 0;
-        colonyName = data.colonyName || "Loaded Colony";
-        currentLanguage = data.currentLanguage || 'en';
+        researchPoints = data.researchPoints || 0; activeResearch = data.activeResearch || null;
+        settlementCompleted = data.settlementCompleted || false; agricultureCompleted = data.agricultureCompleted || false; miningCompleted = data.miningCompleted || false;
+        maxWorkers = data.maxWorkers || 0; moveCount = data.moveCount || 0; movesSinceLastCoal = data.movesSinceLastCoal || 0;
+        colonyName = data.colonyName || "Loaded Colony"; currentLanguage = data.currentLanguage || 'en';
         // Restore world state
-        viewOffsetX = data.viewOffsetX || 0;
-        viewOffsetY = data.viewOffsetY || 0;
-        worldData = data.worldData || {};
-        revealedTiles = new Set(data.revealedTiles || []); // Convert array back to Set
-        selectedUnitId = data.selectedUnitId !== undefined ? data.selectedUnitId : (units.length > 0 ? units[0].id : null); // Select after units are loaded
+        viewOffsetX = data.viewOffsetX || 0; viewOffsetY = data.viewOffsetY || 0;
+        worldData = data.worldData || {}; revealedTiles = new Set(data.revealedTiles || []);
+        selectedUnitId = data.selectedUnitId !== undefined ? data.selectedUnitId : (units.length > 0 ? units[0].id : null);
 
          // Restore logs and render messages
          eventLogs = (data.eventLogs || []).map(log => {
@@ -1440,24 +1340,15 @@
              return { time: log.time, messageKey: log.messageKey, args: log.args, rendered: renderedMessage };
          });
 
-        // --- Refresh UI ---
-        selectedBuilding = null;
-        highlightEnabled = false;
-        hideAllPanels();
-
+        // Refresh UI
+        selectedBuilding = null; highlightEnabled = false; hideAllPanels();
         updateLanguageUI(); // Updates static text first
+        updateInventoryDisplay(); updateResearchPointsDisplay(); updateUnitDisplayBar();
+        updateGrid(); // Draw loaded view
+        // checkResource(); // Called by updateGrid
+        updateResearchProgress(); updateBuildingsList(); updateUnitsPanel();
 
-        // Explicitly update dynamic parts AFTER language is set
-        updateInventoryDisplay();
-        updateResearchPointsDisplay();
-        updateUnitDisplayBar(); // Update icons and selection
-        updateGrid(); // Crucial: redraw grid based on loaded worldData & viewOffset
-        checkResource(); // Check resource at selected unit's new pos
-        updateResearchProgress(); // Update research UI
-        updateBuildingsList(); // Update build options
-        updateUnitsPanel(); // Update unit options
-
-        // Ensure research buttons reflect loaded state
+        // Set button states
         settlementResearchBtn.disabled = settlementCompleted || !!activeResearch;
         agricultureResearchBtn.disabled = agricultureCompleted || !!activeResearch;
         miningResearchBtn.disabled = miningCompleted || !agricultureCompleted || !!activeResearch;
@@ -1465,7 +1356,7 @@
         showAlert('alertLoadSuccess', 3000, false, [colonyName]);
     }
 
-    function loadGame(event) { // --- No changes needed here ---
+    function loadGame(event) {
         const file = event.target.files[0];
         if (!file) return;
         const reader = new FileReader();
@@ -1473,7 +1364,7 @@
             try {
                 const fileContent = e.target.result;
                 const loadedData = JSON.parse(fileContent);
-                if (!loadedData || typeof loadedData.colonyName === 'undefined' || typeof loadedData.units === 'undefined' || typeof loadedData.worldData === 'undefined') { // Added worldData check
+                if (!loadedData || typeof loadedData.colonyName === 'undefined' || typeof loadedData.units === 'undefined' || typeof loadedData.worldData === 'undefined') {
                      throw new Error(translations[currentLanguage].alertLoadInvalidFormat);
                 }
                 applyLoadedData(loadedData);
@@ -1484,10 +1375,7 @@
                 loadFileInput.value = null;
             }
         };
-        reader.onerror = function() {
-            showAlert('alertReadFileError', 3000);
-            loadFileInput.value = null;
-        };
+        reader.onerror = function() { showAlert('alertReadFileError', 3000); loadFileInput.value = null; };
         reader.readAsText(file);
     }
 
@@ -1497,16 +1385,13 @@
     loadFileInput.addEventListener('change', loadGame);
 
     // --- UI Language Update Function ---
-    function updateLanguageUI() { // --- No changes needed here ---
+    function updateLanguageUI() {
         const lang = translations[currentLanguage];
-
-        // Update static elements
+        // Update static elements (buttons, titles, etc.)
         document.querySelector('h1').textContent = lang.gameTitle;
         languageSwitchButton.textContent = (currentLanguage === 'en') ? lang.switchToFrench : lang.switchToEnglish;
         languageSwitchButton.title = lang.switchLanguageTooltip;
         colonyNameDisplay.textContent = `${lang.colonyLabel} ${colonyName}`;
-
-        // Left Panel
         inventoryDisplay.querySelector('h2').textContent = lang.inventoryTitle;
         inventoryDisplay.querySelector('p:nth-of-type(1)').childNodes[0].nodeValue = `${lang.wood}: `;
         inventoryDisplay.querySelector('p:nth-of-type(2)').childNodes[0].nodeValue = `${lang.pebble}: `;
@@ -1514,53 +1399,36 @@
         inventoryDisplay.querySelector('p:nth-of-type(4)').childNodes[0].nodeValue = `${lang.wheat}: `;
         inventoryDisplay.querySelector('p:nth-of-type(5)').childNodes[0].nodeValue = `${lang.coal}: `;
         actionButton.textContent = lang.gatherButton;
-        researchButton.textContent = lang.researchButton;
-        buildingsButton.textContent = lang.buildingsButton;
-        unitsButton.textContent = lang.unitsButton;
-        logsButton.textContent = lang.logsButton;
-        saveButton.textContent = lang.saveButton;
-        loadButton.textContent = lang.loadButton;
+        researchButton.textContent = lang.researchButton; buildingsButton.textContent = lang.buildingsButton;
+        unitsButton.textContent = lang.unitsButton; logsButton.textContent = lang.logsButton;
+        saveButton.textContent = lang.saveButton; loadButton.textContent = lang.loadButton;
         if(logsPanel) {
             logsPanel.querySelector('h2').textContent = lang.logsPanelTitle;
             logSearchInput.placeholder = lang.logSearchPlaceholder;
              const filterLabel = logFilterCheckbox.parentElement;
-            if (filterLabel && filterLabel.lastChild.nodeType === Node.TEXT_NODE) {
-                 filterLabel.lastChild.nodeValue = ` ${lang.logFilterLabel}`;
-            } else if (filterLabel) {
-                 filterLabel.appendChild(document.createTextNode(` ${lang.logFilterLabel}`));
-            }
+            if (filterLabel && filterLabel.lastChild.nodeType === Node.TEXT_NODE) { filterLabel.lastChild.nodeValue = ` ${lang.logFilterLabel}`; }
+            else if (filterLabel) { filterLabel.appendChild(document.createTextNode(` ${lang.logFilterLabel}`)); }
         }
-
-        // Right Panel
         researchPointsDisplay.parentElement.childNodes[0].nodeValue = `${lang.researchPointsLabel} `;
         if(techTree) {
-            techTree.querySelector('h2').textContent = lang.researchPanelTitle;
-            techTree.querySelector('h3').textContent = lang.primitiveAge;
-            settlementResearchBtn.textContent = lang.researchSettlement;
-            settlementResearchBtn.parentElement.querySelector('p').textContent = lang.researchSettlementDesc;
-            agricultureResearchBtn.textContent = lang.researchAgriculture;
-            agricultureResearchBtn.parentElement.querySelector('p').textContent = lang.researchAgricultureDesc;
-            miningResearchBtn.textContent = lang.researchMining;
-            miningResearchBtn.parentElement.querySelector('p').textContent = lang.researchMiningDesc;
+            techTree.querySelector('h2').textContent = lang.researchPanelTitle; techTree.querySelector('h3').textContent = lang.primitiveAge;
+            settlementResearchBtn.textContent = lang.researchSettlement; settlementResearchBtn.parentElement.querySelector('p').textContent = lang.researchSettlementDesc;
+            agricultureResearchBtn.textContent = lang.researchAgriculture; agricultureResearchBtn.parentElement.querySelector('p').textContent = lang.researchAgricultureDesc;
+            miningResearchBtn.textContent = lang.researchMining; miningResearchBtn.parentElement.querySelector('p').textContent = lang.researchMiningDesc;
         }
         if(buildingsList) buildingsList.querySelector('h2').textContent = lang.buildingsPanelTitle;
         if(unitsPanel) unitsPanel.querySelector('h2').textContent = lang.unitsPanelTitle;
 
-        // Trigger dynamic updates relevant to language change
-        updateGrid(); // Update tooltips
-        updateUnitDisplayBar(); // Update tooltips
-        updateBuildingsList(); // Update button text/desc
-        updateUnitsPanel(); // Update button text
-        updateResearchProgress(); // Update status text
-        checkResource(); // Update tile info display
+        // Trigger dynamic updates
+        updateGrid(); updateUnitDisplayBar(); updateBuildingsList(); updateUnitsPanel();
+        updateResearchProgress(); checkResource(); // checkResource calls displayTileInfo
         if (logsPanel.style.display === 'block') { updateLogsDisplay(); }
     }
 
-
     // --- Event Listener for Language Switch ---
-    languageSwitchButton.addEventListener('click', () => { // --- No changes needed here ---
+    languageSwitchButton.addEventListener('click', () => {
         currentLanguage = (currentLanguage === 'en') ? 'fr' : 'en';
-        eventLogs.forEach(log => {
+        eventLogs.forEach(log => { // Re-render logs
             if (log.messageKey) {
                 let renderedMessage = translations[currentLanguage][log.messageKey] || log.messageKey;
                 if (log.args && log.args.length > 0) {
@@ -1575,71 +1443,40 @@
         updateLanguageUI();
     });
 
-
     // --- Game Start ---
     function startGame() {
-        currentLanguage = 'en'; // Default
+        currentLanguage = 'en';
         const lang = translations[currentLanguage];
-
         colonyName = prompt(lang.promptColonyName, lang.defaultColonyName);
         if (!colonyName || colonyName.trim() === "") { colonyName = lang.defaultColonyName; }
 
-        // Reset state variables
-        nextUnitId = 0;
-        inventory = { wood: 0, pebble: 0, flint: 0, wheat: 0, coal: 0 };
-        researchPoints = 0;
-        activeResearch = null;
-        settlementCompleted = false;
-        agricultureCompleted = false;
-        miningCompleted = false;
-        maxWorkers = 0;
-        selectedBuilding = null;
-        moveCount = 0;
-        movesSinceLastCoal = 0;
-        highlightEnabled = false;
+        // Reset state
+        nextUnitId = 0; inventory = { wood: 0, pebble: 0, flint: 0, wheat: 0, coal: 0 };
+        researchPoints = 0; activeResearch = null; settlementCompleted = false; agricultureCompleted = false; miningCompleted = false;
+        maxWorkers = 0; selectedBuilding = null; moveCount = 0; movesSinceLastCoal = 0; highlightEnabled = false;
         eventLogs = [{ time: getFormattedTime(), messageKey: 'logNewGame', args:[colonyName], rendered: lang.logNewGame.replace('{0}', colonyName) }];
-
-        // Reset world state
-        worldData = {};
-        revealedTiles = new Set();
-        // Place starting unit and set initial view
-        const startWorldX = 5; // Arbitrary starting world coord
-        const startWorldY = 5;
+        worldData = {}; revealedTiles = new Set();
+        const startWorldX = 5; const startWorldY = 5;
         units = [{ id: `unit-${nextUnitId++}`, type: 'pawn', worldX: startWorldX, worldY: startWorldY }];
         selectedUnitId = units[0].id;
-        viewOffsetX = startWorldX - VIEW_CENTER_OFFSET; // Center view on start unit
-        viewOffsetY = startWorldY - VIEW_CENTER_OFFSET;
+        viewOffsetX = startWorldX - VIEW_CENTER_OFFSET; viewOffsetY = startWorldY - VIEW_CENTER_OFFSET;
 
-        // Initialize Grid DOM & Reveal Starting Area
+        // Initialize UI & World
         initializeGridDOM();
-        revealArea(startWorldX, startWorldY, REVEAL_RADIUS); // Generate initial area
+        revealArea(startWorldX, startWorldY, REVEAL_RADIUS);
+        hideAllPanels();
+        updateLanguageUI(); // Includes sub-updates like updateGrid, checkResource etc.
+        updateInventoryDisplay(); updateResearchPointsDisplay(); updateUnitDisplayBar();
+        updateResearchProgress(); updateBuildingsList(); updateUnitsPanel();
 
-        // --- Update UI ---
-        hideAllPanels(); // Ensure panels start hidden
-        updateLanguageUI(); // Updates static text, calls sub-updates
-
-        // Explicitly set initial dynamic UI states
-        updateInventoryDisplay();
-        updateResearchPointsDisplay();
-        updateUnitDisplayBar(); // Add unit icon
-        updateGrid(); // Draw the initial view
-        checkResource(); // Check resource at start location
-        updateResearchProgress(); // Set initial status
-        updateBuildingsList();
-        updateUnitsPanel();
-
-        // Set initial research button states
-        settlementResearchBtn.disabled = false;
-        agricultureResearchBtn.disabled = false;
-        miningResearchBtn.disabled = true;
-
-        researchStatusDisplay.textContent = lang.researchStatusInitial;
-        researchStatusDisplay.style.display = 'block';
+        // Set initial button states
+        settlementResearchBtn.disabled = false; agricultureResearchBtn.disabled = false; miningResearchBtn.disabled = true;
+        researchStatusDisplay.textContent = lang.researchStatusInitial; researchStatusDisplay.style.display = 'block';
 
         showAlert('alertWelcome', 4000, false, [colonyName]);
     }
 
-    // Start the game when the script loads
+    // Start
     startGame();
 
   </script>
