@@ -101,7 +101,34 @@
   /* --- Other UI --- */
    #colony-name-display { font-size: 22px; color: #2c3e50; font-weight: bold; margin-bottom: 0; text-align: left; padding: 10px; background-color: #ecf0f1; border-radius: 8px; }
   #resource-name { margin-top: 15px; font-size: 16px; font-weight: bold; color: #7f8c8d; min-height: 20px; text-align: left; }
-  #research-points-display-container { font-size: 16px; font-weight: bold; color: #8e44ad; text-align: left; padding: 10px; background-color: #f3eaf7; border-radius: 8px; margin-bottom: 0; }
+
+  /* Coordinate Display */
+  #unit-coords-display-container {
+      font-size: 16px;
+      font-weight: bold;
+      color: #34495e; /* Dark blue-gray color */
+      text-align: left;
+      padding: 10px;
+      background-color: #ecf0f1; /* Light gray background */
+      border-radius: 8px;
+      margin-bottom: 10px; /* Add spacing below coords */
+  }
+  #unit-coords-display-container span {
+      font-weight: normal; /* Make coords value normal weight */
+      color: #2c3e50;
+  }
+
+  /* Research Points Display */
+  #research-points-display-container {
+      font-size: 16px;
+      font-weight: bold;
+      color: #8e44ad;
+      text-align: left;
+      padding: 10px;
+      background-color: #f3eaf7;
+      border-radius: 8px;
+      margin-bottom: 0; /* Reset bottom margin */
+  }
 
   /* --- Progress Bars --- */
   .research-progress-container { width: 100%; height: 20px; border: 1px solid #bdc3c7; margin-top: 8px; border-radius: 10px; background-color: #ecf0f1; overflow: hidden; display: none; align-items: center; }
@@ -167,6 +194,10 @@
 
     <!-- === RIGHT CONTAINER === -->
     <div id="right-panel">
+       <!-- Added Coordinate Display -->
+       <div id="unit-coords-display-container">
+           Coords: <span id="unit-coords">(-, -)</span>
+       </div>
        <div id="research-points-display-container">Research Points: <span id="research-points">0</span></div>
        <div id="research-status-display"></div>
 
@@ -227,6 +258,7 @@
     const logSearchInput = document.getElementById('log-search-input'); const logFilterCheckbox = document.getElementById('log-filter-checkbox'); const resourceNameDisplay = document.getElementById('resource-name');
     const researchPointsDisplay = document.getElementById('research-points'); const researchStatusDisplay = document.getElementById('research-status-display'); const colonyNameDisplay = document.getElementById('colony-name-display');
     const alertMessageElement = document.getElementById('alert-message'); const unitDisplayBar = document.getElementById('unit-display-bar');
+    const unitCoordsDisplay = document.getElementById('unit-coords'); // New ref
     const settlementResearchBtn = document.getElementById('settlement-research'); const settlementResearchProgress = document.getElementById('settlement-research-progress'); const settlementResearchProgressBar = document.getElementById('settlement-research-bar'); const settlementResearchPercent = document.getElementById('settlement-research-percent');
     const agricultureResearchBtn = document.getElementById('agriculture-research'); const agricultureResearchProgress = document.getElementById('agriculture-research-progress'); const agricultureResearchProgressBar = document.getElementById('agriculture-research-bar'); const agricultureResearchPercent = document.getElementById('agriculture-research-percent');
     const miningResearchBtn = document.getElementById('mining-research'); const miningResearchProgress = document.getElementById('mining-research-progress'); const miningResearchProgressBar = document.getElementById('mining-research-bar'); const miningResearchPercent = document.getElementById('mining-research-percent');
@@ -482,7 +514,7 @@
     function showAlert(messageKey, duration = 3000, logMessage = true, args = []) {
         clearTimeout(alertTimeout);
         const lang = translations[currentLanguage];
-        let message = lang[messageKey] || messageKey; // Fallback to key if not found
+        let message = lang[messageKey] || messageKey;
 
         if (args && args.length > 0) {
             args.forEach((arg, index) => {
@@ -538,9 +570,7 @@
             if (hideFilteredMessages) {
                 const isGather = log.messageKey === 'alertGathered';
                 const isCost = log.messageKey === 'alertNotEnoughResources';
-                 if (isGather || isCost) {
-                    return false;
-                }
+                 if (isGather || isCost) { return false; }
             }
             return true;
         });
@@ -573,31 +603,18 @@
     }
 
     // --- World Generation ---
-    function getTileData(worldX, worldY) {
-        return worldData[worldY]?.[worldX];
-    }
-
-    function setTileData(worldX, worldY, data) {
-        if (!worldData[worldY]) {
-            worldData[worldY] = {};
-        }
-        worldData[worldY][worldX] = data;
-    }
+    function getTileData(worldX, worldY) { return worldData[worldY]?.[worldX]; }
+    function setTileData(worldX, worldY, data) { if (!worldData[worldY]) { worldData[worldY] = {}; } worldData[worldY][worldX] = data; }
 
     function generateTileContent(worldX, worldY) {
         const coordString = `${worldX},${worldY}`;
-        if (revealedTiles.has(coordString)) {
-            return getTileData(worldX, worldY);
-        }
-
+        if (revealedTiles.has(coordString)) { return getTileData(worldX, worldY); }
         revealedTiles.add(coordString);
-
         let type = 'empty';
         const rand = Math.random();
-        if (rand < 0.08) { type = 'tree'; } // Increased density slightly
+        if (rand < 0.08) { type = 'tree'; }
         else if (rand < 0.13) { type = 'stone'; }
         else if (rand < 0.16) { type = 'flint'; }
-
         const data = { type: type, building: null };
         setTileData(worldX, worldY, data);
         return data;
@@ -607,367 +624,124 @@
         let newlyRevealed = false;
         for (let dy = -radius; dy <= radius; dy++) {
             for (let dx = -radius; dx <= radius; dx++) {
-                 const wx = centerX + dx;
-                 const wy = centerY + dy;
+                 const wx = centerX + dx; const wy = centerY + dy;
                  const coordString = `${wx},${wy}`;
-                 if (!revealedTiles.has(coordString)) {
-                     generateTileContent(wx, wy);
-                     newlyRevealed = true;
-                 }
+                 if (!revealedTiles.has(coordString)) { generateTileContent(wx, wy); newlyRevealed = true; }
             }
         }
-        return newlyRevealed; // Indicate if any new tiles were actually revealed
+        return newlyRevealed;
     }
-
 
     // --- Update Functions ---
     function updateGrid() {
         const tiles = grid.querySelectorAll('.tile');
         const lang = translations[currentLanguage];
-
         tiles.forEach(tile => {
-            const gx = parseInt(tile.dataset.gridX);
-            const gy = parseInt(tile.dataset.gridY);
-            const worldX = gx + viewOffsetX;
-            const worldY = gy + viewOffsetY;
+            const gx = parseInt(tile.dataset.gridX); const gy = parseInt(tile.dataset.gridY);
+            const worldX = gx + viewOffsetX; const worldY = gy + viewOffsetY;
             const coordString = `${worldX},${worldY}`;
-
             const existingMarker = tile.querySelector('.unit-marker');
             if (existingMarker) existingMarker.remove();
-            tile.className = 'tile';
-            tile.textContent = '';
-            tile.classList.remove('highlight');
-
+            tile.className = 'tile'; tile.textContent = ''; tile.classList.remove('highlight');
             if (revealedTiles.has(coordString)) {
-                const data = getTileData(worldX, worldY);
-                let tileTitle = lang.emptyTile;
-
+                const data = getTileData(worldX, worldY); let tileTitle = lang.emptyTile;
                 if (data) {
                     tile.classList.add(data.type);
                     if (data.building) {
-                        tile.classList.add(data.building);
-                        tile.textContent = data.building.substring(0, 4).toUpperCase();
+                        tile.classList.add(data.building); tile.textContent = data.building.substring(0, 4).toUpperCase();
                         tileTitle = lang[`building${data.building.charAt(0).toUpperCase() + data.building.slice(1)}`] || data.building;
                     } else if (data.type !== 'empty') {
                          let resourceKey = '';
-                         if (data.type === 'tree') resourceKey = 'tileResourceTree';
-                         else if (data.type === 'stone') resourceKey = 'tileResourceStone';
-                         else if (data.type === 'flint') resourceKey = 'tileResourceFlint';
+                         if (data.type === 'tree') resourceKey = 'tileResourceTree'; else if (data.type === 'stone') resourceKey = 'tileResourceStone'; else if (data.type === 'flint') resourceKey = 'tileResourceFlint';
                          tileTitle = lang[resourceKey] || data.type;
                     }
-                } else {
-                    tile.classList.add('empty');
-                     tileTitle = lang.emptyTile;
-                }
+                } else { tile.classList.add('empty'); tileTitle = lang.emptyTile; }
                  tile.title = tileTitle;
-
-            } else {
-                tile.classList.add('unknown');
-                tile.title = lang.unknownTile;
-            }
+            } else { tile.classList.add('unknown'); tile.title = lang.unknownTile; }
         });
-
         units.forEach(unit => {
-            const unitGridX = unit.worldX - viewOffsetX;
-            const unitGridY = unit.worldY - viewOffsetY;
-
+            const unitGridX = unit.worldX - viewOffsetX; const unitGridY = unit.worldY - viewOffsetY;
             if (unitGridX >= 0 && unitGridX < gridSize && unitGridY >= 0 && unitGridY < gridSize) {
                 const tile = grid.querySelector(`.tile[data-grid-x="${unitGridX}"][data-grid-y="${unitGridY}"]`);
                 if (tile && !tile.classList.contains('unknown')) {
-                    const marker = document.createElement('div');
-                    marker.classList.add('unit-marker', unit.type);
+                    const marker = document.createElement('div'); marker.classList.add('unit-marker', unit.type);
                     const unitTypeKey = `unit${unit.type.charAt(0).toUpperCase() + unit.type.slice(1)}`;
                     const translatedUnitType = lang[unitTypeKey] || unit.type;
                     marker.textContent = translatedUnitType.charAt(0).toUpperCase();
-                    if (unit.id === selectedUnitId) {
-                        marker.classList.add('selected');
-                    }
+                    if (unit.id === selectedUnitId) { marker.classList.add('selected'); }
                     tile.appendChild(marker);
-                    // Update tooltip on the tile itself to include unit info
-                     tile.title = `${translatedUnitType} (${unit.id}) - ${tile.title}`;
+                    tile.title = `${translatedUnitType} (${unit.id}) - ${tile.title}`;
                 }
             }
         });
-
         const selectedUnit = units.find(u => u.id === selectedUnitId);
         if (highlightEnabled && selectedUnit) {
-            const unitGridX = selectedUnit.worldX - viewOffsetX;
-            const unitGridY = selectedUnit.worldY - viewOffsetY;
-
+            const unitGridX = selectedUnit.worldX - viewOffsetX; const unitGridY = selectedUnit.worldY - viewOffsetY;
             if (unitGridX >= 0 && unitGridX < gridSize && unitGridY >= 0 && unitGridY < gridSize) {
                 tiles.forEach(tile => {
-                    const targetGridX = parseInt(tile.dataset.gridX);
-                    const targetGridY = parseInt(tile.dataset.gridY);
-                    const dx = Math.abs(targetGridX - unitGridX);
-                    const dy = Math.abs(targetGridY - unitGridY);
-
+                    const targetGridX = parseInt(tile.dataset.gridX); const targetGridY = parseInt(tile.dataset.gridY);
+                    const dx = Math.abs(targetGridX - unitGridX); const dy = Math.abs(targetGridY - unitGridY);
                     if (dx <= 1 && dy <= 1 && !(dx === 0 && dy === 0) && !tile.classList.contains('unknown')) {
-                        const targetWorldX = targetGridX + viewOffsetX;
-                        const targetWorldY = targetGridY + viewOffsetY;
+                        const targetWorldX = targetGridX + viewOffsetX; const targetWorldY = targetGridY + viewOffsetY;
                         const targetOccupied = units.some(u => u.worldX === targetWorldX && u.worldY === targetWorldY && u.id !== selectedUnitId);
-                        if (!targetOccupied) {
-                             tile.classList.add('highlight');
-                        }
+                        if (!targetOccupied) { tile.classList.add('highlight'); }
                     }
                 });
             }
         }
-        // After redrawing grid, check resource availability for selected unit
-        checkResource();
+        checkResource(); // Check resource after every grid update
     }
 
+    function updateInventoryDisplay() { /* ... no changes ... */ woodCountDisplay.textContent = inventory.wood; pebbleCountDisplay.textContent = inventory.pebble; flintCountDisplay.textContent = inventory.flint; wheatCountDisplay.textContent = inventory.wheat; coalCountDisplay.textContent = inventory.coal; }
+    function updateResearchPointsDisplay() { /* ... no changes ... */ researchPointsDisplay.textContent = researchPoints; }
 
-    function updateInventoryDisplay() {
-        woodCountDisplay.textContent = inventory.wood;
-        pebbleCountDisplay.textContent = inventory.pebble;
-        flintCountDisplay.textContent = inventory.flint;
-        wheatCountDisplay.textContent = inventory.wheat;
-        coalCountDisplay.textContent = inventory.coal;
-     }
-    function updateResearchPointsDisplay() { researchPointsDisplay.textContent = researchPoints; }
-
-    function updateResearchProgress() {
-        let statusMsg = researchStatusDisplay.textContent || "";
-        let researchCompletedThisTurn = false;
-        const lang = translations[currentLanguage];
-
-        function formatProgress(researchKeyBase, currentPoints, cost) {
-             const researchKey = `research${researchKeyBase.charAt(0).toUpperCase() + researchKeyBase.slice(1)}`;
-             const progress = Math.min(100, cost > 0 ? (currentPoints / cost) * 100 : 100);
-             const researchName = lang[researchKey] || researchKeyBase;
-             return `${lang.researchStatusResearching} ${researchName}... ${Math.floor(progress)}%`;
-        }
-
-        function updateProgressBar(progressBar, percentDisplay, progressContainer, progress) {
-            progressBar.style.width = progress + '%';
-            percentDisplay.textContent = Math.floor(progress) + '%';
-            progressContainer.style.display = 'flex';
-        }
-
-        function handleCompletion(researchKeyBase, completionFlag, progressContainer, buttonElement, nextButtonElement = null) {
-             const completionKey = `researchStatusComplete${researchKeyBase.charAt(0).toUpperCase() + researchKeyBase.slice(1)}`;
-             activeResearch = null; researchPoints = 0;
-             progressContainer.style.display = 'none';
-             buttonElement.disabled = true;
-             statusMsg = `${lang.researchStatusComplete} ${lang[completionKey]}`;
-             showAlert(completionKey, 3500);
-             researchCompletedThisTurn = true;
-             if (nextButtonElement) {
-                 const nextResearchKey = nextButtonElement.id.replace('-research', '');
-                 const nextCompletionFlagName = `${nextResearchKey}Completed`;
-                 if (!window[nextCompletionFlagName]) {
-                      nextButtonElement.disabled = false;
-                 }
-             }
-             return true;
-        }
-
-        if (activeResearch === 'settlement') {
-            const progress = Math.min(100, settlementResearchCost > 0 ? (researchPoints / settlementResearchCost) * 100 : 100);
-            updateProgressBar(settlementResearchProgressBar, settlementResearchPercent, settlementResearchProgress, progress);
-            if (researchPoints >= settlementResearchCost && !settlementCompleted) {
-                settlementCompleted = handleCompletion('Settlement', settlementCompleted, settlementResearchProgress, settlementResearchBtn);
-            } else if (activeResearch === 'settlement') {
-                statusMsg = formatProgress('settlement', researchPoints, settlementResearchCost);
-            }
-        } else if (activeResearch === 'agriculture') {
-            const progress = Math.min(100, agricultureResearchCost > 0 ? (researchPoints / agricultureResearchCost) * 100 : 100);
-            updateProgressBar(agricultureResearchProgressBar, agricultureResearchPercent, agricultureResearchProgress, progress);
-             if (researchPoints >= agricultureResearchCost && !agricultureCompleted) {
-                 agricultureCompleted = handleCompletion('Agriculture', agricultureCompleted, agricultureResearchProgress, agricultureResearchBtn, miningResearchBtn);
-            } else if (activeResearch === 'agriculture') {
-                 statusMsg = formatProgress('agriculture', researchPoints, agricultureResearchCost);
-            }
-        } else if (activeResearch === 'mining') {
-            const progress = Math.min(100, miningResearchCost > 0 ? (researchPoints / miningResearchCost) * 100 : 100);
-             updateProgressBar(miningResearchProgressBar, miningResearchPercent, miningResearchProgress, progress);
-            if (researchPoints >= miningResearchCost && !miningCompleted) {
-                miningCompleted = handleCompletion('Mining', miningCompleted, miningResearchProgress, miningResearchBtn);
-            } else if (activeResearch === 'mining') {
-                 statusMsg = formatProgress('mining', researchPoints, miningResearchCost);
-            }
+    function updateUnitCoordsDisplay() { // NEW function
+        const selectedUnit = units.find(u => u.id === selectedUnitId);
+        if (selectedUnit) {
+            unitCoordsDisplay.textContent = `(${selectedUnit.worldX}, ${selectedUnit.worldY})`;
         } else {
-            settlementResearchProgress.style.display = 'none';
-            agricultureResearchProgress.style.display = 'none';
-            miningResearchProgress.style.display = 'none';
-             if (!researchCompletedThisTurn && !statusMsg.startsWith(lang.researchStatusComplete)) {
-                 const isCompletionMsg = statusMsg === `${lang.researchStatusComplete} ${lang.researchStatusCompleteSettlement}` ||
-                                         statusMsg === `${lang.researchStatusComplete} ${lang.researchStatusCompleteAgriculture}` ||
-                                         statusMsg === `${lang.researchStatusComplete} ${lang.researchStatusCompleteMining}`;
-                 if (!isCompletionMsg) {
-                      const initialMsg = lang.researchStatusInitial || "";
-                      statusMsg = researchStatusDisplay.textContent.startsWith(initialMsg) ? researchStatusDisplay.textContent : "";
-                 }
-            }
+            unitCoordsDisplay.textContent = `(-, -)`;
         }
+    }
 
+    function updateResearchProgress() { /* ... no changes needed ... */
+        let statusMsg = researchStatusDisplay.textContent || ""; let researchCompletedThisTurn = false; const lang = translations[currentLanguage];
+        function formatProgress(researchKeyBase, currentPoints, cost) { const researchKey = `research${researchKeyBase.charAt(0).toUpperCase() + researchKeyBase.slice(1)}`; const progress = Math.min(100, cost > 0 ? (currentPoints / cost) * 100 : 100); const researchName = lang[researchKey] || researchKeyBase; return `${lang.researchStatusResearching} ${researchName}... ${Math.floor(progress)}%`; }
+        function updateProgressBar(progressBar, percentDisplay, progressContainer, progress) { progressBar.style.width = progress + '%'; percentDisplay.textContent = Math.floor(progress) + '%'; progressContainer.style.display = 'flex'; }
+        function handleCompletion(researchKeyBase, completionFlag, progressContainer, buttonElement, nextButtonElement = null) { const completionKey = `researchStatusComplete${researchKeyBase.charAt(0).toUpperCase() + researchKeyBase.slice(1)}`; activeResearch = null; researchPoints = 0; progressContainer.style.display = 'none'; buttonElement.disabled = true; statusMsg = `${lang.researchStatusComplete} ${lang[completionKey]}`; showAlert(completionKey, 3500); researchCompletedThisTurn = true; if (nextButtonElement) { const nextResearchKey = nextButtonElement.id.replace('-research', ''); const nextCompletionFlagName = `${nextResearchKey}Completed`; if (!window[nextCompletionFlagName]) { nextButtonElement.disabled = false; } } return true; }
+        if (activeResearch === 'settlement') { const progress = Math.min(100, settlementResearchCost > 0 ? (researchPoints / settlementResearchCost) * 100 : 100); updateProgressBar(settlementResearchProgressBar, settlementResearchPercent, settlementResearchProgress, progress); if (researchPoints >= settlementResearchCost && !settlementCompleted) { settlementCompleted = handleCompletion('Settlement', settlementCompleted, settlementResearchProgress, settlementResearchBtn); } else if (activeResearch === 'settlement') { statusMsg = formatProgress('settlement', researchPoints, settlementResearchCost); } }
+        else if (activeResearch === 'agriculture') { const progress = Math.min(100, agricultureResearchCost > 0 ? (researchPoints / agricultureResearchCost) * 100 : 100); updateProgressBar(agricultureResearchProgressBar, agricultureResearchPercent, agricultureResearchProgress, progress); if (researchPoints >= agricultureResearchCost && !agricultureCompleted) { agricultureCompleted = handleCompletion('Agriculture', agricultureCompleted, agricultureResearchProgress, agricultureResearchBtn, miningResearchBtn); } else if (activeResearch === 'agriculture') { statusMsg = formatProgress('agriculture', researchPoints, agricultureResearchCost); } }
+        else if (activeResearch === 'mining') { const progress = Math.min(100, miningResearchCost > 0 ? (researchPoints / miningResearchCost) * 100 : 100); updateProgressBar(miningResearchProgressBar, miningResearchPercent, miningResearchProgress, progress); if (researchPoints >= miningResearchCost && !miningCompleted) { miningCompleted = handleCompletion('Mining', miningCompleted, miningResearchProgress, miningResearchBtn); } else if (activeResearch === 'mining') { statusMsg = formatProgress('mining', researchPoints, miningResearchCost); } }
+        else { settlementResearchProgress.style.display = 'none'; agricultureResearchProgress.style.display = 'none'; miningResearchProgress.style.display = 'none'; if (!researchCompletedThisTurn && !statusMsg.startsWith(lang.researchStatusComplete)) { const isCompletionMsg = statusMsg === `${lang.researchStatusComplete} ${lang.researchStatusCompleteSettlement}` || statusMsg === `${lang.researchStatusComplete} ${lang.researchStatusCompleteAgriculture}` || statusMsg === `${lang.researchStatusComplete} ${lang.researchStatusCompleteMining}`; if (!isCompletionMsg) { const initialMsg = lang.researchStatusInitial || ""; statusMsg = researchStatusDisplay.textContent.startsWith(initialMsg) ? researchStatusDisplay.textContent : ""; } } }
         if (researchCompletedThisTurn) { updateBuildingsList(); updateUnitsPanel(); updateResearchPointsDisplay(); }
-
-        if (researchStatusDisplay.textContent !== statusMsg || statusMsg.startsWith(lang.researchStatusComplete) || statusMsg === "" || statusMsg.startsWith(lang.researchStatusInitial)) {
-            researchStatusDisplay.textContent = statusMsg;
-        }
+        if (researchStatusDisplay.textContent !== statusMsg || statusMsg.startsWith(lang.researchStatusComplete) || statusMsg === "" || statusMsg.startsWith(lang.researchStatusInitial)) { researchStatusDisplay.textContent = statusMsg; }
         researchStatusDisplay.style.display = statusMsg ? 'block' : 'none';
     }
 
-
-    function updateBuildingsList() {
-        const buildingsListElement = buildingsList.querySelector('ul');
-        buildingsListElement.innerHTML = '';
-        const lang = translations[currentLanguage];
-
-        function addBuildingOption(buildingKey, cost, costCheckFn) {
-            const buildingName = lang[buildingKey] || buildingKey.replace('building','');
-            const descriptionText = lang[`${buildingKey}Desc`] || "";
-            const costString = Object.entries(cost)
-                .map(([resKey, amount]) => `${amount} ${lang[resKey] || resKey}`)
-                .join(', ');
-
-            const listItem = document.createElement('li');
-            const button = document.createElement('button');
-            button.textContent = `${buildingName} (${costString})`;
-            const buildingTypeSimple = buildingKey.replace('building','').toLowerCase();
-            button.dataset.building = buildingTypeSimple;
-
-            button.addEventListener('click', () => {
-                 if (costCheckFn()) {
-                    selectedBuilding = buildingTypeSimple;
-                    showAlert('alertBuildSelected', 4000, true, [buildingKey]);
-                } else {
-                    showAlert('alertNotEnoughResources', 3000, true, [buildingKey]);
-                }
-            });
-
-            listItem.appendChild(button);
-            const description = document.createElement('p');
-            description.textContent = descriptionText;
-            description.style.fontSize = '12px';
-            description.style.color = '#666';
-            description.style.marginTop = '4px';
-            listItem.appendChild(description);
-            buildingsListElement.appendChild(listItem);
-        }
-
-        if (settlementCompleted) {
-            addBuildingOption('buildingHouse', houseCost, () => inventory.wood >= houseCost.wood && inventory.pebble >= houseCost.pebble);
-        }
-        if (agricultureCompleted) {
-            addBuildingOption('buildingFarm', farmCost, () => inventory.wood >= farmCost.wood);
-        }
-        if (miningCompleted) {
-            addBuildingOption('buildingMine', mineCost, () => inventory.pebble >= mineCost.pebble && inventory.wood >= mineCost.wood);
-        }
-
-        if (buildingsListElement.innerHTML === '') {
-            buildingsListElement.innerHTML = `<li>${lang.noBuildingsAvailable}</li>`;
-        }
+    function updateBuildingsList() { /* ... no changes ... */
+        const buildingsListElement = buildingsList.querySelector('ul'); buildingsListElement.innerHTML = ''; const lang = translations[currentLanguage];
+        function addBuildingOption(buildingKey, cost, costCheckFn) { const buildingName = lang[buildingKey] || buildingKey.replace('building',''); const descriptionText = lang[`${buildingKey}Desc`] || ""; const costString = Object.entries(cost).map(([resKey, amount]) => `${amount} ${lang[resKey] || resKey}`).join(', '); const listItem = document.createElement('li'); const button = document.createElement('button'); button.textContent = `${buildingName} (${costString})`; const buildingTypeSimple = buildingKey.replace('building','').toLowerCase(); button.dataset.building = buildingTypeSimple; button.addEventListener('click', () => { if (costCheckFn()) { selectedBuilding = buildingTypeSimple; showAlert('alertBuildSelected', 4000, true, [buildingKey]); } else { showAlert('alertNotEnoughResources', 3000, true, [buildingKey]); } }); listItem.appendChild(button); const description = document.createElement('p'); description.textContent = descriptionText; description.style.fontSize = '12px'; description.style.color = '#666'; description.style.marginTop = '4px'; listItem.appendChild(description); buildingsListElement.appendChild(listItem); }
+        if (settlementCompleted) { addBuildingOption('buildingHouse', houseCost, () => inventory.wood >= houseCost.wood && inventory.pebble >= houseCost.pebble); }
+        if (agricultureCompleted) { addBuildingOption('buildingFarm', farmCost, () => inventory.wood >= farmCost.wood); }
+        if (miningCompleted) { addBuildingOption('buildingMine', mineCost, () => inventory.pebble >= mineCost.pebble && inventory.wood >= mineCost.wood); }
+        if (buildingsListElement.innerHTML === '') { buildingsListElement.innerHTML = `<li>${lang.noBuildingsAvailable}</li>`; }
     }
-
-    function updateUnitDisplayBar() {
-        unitDisplayBar.innerHTML = '';
-        const lang = translations[currentLanguage];
-        units.forEach(unit => {
-            const icon = document.createElement('div');
-            icon.classList.add('unit-icon');
-            icon.dataset.unitId = unit.id;
-            icon.dataset.unitType = unit.type;
-            const unitTypeKey = `unit${unit.type.charAt(0).toUpperCase() + unit.type.slice(1)}`;
-            const translatedUnitType = lang[unitTypeKey] || unit.type;
-            icon.textContent = translatedUnitType.charAt(0).toUpperCase();
-            icon.title = `${translatedUnitType} (${unit.id})`;
-            if (unit.id === selectedUnitId) {
-                icon.classList.add('selected');
-            }
-            icon.addEventListener('click', () => {
-                selectedUnitId = unit.id;
-                focusOnUnit(unit.id); // <<<<<< Focus on click
-            });
-            unitDisplayBar.appendChild(icon);
-        });
+    function updateUnitDisplayBar() { /* ... no changes ... */
+        unitDisplayBar.innerHTML = ''; const lang = translations[currentLanguage]; units.forEach(unit => { const icon = document.createElement('div'); icon.classList.add('unit-icon'); icon.dataset.unitId = unit.id; icon.dataset.unitType = unit.type; const unitTypeKey = `unit${unit.type.charAt(0).toUpperCase() + unit.type.slice(1)}`; const translatedUnitType = lang[unitTypeKey] || unit.type; icon.textContent = translatedUnitType.charAt(0).toUpperCase(); icon.title = `${translatedUnitType} (${unit.id})`; if (unit.id === selectedUnitId) { icon.classList.add('selected'); } icon.addEventListener('click', () => { selectedUnitId = unit.id; focusOnUnit(unit.id); }); unitDisplayBar.appendChild(icon); });
     }
-
-    function updateUnitsPanel() {
-        const currentWorkers = units.filter(u => u.type === 'worker').length;
-        const lang = translations[currentLanguage];
-
-        let buttonText = lang.deployWorkerButton;
-        let isDisabled = false;
-
-        if (!settlementCompleted) {
-             isDisabled = true;
-        } else if (maxWorkers <= 0) {
-             isDisabled = true;
-            buttonText = lang.deployWorkerRequiresHouse;
-        } else if (currentWorkers >= maxWorkers) {
-             isDisabled = true;
-            buttonText = `${lang.deployWorkerButton} (${currentWorkers}/${maxWorkers} ${lang.deployWorkerMax})`;
-        } else {
-            isDisabled = false;
-            buttonText = `${lang.deployWorkerButton} (${currentWorkers}/${maxWorkers})`;
-        }
-
-        deployWorkerButton.disabled = isDisabled;
-        deployWorkerButton.textContent = buttonText;
-
-        const workerLi = unitsList.querySelector('li');
-        if (workerLi) {
-             workerLi.innerHTML = '';
-             workerLi.appendChild(deployWorkerButton);
-        } else {
-            const newLi = document.createElement('li');
-            newLi.appendChild(deployWorkerButton);
-            unitsList.appendChild(newLi);
-        }
+    function updateUnitsPanel() { /* ... no changes ... */
+        const currentWorkers = units.filter(u => u.type === 'worker').length; const lang = translations[currentLanguage]; let buttonText = lang.deployWorkerButton; let isDisabled = false; if (!settlementCompleted) { isDisabled = true; } else if (maxWorkers <= 0) { isDisabled = true; buttonText = lang.deployWorkerRequiresHouse; } else if (currentWorkers >= maxWorkers) { isDisabled = true; buttonText = `${lang.deployWorkerButton} (${currentWorkers}/${maxWorkers} ${lang.deployWorkerMax})`; } else { isDisabled = false; buttonText = `${lang.deployWorkerButton} (${currentWorkers}/${maxWorkers})`; } deployWorkerButton.disabled = isDisabled; deployWorkerButton.textContent = buttonText; const workerLi = unitsList.querySelector('li'); if (workerLi) { workerLi.innerHTML = ''; workerLi.appendChild(deployWorkerButton); } else { const newLi = document.createElement('li'); newLi.appendChild(deployWorkerButton); unitsList.appendChild(newLi); }
     }
 
     // --- Gameplay Functions ---
-    function checkResource() {
-        const selectedUnit = units.find(u => u.id === selectedUnitId);
-        let canGather = false;
-        let tileInfo = null;
-
-        if (selectedUnit) {
-            const unitWorldX = selectedUnit.worldX;
-            const unitWorldY = selectedUnit.worldY;
-            const data = getTileData(unitWorldX, unitWorldY);
-            tileInfo = data;
-
-            if (data && !data.building) {
-                 if (data.type === 'tree' || data.type === 'stone' || data.type === 'flint') {
-                    canGather = true;
-                 }
-            }
-        }
-
-        actionButton.style.display = canGather ? 'inline-block' : 'none';
-        displayTileInfo(selectedUnit, tileInfo);
+    function checkResource() { /* ... no changes ... */
+        const selectedUnit = units.find(u => u.id === selectedUnitId); let canGather = false; let tileInfo = null; if (selectedUnit) { const unitWorldX = selectedUnit.worldX; const unitWorldY = selectedUnit.worldY; const data = getTileData(unitWorldX, unitWorldY); tileInfo = data; if (data && !data.building) { if (data.type === 'tree' || data.type === 'stone' || data.type === 'flint') { canGather = true; } } } actionButton.style.display = canGather ? 'inline-block' : 'none'; displayTileInfo(selectedUnit, tileInfo);
+    }
+    function displayTileInfo(unit, tileData) { /* ... no changes ... */
+        const lang = translations[currentLanguage]; if (!unit) { resourceNameDisplay.textContent = lang.noUnitSelected; return; } let nameToShow = lang.unknownTile; if (tileData) { if (tileData.building) { const buildingKey = `building${tileData.building.charAt(0).toUpperCase() + tileData.building.slice(1)}`; nameToShow = `${lang.onTile} ${lang[buildingKey] || tileData.building}`; } else if (tileData.type === 'tree') { nameToShow = `${lang.onTile} ${lang.tileResourceTree}`; } else if (tileData.type === 'stone') { nameToShow = `${lang.onTile} ${lang.tileResourceStone}`; } else if (tileData.type === 'flint') { nameToShow = `${lang.onTile} ${lang.tileResourceFlint}`; } else { nameToShow = `${lang.onTile} ${lang.emptyTile}`; } } resourceNameDisplay.textContent = nameToShow;
     }
 
-    function displayTileInfo(unit, tileData) {
-        const lang = translations[currentLanguage];
-        if (!unit) {
-            resourceNameDisplay.textContent = lang.noUnitSelected;
-            return;
-        }
-
-        let nameToShow = lang.unknownTile;
-        if (tileData) {
-            if (tileData.building) {
-                const buildingKey = `building${tileData.building.charAt(0).toUpperCase() + tileData.building.slice(1)}`;
-                nameToShow = `${lang.onTile} ${lang[buildingKey] || tileData.building}`;
-            } else if (tileData.type === 'tree') {
-                nameToShow = `${lang.onTile} ${lang.tileResourceTree}`;
-            } else if (tileData.type === 'stone') {
-                nameToShow = `${lang.onTile} ${lang.tileResourceStone}`;
-            } else if (tileData.type === 'flint') {
-                nameToShow = `${lang.onTile} ${lang.tileResourceFlint}`;
-            } else {
-                nameToShow = `${lang.onTile} ${lang.emptyTile}`;
-            }
-        }
-        resourceNameDisplay.textContent = nameToShow;
-    }
-
-    function moveUnit(targetGridX, targetGridY) {
+    function moveUnit(targetGridX, targetGridY) { // <<< MODIFIED
         const selectedUnit = units.find(u => u.id === selectedUnitId);
         if (!selectedUnit) return;
 
@@ -975,23 +749,18 @@
         const targetWorldY = targetGridY + viewOffsetY;
 
         // Validation
-        const dx = Math.abs(targetWorldX - selectedUnit.worldX);
-        const dy = Math.abs(targetWorldY - selectedUnit.worldY);
+        const dx = Math.abs(targetWorldX - selectedUnit.worldX); const dy = Math.abs(targetWorldY - selectedUnit.worldY);
         if (!(dx <= 1 && dy <= 1 && (dx !== 0 || dy !== 0))) { return; } // Not adjacent
         if (!revealedTiles.has(`${targetWorldX},${targetWorldY}`)) { return; } // Not revealed
-
         const targetOccupied = units.some(u => u.worldX === targetWorldX && u.worldY === targetWorldY && u.id !== selectedUnitId);
-        if (targetOccupied) {
-            showAlert("alertUnitMoveOccupied", 2000, false);
-            return;
-        }
+        if (targetOccupied) { showAlert("alertUnitMoveOccupied", 2000, false); return; }
 
         // Execute Move
         selectedUnit.worldX = targetWorldX;
         selectedUnit.worldY = targetWorldY;
 
         // Reveal & Update Progress
-        const newlyRevealed = revealArea(targetWorldX, targetWorldY, REVEAL_RADIUS);
+        revealArea(targetWorldX, targetWorldY, REVEAL_RADIUS);
         if (activeResearch) { researchPoints++; updateResearchPointsDisplay(); updateResearchProgress(); }
         moveCount++; movesSinceLastCoal++;
         if (moveCount >= wheatProductionInterval) { produceWheat(); moveCount = 0; }
@@ -1003,319 +772,91 @@
             // <<<< FOCUS on the selected unit after move >>>>
             focusOnUnit(selectedUnit.id);
         } else {
-            // If selection changed during logic, just update grid without focus
+            // Fallback (unlikely scenario)
             updateGrid();
-            // checkResource(); // updateGrid calls checkResource now
         }
     }
 
-
-    function gatherResource() {
-        const selectedUnit = units.find(u => u.id === selectedUnitId);
-        if (!selectedUnit) { showAlert("noUnitSelected", 2000); return; }
-
-        const unitWorldX = selectedUnit.worldX;
-        const unitWorldY = selectedUnit.worldY;
-        const data = getTileData(unitWorldX, unitWorldY);
-
-        if (data && !data.building) {
-             let gatheredResourceKey = '';
-             if (data.type === 'tree') { inventory.wood++; gatheredResourceKey = 'wood'; data.type = 'empty'; }
-             else if (data.type === 'stone') { inventory.pebble++; gatheredResourceKey = 'pebble'; data.type = 'empty'; }
-             else if (data.type === 'flint') { inventory.flint++; gatheredResourceKey = 'flint'; data.type = 'empty'; }
-
-             if (gatheredResourceKey) {
-                 showAlert('alertGathered', 1500, true, [gatheredResourceKey]);
-                 setTileData(unitWorldX, unitWorldY, data);
-                 updateInventoryDisplay();
-                 updateGrid(); // Redraw grid to show change and re-run checkResource
-             }
-        }
+    function gatherResource() { /* ... no changes ... */
+        const selectedUnit = units.find(u => u.id === selectedUnitId); if (!selectedUnit) { showAlert("noUnitSelected", 2000); return; } const unitWorldX = selectedUnit.worldX; const unitWorldY = selectedUnit.worldY; const data = getTileData(unitWorldX, unitWorldY); if (data && !data.building) { let gatheredResourceKey = ''; if (data.type === 'tree') { inventory.wood++; gatheredResourceKey = 'wood'; data.type = 'empty'; } else if (data.type === 'stone') { inventory.pebble++; gatheredResourceKey = 'pebble'; data.type = 'empty'; } else if (data.type === 'flint') { inventory.flint++; gatheredResourceKey = 'flint'; data.type = 'empty'; } if (gatheredResourceKey) { showAlert('alertGathered', 1500, true, [gatheredResourceKey]); setTileData(unitWorldX, unitWorldY, data); updateInventoryDisplay(); updateGrid(); } }
     }
-
-    function produceWheat() {
-        let wheatProduced = 0;
-        revealedTiles.forEach(coordString => {
-            const [x, y] = coordString.split(',').map(Number);
-            const data = getTileData(x, y);
-            if (data && data.building === 'farm') { wheatProduced++; }
-        });
-        if (wheatProduced > 0) { inventory.wheat += wheatProduced; updateInventoryDisplay(); }
-    }
-
-    function produceCoal() {
-        let coalProduced = 0;
-        revealedTiles.forEach(coordString => {
-            const [x, y] = coordString.split(',').map(Number);
-            const data = getTileData(x, y);
-            if (data && data.building === 'mine') { coalProduced++; }
-        });
-        if (coalProduced > 0) { inventory.coal += coalProduced; updateInventoryDisplay(); }
-    }
-
-    function findSpawnPointNearHouse() {
-         const workers = units.filter(u => u.type === 'worker');
-         if (workers.length === 0 && units.length > 0) {
-             const pawn = units[0];
-             for (let dy = -1; dy <= 1; dy++) {
-                 for (let dx = -1; dx <= 1; dx++) {
-                     if (dx === 0 && dy === 0) continue;
-                     const sx = pawn.worldX + dx;
-                     const sy = pawn.worldY + dy;
-                     const sData = getTileData(sx, sy);
-                     if (revealedTiles.has(`${sx},${sy}`) && sData && sData.type === 'empty' && !sData.building && !units.some(u => u.worldX === sx && u.worldY === sy)) {
-                         return { worldX: sx, worldY: sy };
-                     }
-                 }
-             }
-             return null;
-         }
-
-        const houseCoords = [];
-        revealedTiles.forEach(coordString => {
-             const [x, y] = coordString.split(',').map(Number);
-             const data = getTileData(x,y);
-             if(data && data.building === 'house') { houseCoords.push({worldX: x, worldY: y}); }
-        });
-        if (houseCoords.length === 0) return null;
-
-        for (const houseCoord of houseCoords) {
-            for (let dy = -1; dy <= 1; dy++) {
-                 for (let dx = -1; dx <= 1; dx++) {
-                    if (dx === 0 && dy === 0) continue;
-                    const sx = houseCoord.worldX + dx;
-                    const sy = houseCoord.worldY + dy;
-                    const sData = getTileData(sx, sy);
-                     if (revealedTiles.has(`${sx},${sy}`) && sData && sData.type === 'empty' && !sData.building && !units.some(u => u.worldX === sx && u.worldY === sy)) {
-                         return { worldX: sx, worldY: sy };
-                    }
-                 }
-             }
-        }
-        return null;
+    function produceWheat() { /* ... no changes ... */ let wheatProduced = 0; revealedTiles.forEach(coordString => { const [x, y] = coordString.split(',').map(Number); const data = getTileData(x, y); if (data && data.building === 'farm') { wheatProduced++; } }); if (wheatProduced > 0) { inventory.wheat += wheatProduced; updateInventoryDisplay(); } }
+    function produceCoal() { /* ... no changes ... */ let coalProduced = 0; revealedTiles.forEach(coordString => { const [x, y] = coordString.split(',').map(Number); const data = getTileData(x, y); if (data && data.building === 'mine') { coalProduced++; } }); if (coalProduced > 0) { inventory.coal += coalProduced; updateInventoryDisplay(); } }
+    function findSpawnPointNearHouse() { /* ... no changes ... */
+         const workers = units.filter(u => u.type === 'worker'); if (workers.length === 0 && units.length > 0) { const pawn = units[0]; for (let dy = -1; dy <= 1; dy++) { for (let dx = -1; dx <= 1; dx++) { if (dx === 0 && dy === 0) continue; const sx = pawn.worldX + dx; const sy = pawn.worldY + dy; const sData = getTileData(sx, sy); if (revealedTiles.has(`${sx},${sy}`) && sData && sData.type === 'empty' && !sData.building && !units.some(u => u.worldX === sx && u.worldY === sy)) { return { worldX: sx, worldY: sy }; } } } return null; } const houseCoords = []; revealedTiles.forEach(coordString => { const [x, y] = coordString.split(',').map(Number); const data = getTileData(x,y); if(data && data.building === 'house') { houseCoords.push({worldX: x, worldY: y}); } }); if (houseCoords.length === 0) return null; for (const houseCoord of houseCoords) { for (let dy = -1; dy <= 1; dy++) { for (let dx = -1; dx <= 1; dx++) { if (dx === 0 && dy === 0) continue; const sx = houseCoord.worldX + dx; const sy = houseCoord.worldY + dy; const sData = getTileData(sx, sy); if (revealedTiles.has(`${sx},${sy}`) && sData && sData.type === 'empty' && !sData.building && !units.some(u => u.worldX === sx && u.worldY === sy)) { return { worldX: sx, worldY: sy }; } } } } return null;
     }
 
     // --- Unit Focusing ---
-    function focusOnUnit(unitId) {
+    function focusOnUnit(unitId) { // <<< MODIFIED (call updateUnitCoordsDisplay)
         const unit = units.find(u => u.id === unitId);
         if (!unit) return;
 
         const newViewOffsetX = unit.worldX - VIEW_CENTER_OFFSET;
         const newViewOffsetY = unit.worldY - VIEW_CENTER_OFFSET;
-
         const viewChanged = newViewOffsetX !== viewOffsetX || newViewOffsetY !== viewOffsetY;
 
-        viewOffsetX = newViewOffsetX;
-        viewOffsetY = newViewOffsetY;
+        viewOffsetX = newViewOffsetX; viewOffsetY = newViewOffsetY;
 
-        // Reveal the area now visible in the viewport
         let newlyRevealed = false;
         for (let gy = 0; gy < gridSize; gy++) {
             for (let gx = 0; gx < gridSize; gx++) {
-                if(revealArea(gx + viewOffsetX, gy + viewOffsetY, 0)) { // Reveal just the tile itself if needed
-                    newlyRevealed = true;
-                }
+                if(revealArea(gx + viewOffsetX, gy + viewOffsetY, 0)) { newlyRevealed = true; }
             }
         }
 
-        // Always update display bar selection
         selectedUnitId = unitId;
         updateUnitDisplayBar();
+        updateUnitCoordsDisplay(); // <<< UPDATE COORDS DISPLAY
 
-        // Redraw grid if view changed or new tiles were revealed by the focus shift itself
         if (viewChanged || newlyRevealed) {
-            updateGrid(); // This will call checkResource
+            updateGrid(); // This calls checkResource
         } else {
-            // If view didn't change, ensure selection highlight is updated on grid
-            updateGrid(); // Minimal redraw for selection change
+            updateGrid(); // Redraw needed for selection highlight update
         }
     }
 
 
     // --- Event Listeners ---
-    grid.addEventListener('click', (event) => {
+    grid.addEventListener('click', (event) => { /* ... no changes ... */
         if (event.target.classList.contains('tile') && !event.target.classList.contains('unknown')) {
-            const gridX = parseInt(event.target.dataset.gridX);
-            const gridY = parseInt(event.target.dataset.gridY);
-            const worldX = gridX + viewOffsetX;
-            const worldY = gridY + viewOffsetY;
-
-            const clickedUnit = units.find(u => u.worldX === worldX && u.worldY === worldY);
-            const lang = translations[currentLanguage];
-
-            if (clickedUnit) {
-                selectedUnitId = clickedUnit.id;
-                selectedBuilding = null;
-                updateUnitDisplayBar();
-                updateGrid();
-                // checkResource(); // updateGrid calls this
-                const unitTypeKey = `unit${clickedUnit.type.charAt(0).toUpperCase() + clickedUnit.type.slice(1)}`;
-                showAlert('alertSelectedUnit', 1500, false, [unitTypeKey, clickedUnit.id]);
-            } else if (selectedBuilding) { // Build action
-                const builderUnit = units.find(u => u.id === selectedUnitId);
-                if (!builderUnit) { showAlert("alertSelectUnitToBuild", 2500); selectedBuilding = null; return; }
-
-                const tileData = getTileData(worldX, worldY);
-                if (tileData && tileData.type === 'empty' && !tileData.building) {
-                    const capabilities = unitCapabilities[builderUnit.type];
-                    const buildingKey = `building${selectedBuilding.charAt(0).toUpperCase() + selectedBuilding.slice(1)}`;
-
-                    if (!capabilities || !capabilities.canBuild.includes(selectedBuilding)) {
-                         const unitTypeKey = `unit${builderUnit.type.charAt(0).toUpperCase() + builderUnit.type.slice(1)}`;
-                         showAlert('alertUnitCannotBuild', 3000, true, [unitTypeKey, buildingKey]);
-                         selectedBuilding = null; return;
-                    }
-
-                    let costMet = false; let cost;
-                    if (selectedBuilding === 'house') {
-                        cost = houseCost;
-                        if (inventory.wood >= cost.wood && inventory.pebble >= cost.pebble) { inventory.wood -= cost.wood; inventory.pebble -= cost.pebble; costMet = true; maxWorkers++; updateUnitsPanel(); }
-                    } else if (selectedBuilding === 'farm') {
-                        cost = farmCost;
-                        if (inventory.wood >= cost.wood) { inventory.wood -= cost.wood; costMet = true; }
-                    } else if (selectedBuilding === 'mine') {
-                        cost = mineCost;
-                        if (inventory.pebble >= cost.pebble && inventory.wood >= cost.wood) { inventory.pebble -= cost.pebble; inventory.wood -= cost.wood; costMet = true; }
-                    }
-
-                    if(costMet) {
-                        tileData.building = selectedBuilding;
-                        setTileData(worldX, worldY, tileData);
-                        showAlert('alertBuildingBuilt', 2500, true, [buildingKey]);
-                        selectedBuilding = null;
-                        updateInventoryDisplay();
-                        updateGrid();
-                        updateBuildingsList();
-                    } else {
-                         showAlert('alertNotEnoughResources', 3000, true, [buildingKey]);
-                         selectedBuilding = null;
-                    }
-                } else {
-                     let reasonKey = 'alertCannotBuildNonEmpty'; let reasonArgs = [];
-                     if (tileData && tileData.building) {
-                         reasonKey = 'alertCannotBuildExists';
-                         reasonArgs = [`building${tileData.building.charAt(0).toUpperCase() + tileData.building.slice(1)}`];
-                     } else if (tileData && tileData.type !== 'empty') {
-                         let resourceNameKey = '';
-                         if (tileData.type === 'tree') resourceNameKey = 'tileResourceTree';
-                         else if (tileData.type === 'stone') resourceNameKey = 'tileResourceStone';
-                         else if (tileData.type === 'flint') resourceNameKey = 'tileResourceFlint';
-                         reasonKey = 'alertCannotBuildOnResource';
-                         reasonArgs = [resourceNameKey || tileData.type];
-                     }
-                     showAlert(reasonKey, 3000, true, reasonArgs);
-                     selectedBuilding = null;
-                }
-            } else { // Move action
-                moveUnit(gridX, gridY);
-            }
+            const gridX = parseInt(event.target.dataset.gridX); const gridY = parseInt(event.target.dataset.gridY); const worldX = gridX + viewOffsetX; const worldY = gridY + viewOffsetY;
+            const clickedUnit = units.find(u => u.worldX === worldX && u.worldY === worldY); const lang = translations[currentLanguage];
+            if (clickedUnit) { selectedUnitId = clickedUnit.id; selectedBuilding = null; updateUnitDisplayBar(); updateGrid(); const unitTypeKey = `unit${clickedUnit.type.charAt(0).toUpperCase() + clickedUnit.type.slice(1)}`; showAlert('alertSelectedUnit', 1500, false, [unitTypeKey, clickedUnit.id]); }
+            else if (selectedBuilding) { const builderUnit = units.find(u => u.id === selectedUnitId); if (!builderUnit) { showAlert("alertSelectUnitToBuild", 2500); selectedBuilding = null; return; } const tileData = getTileData(worldX, worldY); if (tileData && tileData.type === 'empty' && !tileData.building) { const capabilities = unitCapabilities[builderUnit.type]; const buildingKey = `building${selectedBuilding.charAt(0).toUpperCase() + selectedBuilding.slice(1)}`; if (!capabilities || !capabilities.canBuild.includes(selectedBuilding)) { const unitTypeKey = `unit${builderUnit.type.charAt(0).toUpperCase() + builderUnit.type.slice(1)}`; showAlert('alertUnitCannotBuild', 3000, true, [unitTypeKey, buildingKey]); selectedBuilding = null; return; } let costMet = false; let cost; if (selectedBuilding === 'house') { cost = houseCost; if (inventory.wood >= cost.wood && inventory.pebble >= cost.pebble) { inventory.wood -= cost.wood; inventory.pebble -= cost.pebble; costMet = true; maxWorkers++; updateUnitsPanel(); } } else if (selectedBuilding === 'farm') { cost = farmCost; if (inventory.wood >= cost.wood) { inventory.wood -= cost.wood; costMet = true; } } else if (selectedBuilding === 'mine') { cost = mineCost; if (inventory.pebble >= cost.pebble && inventory.wood >= cost.wood) { inventory.pebble -= cost.pebble; inventory.wood -= cost.wood; costMet = true; } } if(costMet) { tileData.building = selectedBuilding; setTileData(worldX, worldY, tileData); showAlert('alertBuildingBuilt', 2500, true, [buildingKey]); selectedBuilding = null; updateInventoryDisplay(); updateGrid(); updateBuildingsList(); } else { showAlert('alertNotEnoughResources', 3000, true, [buildingKey]); selectedBuilding = null; } } else { let reasonKey = 'alertCannotBuildNonEmpty'; let reasonArgs = []; if (tileData && tileData.building) { reasonKey = 'alertCannotBuildExists'; reasonArgs = [`building${tileData.building.charAt(0).toUpperCase() + tileData.building.slice(1)}`]; } else if (tileData && tileData.type !== 'empty') { let resourceNameKey = ''; if (tileData.type === 'tree') resourceNameKey = 'tileResourceTree'; else if (tileData.type === 'stone') resourceNameKey = 'tileResourceStone'; else if (tileData.type === 'flint') resourceNameKey = 'tileResourceFlint'; reasonKey = 'alertCannotBuildOnResource'; reasonArgs = [resourceNameKey || tileData.type]; } showAlert(reasonKey, 3000, true, reasonArgs); selectedBuilding = null; } }
+            else { moveUnit(gridX, gridY); }
         }
     });
     actionButton.addEventListener('click', gatherResource);
 
     // --- Panel Toggling ---
-    function hideAllPanels() {
-        techTree.style.display = 'none';
-        buildingsList.style.display = 'none';
-        unitsPanel.style.display = 'none';
-        logsPanel.style.display = 'none';
-    }
-    researchButton.addEventListener('click', () => { const isVisible = techTree.style.display === 'block'; hideAllPanels(); if (!isVisible) techTree.style.display = 'block'; });
-    buildingsButton.addEventListener('click', () => { const isVisible = buildingsList.style.display === 'block'; hideAllPanels(); if (!isVisible) { updateBuildingsList(); buildingsList.style.display = 'block'; } });
-    unitsButton.addEventListener('click', () => { const isVisible = unitsPanel.style.display === 'block'; hideAllPanels(); if (!isVisible) { updateUnitsPanel(); unitsPanel.style.display = 'block'; } });
-    logsButton.addEventListener('click', () => { const isVisible = logsPanel.style.display === 'block'; hideAllPanels(); if (!isVisible) { updateLogsDisplay(); logsPanel.style.display = 'block'; } });
+    function hideAllPanels() { /* ... no changes ... */ techTree.style.display = 'none'; buildingsList.style.display = 'none'; unitsPanel.style.display = 'none'; logsPanel.style.display = 'none'; }
+    researchButton.addEventListener('click', () => { /* ... no changes ... */ const isVisible = techTree.style.display === 'block'; hideAllPanels(); if (!isVisible) techTree.style.display = 'block'; });
+    buildingsButton.addEventListener('click', () => { /* ... no changes ... */ const isVisible = buildingsList.style.display === 'block'; hideAllPanels(); if (!isVisible) { updateBuildingsList(); buildingsList.style.display = 'block'; } });
+    unitsButton.addEventListener('click', () => { /* ... no changes ... */ const isVisible = unitsPanel.style.display === 'block'; hideAllPanels(); if (!isVisible) { updateUnitsPanel(); unitsPanel.style.display = 'block'; } });
+    logsButton.addEventListener('click', () => { /* ... no changes ... */ const isVisible = logsPanel.style.display === 'block'; hideAllPanels(); if (!isVisible) { updateLogsDisplay(); logsPanel.style.display = 'block'; } });
 
     // --- Log Filter/Search Listeners ---
     logSearchInput.addEventListener('input', updateLogsDisplay);
     logFilterCheckbox.addEventListener('change', updateLogsDisplay);
 
     // --- Research Button Listeners ---
-    function handleResearchClick(researchType, buttonElement, completionFlag, progressContainer) {
-         const researchKey = `research${researchType.charAt(0).toUpperCase() + researchType.slice(1)}`;
-         if (buttonElement.disabled || completionFlag) return;
-         if (!activeResearch) {
-             activeResearch = researchType.toLowerCase();
-             progressContainer.style.display = 'flex';
-             updateResearchPointsDisplay();
-             updateResearchProgress();
-             showAlert("alertResearchStarted", 2500, true, [researchKey]);
-         } else {
-             const activeResearchKey = `research${activeResearch.charAt(0).toUpperCase() + activeResearch.slice(1)}`;
-             showAlert("alertAlreadyResearching", 3000, true, [activeResearchKey]);
-         }
-     }
+    function handleResearchClick(researchType, buttonElement, completionFlag, progressContainer) { /* ... no changes ... */ const researchKey = `research${researchType.charAt(0).toUpperCase() + researchType.slice(1)}`; if (buttonElement.disabled || completionFlag) return; if (!activeResearch) { activeResearch = researchType.toLowerCase(); progressContainer.style.display = 'flex'; updateResearchPointsDisplay(); updateResearchProgress(); showAlert("alertResearchStarted", 2500, true, [researchKey]); } else { const activeResearchKey = `research${activeResearch.charAt(0).toUpperCase() + activeResearch.slice(1)}`; showAlert("alertAlreadyResearching", 3000, true, [activeResearchKey]); } }
     settlementResearchBtn.addEventListener('click', () => handleResearchClick('Settlement', settlementResearchBtn, settlementCompleted, settlementResearchProgress));
     agricultureResearchBtn.addEventListener('click', () => handleResearchClick('Agriculture', agricultureResearchBtn, agricultureCompleted, agricultureResearchProgress));
     miningResearchBtn.addEventListener('click', () => handleResearchClick('Mining', miningResearchBtn, miningCompleted, miningResearchProgress));
 
     // --- Deploy Worker Listener ---
-    deployWorkerButton.addEventListener('click', () => {
-        if (deployWorkerButton.disabled) return;
-
-        const spawnDetails = findSpawnPointNearHouse();
-        if (spawnDetails) {
-            const newWorker = { id: `unit-${nextUnitId++}`, type: 'worker', worldX: spawnDetails.worldX, worldY: spawnDetails.worldY };
-            units.push(newWorker);
-            revealArea(newWorker.worldX, newWorker.worldY, REVEAL_RADIUS);
-            showAlert("alertWorkerDeployed", 2000);
-            updateGrid(); // Show new worker
-            updateUnitDisplayBar(); // Add icon
-            updateUnitsPanel(); // Update count/button state
-        } else {
-            showAlert("alertNoSpaceForWorker", 3000);
-        }
-    });
+    deployWorkerButton.addEventListener('click', () => { /* ... no changes ... */ if (deployWorkerButton.disabled) return; const spawnDetails = findSpawnPointNearHouse(); if (spawnDetails) { const newWorker = { id: `unit-${nextUnitId++}`, type: 'worker', worldX: spawnDetails.worldX, worldY: spawnDetails.worldY }; units.push(newWorker); revealArea(newWorker.worldX, newWorker.worldY, REVEAL_RADIUS); showAlert("alertWorkerDeployed", 2000); updateGrid(); updateUnitDisplayBar(); updateUnitsPanel(); } else { showAlert("alertNoSpaceForWorker", 3000); } });
 
     // --- Grid Hover Highlights ---
-    grid.addEventListener('mouseover', (event) => {
-        if (event.target.classList.contains('tile') && !event.target.classList.contains('unknown') && !selectedBuilding && selectedUnitId != null) {
-            highlightEnabled = true; updateGrid();
-        }
-    });
-    grid.addEventListener('mouseout', (event) => {
-         if (highlightEnabled && (!event.relatedTarget || !event.relatedTarget.closest || !event.relatedTarget.closest('#grid'))) {
-             highlightEnabled = false; updateGrid();
-         }
-     });
-
+    grid.addEventListener('mouseover', (event) => { /* ... no changes ... */ if (event.target.classList.contains('tile') && !event.target.classList.contains('unknown') && !selectedBuilding && selectedUnitId != null) { highlightEnabled = true; updateGrid(); } });
+    grid.addEventListener('mouseout', (event) => { /* ... no changes ... */ if (highlightEnabled && (!event.relatedTarget || !event.relatedTarget.closest || !event.relatedTarget.closest('#grid'))) { highlightEnabled = false; updateGrid(); } });
 
     // --- Save/Load Functions ---
-    function gatherSaveData() {
-        return {
-            units: units, nextUnitId: nextUnitId, selectedUnitId: selectedUnitId,
-            inventory: inventory, researchPoints: researchPoints, activeResearch: activeResearch,
-            settlementCompleted: settlementCompleted, agricultureCompleted: agricultureCompleted, miningCompleted: miningCompleted,
-            maxWorkers: maxWorkers, moveCount: moveCount, movesSinceLastCoal: movesSinceLastCoal,
-            colonyName: colonyName, currentLanguage: currentLanguage,
-            eventLogs: eventLogs.map(log => ({ time: log.time, messageKey: log.messageKey || null, args: log.args || [] })),
-            viewOffsetX: viewOffsetX, viewOffsetY: viewOffsetY, worldData: worldData, revealedTiles: Array.from(revealedTiles)
-        };
-    }
+    function gatherSaveData() { /* ... no changes ... */ return { units: units, nextUnitId: nextUnitId, selectedUnitId: selectedUnitId, inventory: inventory, researchPoints: researchPoints, activeResearch: activeResearch, settlementCompleted: settlementCompleted, agricultureCompleted: agricultureCompleted, miningCompleted: miningCompleted, maxWorkers: maxWorkers, moveCount: moveCount, movesSinceLastCoal: movesSinceLastCoal, colonyName: colonyName, currentLanguage: currentLanguage, eventLogs: eventLogs.map(log => ({ time: log.time, messageKey: log.messageKey || null, args: log.args || [] })), viewOffsetX: viewOffsetX, viewOffsetY: viewOffsetY, worldData: worldData, revealedTiles: Array.from(revealedTiles) }; }
+    function saveGame() { /* ... no changes ... */ try { const saveData = gatherSaveData(); const saveDataJson = JSON.stringify(saveData); const blob = new Blob([saveDataJson], { type: 'application/json' }); const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; const safeColonyName = colonyName.replace(/[^a-z0-9]/gi, '_').toLowerCase(); link.download = `tinyciv_${safeColonyName}_save.json`; document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url); showAlert('alertGameSaved', 2000); const timeString = getFormattedTime(); eventLogs.push({ time: timeString, messageKey: 'logGameSaved', args: [], rendered: translations[currentLanguage].logGameSaved }); if (logsPanel.style.display === 'block') { updateLogsDisplay(); } } catch (error) { console.error("Error saving game:", error); if (error instanceof RangeError) { showAlert('alertSaveError', 6000, true, ["Save data too large!"]); } else { showAlert('alertSaveError', 4000); } } }
 
-    function saveGame() {
-        try {
-            const saveData = gatherSaveData();
-            const saveDataJson = JSON.stringify(saveData);
-            const blob = new Blob([saveDataJson], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            const safeColonyName = colonyName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-            link.download = `tinyciv_${safeColonyName}_save.json`;
-            document.body.appendChild(link); link.click(); document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-            showAlert('alertGameSaved', 2000);
-            const timeString = getFormattedTime();
-            eventLogs.push({ time: timeString, messageKey: 'logGameSaved', args: [], rendered: translations[currentLanguage].logGameSaved });
-            if (logsPanel.style.display === 'block') { updateLogsDisplay(); }
-        } catch (error) {
-            console.error("Error saving game:", error);
-             if (error instanceof RangeError) { showAlert('alertSaveError', 6000, true, ["Save data too large!"]); }
-             else { showAlert('alertSaveError', 4000); }
-        }
-    }
-
-    function applyLoadedData(data) {
+    function applyLoadedData(data) { // <<< MODIFIED (call updateUnitCoordsDisplay)
         // Restore basic state
         units = data.units || []; nextUnitId = data.nextUnitId || 0;
         inventory = data.inventory || { wood: 0, pebble: 0, flint: 0, wheat: 0, coal: 0 };
@@ -1343,9 +884,10 @@
         // Refresh UI
         selectedBuilding = null; highlightEnabled = false; hideAllPanels();
         updateLanguageUI(); // Updates static text first
-        updateInventoryDisplay(); updateResearchPointsDisplay(); updateUnitDisplayBar();
+        updateInventoryDisplay(); updateResearchPointsDisplay();
+        updateUnitDisplayBar();
+        updateUnitCoordsDisplay(); // <<< UPDATE COORDS
         updateGrid(); // Draw loaded view
-        // checkResource(); // Called by updateGrid
         updateResearchProgress(); updateBuildingsList(); updateUnitsPanel();
 
         // Set button states
@@ -1355,29 +897,7 @@
 
         showAlert('alertLoadSuccess', 3000, false, [colonyName]);
     }
-
-    function loadGame(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                const fileContent = e.target.result;
-                const loadedData = JSON.parse(fileContent);
-                if (!loadedData || typeof loadedData.colonyName === 'undefined' || typeof loadedData.units === 'undefined' || typeof loadedData.worldData === 'undefined') {
-                     throw new Error(translations[currentLanguage].alertLoadInvalidFormat);
-                }
-                applyLoadedData(loadedData);
-            } catch (error) {
-                console.error("Error loading game:", error);
-                showAlert('alertLoadError', 5000, true, [error.message]);
-            } finally {
-                loadFileInput.value = null;
-            }
-        };
-        reader.onerror = function() { showAlert('alertReadFileError', 3000); loadFileInput.value = null; };
-        reader.readAsText(file);
-    }
+    function loadGame(event) { /* ... no changes ... */ const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(e) { try { const fileContent = e.target.result; const loadedData = JSON.parse(fileContent); if (!loadedData || typeof loadedData.colonyName === 'undefined' || typeof loadedData.units === 'undefined' || typeof loadedData.worldData === 'undefined') { throw new Error(translations[currentLanguage].alertLoadInvalidFormat); } applyLoadedData(loadedData); } catch (error) { console.error("Error loading game:", error); showAlert('alertLoadError', 5000, true, [error.message]); } finally { loadFileInput.value = null; } }; reader.onerror = function() { showAlert('alertReadFileError', 3000); loadFileInput.value = null; }; reader.readAsText(file); }
 
     // --- Event Listeners for Save/Load ---
     saveButton.addEventListener('click', saveGame);
@@ -1385,66 +905,25 @@
     loadFileInput.addEventListener('change', loadGame);
 
     // --- UI Language Update Function ---
-    function updateLanguageUI() {
+    function updateLanguageUI() { /* ... no changes ... */
         const lang = translations[currentLanguage];
-        // Update static elements (buttons, titles, etc.)
-        document.querySelector('h1').textContent = lang.gameTitle;
-        languageSwitchButton.textContent = (currentLanguage === 'en') ? lang.switchToFrench : lang.switchToEnglish;
-        languageSwitchButton.title = lang.switchLanguageTooltip;
-        colonyNameDisplay.textContent = `${lang.colonyLabel} ${colonyName}`;
-        inventoryDisplay.querySelector('h2').textContent = lang.inventoryTitle;
-        inventoryDisplay.querySelector('p:nth-of-type(1)').childNodes[0].nodeValue = `${lang.wood}: `;
-        inventoryDisplay.querySelector('p:nth-of-type(2)').childNodes[0].nodeValue = `${lang.pebble}: `;
-        inventoryDisplay.querySelector('p:nth-of-type(3)').childNodes[0].nodeValue = `${lang.flint}: `;
-        inventoryDisplay.querySelector('p:nth-of-type(4)').childNodes[0].nodeValue = `${lang.wheat}: `;
-        inventoryDisplay.querySelector('p:nth-of-type(5)').childNodes[0].nodeValue = `${lang.coal}: `;
-        actionButton.textContent = lang.gatherButton;
-        researchButton.textContent = lang.researchButton; buildingsButton.textContent = lang.buildingsButton;
-        unitsButton.textContent = lang.unitsButton; logsButton.textContent = lang.logsButton;
-        saveButton.textContent = lang.saveButton; loadButton.textContent = lang.loadButton;
-        if(logsPanel) {
-            logsPanel.querySelector('h2').textContent = lang.logsPanelTitle;
-            logSearchInput.placeholder = lang.logSearchPlaceholder;
-             const filterLabel = logFilterCheckbox.parentElement;
-            if (filterLabel && filterLabel.lastChild.nodeType === Node.TEXT_NODE) { filterLabel.lastChild.nodeValue = ` ${lang.logFilterLabel}`; }
-            else if (filterLabel) { filterLabel.appendChild(document.createTextNode(` ${lang.logFilterLabel}`)); }
-        }
+        document.querySelector('h1').textContent = lang.gameTitle; languageSwitchButton.textContent = (currentLanguage === 'en') ? lang.switchToFrench : lang.switchToEnglish; languageSwitchButton.title = lang.switchLanguageTooltip; colonyNameDisplay.textContent = `${lang.colonyLabel} ${colonyName}`;
+        inventoryDisplay.querySelector('h2').textContent = lang.inventoryTitle; inventoryDisplay.querySelector('p:nth-of-type(1)').childNodes[0].nodeValue = `${lang.wood}: `; inventoryDisplay.querySelector('p:nth-of-type(2)').childNodes[0].nodeValue = `${lang.pebble}: `; inventoryDisplay.querySelector('p:nth-of-type(3)').childNodes[0].nodeValue = `${lang.flint}: `; inventoryDisplay.querySelector('p:nth-of-type(4)').childNodes[0].nodeValue = `${lang.wheat}: `; inventoryDisplay.querySelector('p:nth-of-type(5)').childNodes[0].nodeValue = `${lang.coal}: `; actionButton.textContent = lang.gatherButton; researchButton.textContent = lang.researchButton; buildingsButton.textContent = lang.buildingsButton; unitsButton.textContent = lang.unitsButton; logsButton.textContent = lang.logsButton; saveButton.textContent = lang.saveButton; loadButton.textContent = lang.loadButton;
+        if(logsPanel) { logsPanel.querySelector('h2').textContent = lang.logsPanelTitle; logSearchInput.placeholder = lang.logSearchPlaceholder; const filterLabel = logFilterCheckbox.parentElement; if (filterLabel && filterLabel.lastChild.nodeType === Node.TEXT_NODE) { filterLabel.lastChild.nodeValue = ` ${lang.logFilterLabel}`; } else if (filterLabel) { filterLabel.appendChild(document.createTextNode(` ${lang.logFilterLabel}`)); } }
         researchPointsDisplay.parentElement.childNodes[0].nodeValue = `${lang.researchPointsLabel} `;
-        if(techTree) {
-            techTree.querySelector('h2').textContent = lang.researchPanelTitle; techTree.querySelector('h3').textContent = lang.primitiveAge;
-            settlementResearchBtn.textContent = lang.researchSettlement; settlementResearchBtn.parentElement.querySelector('p').textContent = lang.researchSettlementDesc;
-            agricultureResearchBtn.textContent = lang.researchAgriculture; agricultureResearchBtn.parentElement.querySelector('p').textContent = lang.researchAgricultureDesc;
-            miningResearchBtn.textContent = lang.researchMining; miningResearchBtn.parentElement.querySelector('p').textContent = lang.researchMiningDesc;
-        }
-        if(buildingsList) buildingsList.querySelector('h2').textContent = lang.buildingsPanelTitle;
-        if(unitsPanel) unitsPanel.querySelector('h2').textContent = lang.unitsPanelTitle;
-
-        // Trigger dynamic updates
-        updateGrid(); updateUnitDisplayBar(); updateBuildingsList(); updateUnitsPanel();
-        updateResearchProgress(); checkResource(); // checkResource calls displayTileInfo
+        if(techTree) { techTree.querySelector('h2').textContent = lang.researchPanelTitle; techTree.querySelector('h3').textContent = lang.primitiveAge; settlementResearchBtn.textContent = lang.researchSettlement; settlementResearchBtn.parentElement.querySelector('p').textContent = lang.researchSettlementDesc; agricultureResearchBtn.textContent = lang.researchAgriculture; agricultureResearchBtn.parentElement.querySelector('p').textContent = lang.researchAgricultureDesc; miningResearchBtn.textContent = lang.researchMining; miningResearchBtn.parentElement.querySelector('p').textContent = lang.researchMiningDesc; }
+        if(buildingsList) buildingsList.querySelector('h2').textContent = lang.buildingsPanelTitle; if(unitsPanel) unitsPanel.querySelector('h2').textContent = lang.unitsPanelTitle;
+        updateGrid(); updateUnitDisplayBar(); updateBuildingsList(); updateUnitsPanel(); updateResearchProgress(); checkResource();
         if (logsPanel.style.display === 'block') { updateLogsDisplay(); }
     }
 
     // --- Event Listener for Language Switch ---
-    languageSwitchButton.addEventListener('click', () => {
-        currentLanguage = (currentLanguage === 'en') ? 'fr' : 'en';
-        eventLogs.forEach(log => { // Re-render logs
-            if (log.messageKey) {
-                let renderedMessage = translations[currentLanguage][log.messageKey] || log.messageKey;
-                if (log.args && log.args.length > 0) {
-                     log.args.forEach((arg, index) => {
-                         const translatedArg = translations[currentLanguage][arg] || arg;
-                         renderedMessage = renderedMessage.replace(`{${index}}`, translatedArg);
-                     });
-                 }
-                 log.rendered = renderedMessage;
-            }
-        });
-        updateLanguageUI();
+    languageSwitchButton.addEventListener('click', () => { /* ... no changes ... */
+        currentLanguage = (currentLanguage === 'en') ? 'fr' : 'en'; eventLogs.forEach(log => { if (log.messageKey) { let renderedMessage = translations[currentLanguage][log.messageKey] || log.messageKey; if (log.args && log.args.length > 0) { log.args.forEach((arg, index) => { const translatedArg = translations[currentLanguage][arg] || arg; renderedMessage = renderedMessage.replace(`{${index}}`, translatedArg); }); } log.rendered = renderedMessage; } }); updateLanguageUI();
     });
 
     // --- Game Start ---
-    function startGame() {
+    function startGame() { // <<< MODIFIED (call updateUnitCoordsDisplay)
         currentLanguage = 'en';
         const lang = translations[currentLanguage];
         colonyName = prompt(lang.promptColonyName, lang.defaultColonyName);
@@ -1465,8 +944,12 @@
         initializeGridDOM();
         revealArea(startWorldX, startWorldY, REVEAL_RADIUS);
         hideAllPanels();
-        updateLanguageUI(); // Includes sub-updates like updateGrid, checkResource etc.
-        updateInventoryDisplay(); updateResearchPointsDisplay(); updateUnitDisplayBar();
+        updateLanguageUI();
+        updateInventoryDisplay(); updateResearchPointsDisplay();
+        updateUnitDisplayBar();
+        updateUnitCoordsDisplay(); // <<< UPDATE COORDS DISPLAY
+        updateGrid();
+        // checkResource(); // Called by updateGrid
         updateResearchProgress(); updateBuildingsList(); updateUnitsPanel();
 
         // Set initial button states
