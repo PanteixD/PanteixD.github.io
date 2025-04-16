@@ -35,7 +35,7 @@
   #grid { display: grid; grid-template-columns: repeat(10, 55px); grid-template-rows: repeat(10, 55px); gap: 5px; padding: 15px; background-color: #b0bec5; border-radius: 12px; border: 1px solid #90a4ae; margin-bottom: 10px; position: relative; user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; }
 
   /* --- Tiles --- */
-  .tile { width: 55px; height: 55px; border: 1px solid #cfd8dc; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: normal; cursor: pointer; overflow: hidden; border-radius: 8px; transition: background-color 0.2s ease-in-out; background-color: #eceff1; color: #555; position: relative; line-height: 1; }
+  .tile { width: 55px; height: 55px; border: 1px solid #cfd8dc; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: normal; cursor: pointer; overflow: hidden; border-radius: 8px; transition: background-color 0.2s ease-in-out, border-color 0.2s ease, box-shadow 0.2s ease; background-color: #eceff1; color: #555; position: relative; line-height: 1; }
   .tile:not(.unknown):hover { transform: scale(1.05); box-shadow: 0 0 8px rgba(0, 0, 0, 0.1); z-index: 1; }
   .tile.unknown { /* Darker Unknown Tile */
     background-color: #78909c; /* Darker shade */
@@ -67,8 +67,14 @@
   .tile.quarry { background-color: #a1887f; color: white; border-color: #795548;}
   .tile.warehouse { background-color: #7f8c8d; color: white; border-color: #62757f; }
 
-  /* Highlight Style */
+  /* Highlight Styles */
   .highlight { background-color: rgba(52, 152, 219, 0.2) !important; border: 1px solid #3498db !important; }
+  .tile.highlight-house-target { /* Style for target house selection */
+       background-color: rgba(46, 204, 113, 0.3) !important; /* Light green highlight */
+       border: 2px solid #2ecc71 !important; /* Green border */
+       box-shadow: 0 0 10px rgba(46, 204, 113, 0.6);
+       cursor: crosshair; /* Indicate target selection */
+   }
 
   /* --- Buttons --- */
   button { padding: 12px 20px; font-size: 16px; cursor: pointer; border: none; border-radius: 8px; background-color: #3498db; color: white; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); font-weight: 600; }
@@ -100,7 +106,8 @@
   .research-item.completed button:hover:not(:disabled) { background-color: #95a5a6; }
    .research-item.completed .research-info { opacity: 0.7; } /* Fade info too */
 
-  #units-list li button { background-color: #27ae60; color: white; } #units-list li button:hover:not(:disabled) { background-color: #2ecc71; }
+  #units-list li button { background-color: #27ae60; color: white; padding: 8px 15px; font-size: 14px; width: auto; display: inline-block; margin-right: 5px; } /* Style for unit deploy buttons */
+  #units-list li button:hover:not(:disabled) { background-color: #229954; } /* Darker green on hover */
   #upgrade-info button { background-color: #c0392b; color: white; padding: 6px 10px; font-size: 13px; width: 100%; box-sizing: border-box; margin-top: 5px; border-radius: 5px; display: block; }
   #upgrade-info button:hover:not(:disabled) { background-color: #a93226; }
 
@@ -137,7 +144,7 @@
   #unit-biome-display-container { color: #16a085; background-color: #e8f8f5; } #unit-biome-display-container span { font-weight: normal; color: #117a65; text-transform: capitalize; }
   #unit-coords-display-container { color: #34495e; background-color: #ecf0f1; } #unit-coords-display-container span { font-weight: normal; color: #2c3e50; }
   #unit-exp-display-container { color: #e67e22; background-color: #fef5e7; } #unit-exp-display-container span { font-weight: normal; color: #d35400; }
-  #research-points-display-container { color: #8e44ad; background-color: #f3eaf7; margin-bottom: 0; }
+  #research-points-display-container { color: #8e44ad; background-color: #f3eaf7; margin-bottom: 0; } /* Removed margin-bottom */
   #upgrade-info { margin-top: 10px; text-align: left; background-color: #f9ebea; padding: 15px; border-radius: 8px; border: 1px solid #f5b7b1; min-height: 50px; }
   #upgrade-info h4 { font-size: 15px; margin-top: 0; margin-bottom: 10px; color: #a93226; border-bottom: 1px solid #e6b0aa; padding-bottom: 5px;}
   #upgrade-info p { font-size: 13px; color: #555; margin-top: 5px; }
@@ -157,14 +164,7 @@
   #close-tutorial-button { display: block; margin: 20px auto 0 auto; background-color: #e74c3c; padding: 10px 25px; }
   #close-tutorial-button:hover { background-color: #c0392b; }
 
-  /* --- Unit Choice Modal Styles --- */
-  #unit-choice-modal { display: none; position: fixed; z-index: 105; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 300px; background-color: #fdfefe; padding: 25px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); border: 1px solid #ccc; text-align: center;}
-  #unit-choice-modal h3 { margin-top: 0; color: #2c3e50; margin-bottom: 20px; }
-  #unit-choice-buttons { display: flex; justify-content: space-around; gap: 10px; }
-  #unit-choice-buttons button { padding: 10px 15px; font-size: 14px; width: 100px; }
-  #unit-choice-worker-button { background-color: #e67e22; } #unit-choice-worker-button:hover:not(:disabled) { background-color: #d35400; }
-  #unit-choice-scout-button { background-color: #1abc9c; } #unit-choice-scout-button:hover:not(:disabled) { background-color: #16a085; }
-
+  /* --- Unit Choice Modal Styles (REMOVED) --- */
 
   /* Tooltip Base Style */
   [data-tooltip] { position: relative; cursor: help; }
@@ -199,7 +199,7 @@
          <button id="tutorial-button" data-panel-target="tutorial-modal">Tutorial</button>
          <button id="research-button" data-panel-target="tech-tree">Research</button>
          <button id="buildings-button" data-panel-target="buildings-list">Buildings</button>
-         <button id="units-button" data-panel-target="units-panel">Units</button> <!-- May become less useful -->
+         <button id="units-button" data-panel-target="units-panel">Units</button> <!-- Panel for deploying units via houses -->
          <button id="upgrade-button" data-panel-target="upgrade-info">Upgrades</button>
          <button id="logs-button" data-panel-target="logs-panel">Logs</button>
          <button id="save-button">Save Game</button>
@@ -218,6 +218,8 @@
        <div id="unit-biome-display-container">Biome: <span id="unit-biome">Unknown</span></div>
        <div id="unit-coords-display-container">Coords: <span id="unit-coords">(-, -)</span></div>
        <div id="unit-exp-display-container">Exp: <span id="unit-exp">0</span></div>
+       <!-- Research Points moved here -->
+       <div id="research-points-display-container">Research Points: <span id="research-points">0</span></div>
 
        <!-- Logs Panel -->
        <div id="logs-panel" class="panel">
@@ -250,15 +252,15 @@
            </div>
        </div>
        <div id="units-panel" class="panel">
-           <h2>Available Units</h2>
+           <h2>Deploy Units</h2> <!-- Changed Title -->
            <div class="panel-content">
-               <ul id="units-list"> <!-- Will likely be empty for Worker/Scout now -->
-                   <li>No units currently deployable via this panel. Build Houses!</li>
+               <ul id="units-list"> <!-- Populated by JS to deploy units via houses -->
+                   <li>Build houses and research units first!</li>
                </ul>
            </div>
        </div>
        <!-- Static displays -->
-       <div id="research-points-display-container">Research Points: <span id="research-points">0</span></div>
+       <!-- Research Points was moved up -->
        <div id="research-status-display"></div>
     </div>
   </div>
@@ -274,13 +276,7 @@
       </div>
   </div>
 
-  <!-- === UNIT CHOICE MODAL (NEW) === -->
-   <div id="unit-choice-modal">
-       <h3 id="unit-choice-title">Choose Unit to Deploy</h3>
-       <div id="unit-choice-buttons">
-           <!-- Buttons added dynamically by JS -->
-       </div>
-   </div>
+  <!-- === UNIT CHOICE MODAL (REMOVED) === -->
 
 
   <script>
@@ -306,11 +302,12 @@
         tutorialModal: document.getElementById('tutorial-modal'), tutorialTitle: document.getElementById('tutorial-title'),
         tutorialStepsList: document.getElementById('tutorial-steps'), closeTutorialButton: document.getElementById('close-tutorial-button'),
         primitiveTechList: document.getElementById('primitive-tech-list'), buildingsListUl: document.querySelector('#buildings-list ul'),
-        unitsListUl: document.getElementById('units-list'), upgradeInfoContent: document.querySelector('#upgrade-info .panel-content'),
+        unitsListUl: document.getElementById('units-list'), // Reference to units panel UL
+        upgradeInfoContent: document.querySelector('#upgrade-info .panel-content'),
         saveButton: document.getElementById('save-button'), loadButton: document.getElementById('load-button'),
-        unitChoiceModal: document.getElementById('unit-choice-modal'), // NEW
-        unitChoiceTitle: document.getElementById('unit-choice-title'), // NEW
-        unitChoiceButtons: document.getElementById('unit-choice-buttons') // NEW
+        // unitChoiceModal: document.getElementById('unit-choice-modal'), // REMOVED
+        // unitChoiceTitle: document.getElementById('unit-choice-title'), // REMOVED
+        // unitChoiceButtons: document.getElementById('unit-choice-buttons') // REMOVED
     };
 
     // --- Game Configuration ---
@@ -327,30 +324,29 @@
         maxStartRegenAttempts: 10,
         units: {
             pawn: { nameKey: 'unitPawn', icon: 'P', build: ['house'], move: 1, revealRadius: 2, researchBonus: 1, upgrades: ['movement1', 'autoGather'] },
-            // REMOVED 'build' from Worker/Scout as they don't trigger builds from panel now
-            worker: { nameKey: 'unitWorker', icon: 'W', build: ['farm', 'mine', 'quarry', 'warehouse'], move: 1, revealRadius: 2, researchBonus: 0, upgrades: ['movement1', 'autoGather', 'buildSpeed1'] },
-            scout: { nameKey: 'unitScout', icon: 'S', build: [], move: 3, revealRadius: 3, researchBonus: 0, upgrades: ['movement1', 'autoGather'] }
+            worker: { nameKey: 'unitWorker', icon: 'W', build: ['farm', 'mine', 'quarry', 'warehouse'], move: 1, revealRadius: 2, researchBonus: 0, upgrades: ['movement1', 'autoGather'], deployableFromPanel: true, requiredTech: 'settlement' }, // Deployable via House slot
+            scout: { nameKey: 'unitScout', icon: 'S', build: [], move: 3, revealRadius: 3, researchBonus: 0, upgrades: ['movement1', 'autoGather'], deployableFromPanel: true, requiredTech: 'exploration' } // Deployable via House slot
         },
         buildings: {
-            // House no longer provides workerCap, instead triggers unit choice
-            house: { nameKey: 'buildingHouse', cost: { wood: 10, pebble: 5 }, provides: { unitChoice: ['worker', 'scout'] }, unlockedBy: 'settlement' },
+            // House now implicitly provides a slot, tracked via tileData.unitDeployed
+            house: { nameKey: 'buildingHouse', cost: { wood: 10, pebble: 5 }, provides: { }, unlockedBy: 'settlement' },
             farm: { nameKey: 'buildingFarm', cost: { wood: 3 }, produces: { resource: 'wheat', interval: 'wheat' }, requires: 'worker', unlockedBy: 'agriculture' },
             mine: { nameKey: 'buildingMine', cost: { pebble: 5, wood: 2 }, produces: { resource: 'coal', interval: 'coal' }, requires: 'worker', unlockedBy: 'mining' },
             quarry: { nameKey: 'buildingQuarry', cost: { pebble: 15, wood: 5 }, produces: { resource: ['iron', 'copper', 'nickel', 'zinc'], interval: 'quarry' }, requires: 'worker', unlockedBy: 'masonry' },
             warehouse: { nameKey: 'buildingWarehouse', cost: { wood: 15, pebble: 10 }, provides: { capacityBonus: 50 }, unlockedBy: 'storage' }
         },
         tech: {
+            // Note: 'unlocks' doesn't list units directly anymore, logic handles it via deployableFromPanel/requiredTech
             settlement: { nameKey: 'researchSettlement', cost: 15, unlocks: ['house'], requires: [], age: 'primitive', color: '#8e44ad' },
             agriculture: { nameKey: 'researchAgriculture', cost: 10, unlocks: ['farm'], requires: [], age: 'primitive', color: '#aed581' },
             mining: { nameKey: 'researchMining', cost: 15, unlocks: ['mine'], requires: ['agriculture'], age: 'primitive', color: '#7f8c8d' },
             masonry: { nameKey: 'researchMasonry', cost: 20, unlocks: ['quarry'], requires: ['mining'], age: 'primitive', color: '#bcaaa4' },
             storage: { nameKey: 'researchStorage', cost: 25, unlocks: ['warehouse'], requires: ['masonry'], age: 'primitive', color: '#7f8c8d' },
-            exploration: { nameKey: 'researchExploration', cost: 15, unlocks: ['scout'], requires: ['settlement'], age: 'primitive', color: '#1abc9c'}
+            exploration: { nameKey: 'researchExploration', cost: 15, unlocks: [], requires: ['settlement'], age: 'primitive', color: '#1abc9c'} // Just enables scout deployment
         },
         upgrades: {
             movement1: { nameKey: 'upgradeMovement1', cost: 10, effect: { moveBonus: 1 }, maxLevel: 1 },
             autoGather: { nameKey: 'upgradeAutoGather', cost: 15, effect: { autoGather: true }, maxLevel: 1 },
-            // buildSpeed1: { nameKey: 'upgradeBuildSpeed1', cost: 20, effect: { buildTimeMultiplier: 0.8 }, maxLevel: 1 }
         },
         resources: [
              { id: 'wood', nameKey: 'wood' }, { id: 'pebble', nameKey: 'pebble' }, { id: 'flint', nameKey: 'flint' },
@@ -364,8 +360,8 @@
         units: [], nextUnitId: 0, selectedUnitId: null,
         inventory: {}, inventoryCapacity: {},
         researchPoints: 0, activeResearch: null, completedTech: new Set(),
-        // maxWorkers: 0, // REMOVED
         selectedBuilding: null,
+        unitToDeploy: null, // Stores type ('worker', 'scout') when selecting target house
         productionProgress: { wheat: 0, coal: 0, quarry: 0 },
         colonyName: "New Colony", currentLanguage: 'en', eventLogs: [],
         viewOffsetX: 0, viewOffsetY: 0, worldData: {}, revealedTiles: new Set(),
@@ -386,36 +382,37 @@
             water: "Water", sand: "Sand", grass: "Grass", forest: "Forest", desert: "Desert",
             tileResourceTree: "Tree", tileResourceStone: "Stone (Pebbles)", tileResourceFlint: "Flint",
             researchPanelTitle: "Tech Tree", primitiveAge: "Primitive Age",
-            researchSettlement: "Settlement", researchSettlementDesc: "Unlocks Houses (Choose 1 Unit: Worker or Scout).", // Updated Desc
+            researchSettlement: "Settlement", researchSettlementDesc: "Unlocks Houses & Worker deployment via Houses.", // Updated Desc
             researchAgriculture: "Agriculture", researchAgricultureDesc: "Unlocks Farms (Wheat production).",
             researchMining: "Mining", researchMiningDesc: "Unlocks Mines (Coal production). Requires Agriculture.",
             researchMasonry: "Masonry", researchMasonryDesc: "Unlocks Quarries (Metal production). Requires Mining.",
             researchStorage: "Storage", researchStorageDesc: "Unlocks Warehouses (+50 Resource Capacity). Requires Masonry.",
-            researchExploration: "Exploration", researchExplorationDesc: "Unlocks Scouts for deployment via Houses. Requires Settlement.", // Updated Desc
+            researchExploration: "Exploration", researchExplorationDesc: "Enables Scout deployment via Houses. Requires Settlement.", // Updated Desc
             buildingsPanelTitle: "Buildings",
-            buildingHouse: "House", buildingHouseDesc: "Allows deployment of 1 Worker or Scout nearby.", // Updated Desc
+            buildingHouse: "House", buildingHouseDesc: "Provides one slot to deploy a Worker or Scout later via the Units panel.", // Updated Desc
             buildingFarm: "Farm", buildingFarmDesc: "Requires Worker. Produces Wheat over time.",
             buildingMine: "Mine", buildingMineDesc: "Requires Worker. Produces Coal over time.",
             buildingQuarry: "Quarry", buildingQuarryDesc: "Requires Worker. Slowly produces Metals.",
             buildingWarehouse: "Warehouse", buildingWarehouseDesc: "Increases Resource Capacity by 50.",
             noBuildingsAvailable: "No buildings available to build yet. Research technology first.",
-            unitsPanelTitle: "Available Units", // Panel less useful now
-            noUnitsAvailablePanel: "Build Houses to deploy Workers/Scouts.", // New key
+            unitsPanelTitle: "Deploy Units", // Updated Title
+            deployUnitButton: "Deploy {0}", // Key for panel deployment
+            noUnitsAvailablePanel: "Research units first!", // Updated key (when houses exist but tech doesn't)
+            noUnusedHouses: "No unused houses available to deploy units.", // New Key
             unitPawn: "Pawn", unitWorker: "Worker", unitScout: "Scout",
-            // deployUnitButton: "Deploy {0}", // No longer used for W/S
-            // deployUnitRequiresTech: "Deploy {0} (Requires {1})", // No longer used for W/S
-            // deployUnitRequiresHouse: "Deploy Worker (Requires House)", // No longer used for W/S
-            deployUnitMax: "Max", // Might be used for future units
+            deployUnitMax: "Max",
             logsPanelTitle: "Event Logs", logSearchPlaceholder: "Search logs...", logFilterLabel: "Hide gather/cost messages",
             alertWelcome: "Welcome to {0}!", alertGameStarted: "Game started for colony: {0}",
-            alertGathered: "Gathered {1} {0}!", // Added quantity {1}
+            alertGathered: "Gathered {1} {0}!",
             alertGatheredQuarry: "Quarry produced 1 {0}!", alertGatheredEvent: "Found a cache: +{1} {0}!",
             alertStorageFull: "Storage full for {0}!",
             alertNotEnoughResources: "Not enough resources for {0}!", alertCannotBuildNonEmpty: "Cannot build: Tile is not empty!", alertCannotBuildExists: "Cannot build: {0} already exists here!", alertCannotBuildOnResource: "Cannot build on a {0}!", alertCannotBuildOnTerrain: "Cannot build on {0}!", alertBuildSelected: "Selected: {0}. Click an empty tile to build.", alertBuildingBuilt: "{0} built!", alertSelectUnitToBuild: "No unit selected to perform build action.", alertUnitCannotBuild: "{0} cannot build {1}s!",
             alertResearchStarted: "Started researching {0}.", alertAlreadyResearching: "Already researching: {0}!", alertResearchComplete: "{0} research complete!",
             alertUnitDeployed: "{0} deployed!",
-            alertMaxWorkers: "Maximum Worker capacity reached. Build more Houses.", // Kept for reference, but logic removed
-            alertNoSpaceForUnit: "No available space near the House to deploy {0}!", // Updated context
+            alertNoSpaceForUnit: "No available space near the selected House to deploy {0}!", // Updated context
+            alertSelectUnusedHouse: "Select an unused House (highlighted) to deploy the unit.", // New Alert
+            alertInvalidHouseTarget: "Invalid target. Please click an unused House.", // New Alert
+            // alertNoSelectedUnitForDeploy: "Select a unit to deploy near.", // REMOVED
             alertGameSaved: "Game Saved!", alertSaveError: "Error saving game. See console for details.", alertLoadSuccess: "Game loaded successfully for colony: {0}!", alertLoadError: "Error loading game: {0}.", alertLoadInvalidFormat: "Invalid save file format.", alertReadFileError: "Error reading file.", alertSaveVersionMismatch: "Save is from an older version and may not load correctly.",
             alertUnitMoveOccupied: "Cannot move unit: Tile is occupied!", alertMoveInvalid: "Cannot move there.", alertSelectedUnit: "Selected Unit: {0} ({1})",
             promptColonyName: "Welcome to Tiny Civilization Evolved! Please name your colony:", defaultColonyName: "New Settlement",
@@ -428,28 +425,25 @@
             upgradeAutoGather: "Auto-Gather", upgradeAutoGatherDesc: "Automatically gathers resources on tile arrival (Cost: {0} Exp).",
             upgradeNoUpgradesAvailable: "No upgrades available or affordable for this unit.",
             alertNotEnoughExp: "Not enough Exp for {0}!", alertUpgradeSuccess: "{0} purchased for unit {1}!", alertUpgradeMaxLevel: "Upgrade {0} is already at max level.",
-            // Unit Choice Modal
-            unitChoiceModalTitle: "Choose Unit",
-            unitChoiceButtonWorker: "Worker",
-            unitChoiceButtonScout: "Scout",
-            // Tutorial
+            unusedHouseTarget: "Target", // Added to house title when targetting
+            // Tutorial (Updated Flow)
             tutorialTitle: "How to Play (Basics)",
-            tutorialStep1: "Select your starting <code>Pawn</code> (blue 'P') by clicking on it or its icon.",
-            tutorialStep2: "Move by clicking an adjacent empty land tile (Grass or Sand).",
-            tutorialStep3: "Move onto a <code>Tree</code> (🌳) or <code>Stone</code> tile.",
-            tutorialStep4: "Click the orange <code>Gather Resource</code> button to collect Wood/Pebbles.",
-            tutorialStep5: "Gather resources. Note the <code>Inventory</code> limits (top left). Inventory starts empty!", // Updated Tutorial
-            tutorialStep6: "Click <code>Research</code> (middle column).",
-            tutorialStep7: "Click <code>Settlement</code> to research it. Info is below the button.",
-            tutorialStep8: "Once done, click <code>Buildings</code>.",
-            tutorialStep9: "Click <code>House</code> (info below button).",
-            tutorialStep10: "Click an empty <code>Grass</code> tile near your Pawn to build.",
-            tutorialStep11: "A House lets you deploy <i>one</i> unit (<code>Worker</code> or <code>Scout</code> if researched). You'll be prompted to choose.", // Updated Tutorial
-            tutorialStep12: "Research <code>Agriculture</code> for Farms (built by Workers).", // Updated Tutorial flow
-            tutorialStep13: "Research <code>Exploration</code> to unlock <code>Scouts</code> (deployable via Houses).", // Updated Tutorial flow
-            tutorialStep14: "Workers build Farms, Mines, etc. Research <code>Storage</code> for <code>Warehouses</code> to increase capacity.", // Combined/reordered
-            tutorialStep15: "Scouts explore faster. Both Workers and Scouts can be deployed via Houses.", // Combined/reordered
-            tutorialStep16: "Units gain <code>Exp</code>. Click <code>Upgrades</code> to spend Exp.",
+            tutorialStep1: "Select your starting <code>Pawn</code> (blue 'P').",
+            tutorialStep2: "Move by clicking adjacent land tiles.",
+            tutorialStep3: "Move onto <code>Tree</code> (🌳) or <code>Stone</code> and click <code>Gather Resource</code>.",
+            tutorialStep4: "Gather Wood/Pebbles. Note <code>Inventory</code> limits.",
+            tutorialStep5: "Click <code>Research</code> and research <code>Settlement</code>.",
+            tutorialStep6: "Once done, click <code>Buildings</code>, select <code>House</code>.",
+            tutorialStep7: "Click an empty <code>Grass</code> tile near your Pawn to build.",
+            tutorialStep8: "A House provides one slot to deploy a unit later.", // New Flow
+            tutorialStep9: "Research <code>Exploration</code> to enable Scout deployment.", // New Flow
+            tutorialStep10: "Click the <code>Units</code> button (middle column).", // New Flow
+            tutorialStep11: "If tech is researched and an unused House exists, click <code>Deploy Worker/Scout</code>.", // New Flow
+            tutorialStep12: "Unused <code>Houses</code> will highlight. Click a highlighted House to deploy the unit nearby.", // New Flow
+            tutorialStep13: "Each House can deploy only one unit.", // New Flow
+            tutorialStep14: "Research <code>Agriculture</code> for Farms (built by Workers).", // Renumbered
+            tutorialStep15: "Research <code>Storage</code> for <code>Warehouses</code> to increase capacity.", // Renumbered
+            tutorialStep16: "Units gain <code>Exp</code>. Click <code>Upgrades</code> (right) to spend Exp.", // Renumbered
             closeButton: "Close",
         },
         fr: { /* ... Corresponding French keys - NEED UPDATING FOR NEW FEATURES ... */
@@ -461,33 +455,36 @@
             water: "Eau", sand: "Sable", grass: "Herbe", forest: "Forêt", desert: "Désert",
             tileResourceTree: "Arbre", tileResourceStone: "Roche (Cailloux)", tileResourceFlint: "Silex",
             researchPanelTitle: "Arbre Technologique", primitiveAge: "Âge Primitif",
-            researchSettlement: "Colonisation", researchSettlementDesc: "Débloque Maisons (Choix 1 Unité: Ouvrier/Éclaireur).", // Updated
+            researchSettlement: "Colonisation", researchSettlementDesc: "Débloque Maisons & déploiement Ouvriers via Maisons.", // Updated fr
             researchAgriculture: "Agriculture", researchAgricultureDesc: "Débloque Fermes (production Blé).",
             researchMining: "Minage", researchMiningDesc: "Débloque Mines (production Charbon). Nécessite Agriculture.",
             researchMasonry: "Maçonnerie", researchMasonryDesc: "Débloque Carrières (production Métal). Nécessite Minage.",
             researchStorage: "Stockage", researchStorageDesc: "Débloque Entrepôts (+50 Capacité Ressource). Nécessite Maçonnerie.",
-            researchExploration: "Exploration", researchExplorationDesc: "Débloque Éclaireurs (déployés via Maisons). Nécessite Colonisation.", // Updated
+            researchExploration: "Exploration", researchExplorationDesc: "Permet le déploiement d'Éclaireurs via Maisons. Nécessite Colonisation.", // Updated fr
             buildingsPanelTitle: "Bâtiments",
-            buildingHouse: "Maison", buildingHouseDesc: "Permet le déploiement d'1 Ouvrier ou Éclaireur proche.", // Updated
+            buildingHouse: "Maison", buildingHouseDesc: "Fournit un emplacement pour déployer un Ouvrier ou Éclaireur plus tard via le panneau Unités.", // Updated fr
             buildingFarm: "Ferme", buildingFarmDesc: "Nécessite Ouvrier. Produit du Blé.",
             buildingMine: "Mine", buildingMineDesc: "Nécessite Ouvrier. Produit du Charbon.",
             buildingQuarry: "Carrière", buildingQuarryDesc: "Nécessite Ouvrier. Produit des Métaux.",
             buildingWarehouse: "Entrepôt", buildingWarehouseDesc: "Augmente la Capacité de Ressources de 50.",
             noBuildingsAvailable: "Aucun bâtiment à construire. Recherchez d'abord.",
-            unitsPanelTitle: "Unités Disponibles",
-            noUnitsAvailablePanel: "Construisez des Maisons pour déployer Ouvriers/Éclaireurs.", // New key fr
+            unitsPanelTitle: "Déployer Unités", // Updated fr
+            deployUnitButton: "Déployer {0}", // Added fr
+            noUnitsAvailablePanel: "Recherchez des unités d'abord !", // Updated fr
+            noUnusedHouses: "Aucune maison inutilisée disponible pour déployer des unités.", // New Key fr
             unitPawn: "Colon", unitWorker: "Ouvrier", unitScout: "Éclaireur",
             deployUnitMax: "Max",
             logsPanelTitle: "Journal des Événements", logSearchPlaceholder: "Rechercher...", logFilterLabel: "Masquer messages récolte/coût",
             alertWelcome: "Bienvenue à {0} !", alertGameStarted: "Partie démarrée pour : {0}",
-            alertGathered: "Récolté {1} {0} !", // Updated fr
+            alertGathered: "Récolté {1} {0} !",
             alertGatheredQuarry: "Carrière a produit 1 {0} !", alertGatheredEvent: "Cache trouvée : +{1} {0}!",
             alertStorageFull: "Stockage plein pour {0} !",
             alertNotEnoughResources: "Pas assez de ressources pour {0} !", alertCannotBuildNonEmpty: "Construction impossible : Case non vide !", alertCannotBuildExists: "{0} existe déjà ici !", alertCannotBuildOnResource: "Construction impossible sur un(e) {0} !", alertCannotBuildOnTerrain: "Construction impossible sur {0} !", alertBuildSelected: "Sélectionné : {0}. Cliquez une case vide.", alertBuildingBuilt: "{0} construit(e) !", alertSelectUnitToBuild: "Pas d'unité sélectionnée pour construire.", alertUnitCannotBuild: "{0} ne peut pas construire de {1}s !",
             alertResearchStarted: "Recherche commencée pour {0}.", alertAlreadyResearching: "Recherche déjà en cours : {0} !", alertResearchComplete: "Recherche {0} terminée !",
             alertUnitDeployed: "{0} déployé !",
-            alertMaxWorkers: "Capacité max d'Ouvriers atteinte.", // No longer used
-            alertNoSpaceForUnit: "Pas d'espace près de la Maison pour déployer {0} !", // Updated fr
+            alertNoSpaceForUnit: "Pas d'espace près de la Maison sélectionnée pour déployer {0} !", // Updated fr
+            alertSelectUnusedHouse: "Sélectionnez une Maison inutilisée (surlignée) pour déployer l'unité.", // New Alert fr
+            alertInvalidHouseTarget: "Cible invalide. Veuillez cliquer sur une Maison inutilisée.", // New Alert fr
             alertGameSaved: "Partie Sauvegardée !", alertSaveError: "Erreur sauvegarde.", alertLoadSuccess: "Partie chargée : {0} !", alertLoadError: "Erreur chargement : {0}.", alertLoadInvalidFormat: "Format sauvegarde invalide.", alertReadFileError: "Erreur lecture fichier.", alertSaveVersionMismatch: "Sauvegarde d'une ancienne version, peut mal charger.",
             alertUnitMoveOccupied: "Déplacement impossible : Case occupée !", alertMoveInvalid: "Déplacement impossible.", alertSelectedUnit: "Unité sélectionnée : {0} ({1})",
             promptColonyName: "Bienvenue ! Nommez votre colonie :", defaultColonyName: "Nouvelle Colonie",
@@ -500,28 +497,25 @@
             upgradeAutoGather: "Récolte Auto", upgradeAutoGatherDesc: "Récolte auto à l'arrivée (Coût : {0} Exp).",
             upgradeNoUpgradesAvailable: "Aucune amélioration disponible/abordable.",
             alertNotEnoughExp: "Pas assez d'Exp pour {0} !", alertUpgradeSuccess: "{0} acheté pour unité {1} !", alertUpgradeMaxLevel: "Amélioration {0} au niveau max.",
-             // Unit Choice Modal fr
-            unitChoiceModalTitle: "Choisir Unité",
-            unitChoiceButtonWorker: "Ouvrier",
-            unitChoiceButtonScout: "Éclaireur",
-            // Tutorial fr
+            unusedHouseTarget: "Cible", // Added fr
+             // Tutorial fr (Updated Flow)
             tutorialTitle: "Comment Jouer (Bases)",
-            tutorialStep1: "Sélectionnez votre <code>Colon</code> (bleu 'C') en cliquant dessus.",
+            tutorialStep1: "Sélectionnez votre <code>Colon</code> (bleu 'C').",
             tutorialStep2: "Déplacez-vous sur une case terrestre adjacente vide.",
-            tutorialStep3: "Allez sur un <code>Arbre</code> (🌳) ou <code>Roche</code>.",
-            tutorialStep4: "Cliquez <code>Récolter Ressource</code>.",
-            tutorialStep5: "Récoltez. Notez les limites (<code>Inventaire</code>). L'inventaire commence vide !", // Updated fr
-            tutorialStep6: "Cliquez <code>Recherche</code>.",
-            tutorialStep7: "Cliquez <code>Colonisation</code>. L'info est sous le bouton.",
-            tutorialStep8: "Une fois finie, cliquez <code>Bâtiments</code>.",
-            tutorialStep9: "Cliquez <code>Maison</code> (info sous le bouton).",
-            tutorialStep10: "Cliquez sur une case <code>Herbe</code> vide près du Colon.",
-            tutorialStep11: "Une Maison permet de déployer <i>une</i> unité (<code>Ouvrier</code> ou <code>Éclaireur</code> si recherché). Un choix vous sera proposé.", // Updated fr
-            tutorialStep12: "Recherchez <code>Agriculture</code> pour les Fermes (construites par Ouvriers).", // Updated fr
-            tutorialStep13: "Recherchez <code>Exploration</code> pour débloquer les <code>Éclaireurs</code> (déployables via Maisons).", // Updated fr
-            tutorialStep14: "Ouvriers construisent Fermes, Mines, etc. Recherchez <code>Stockage</code> pour <code>Entrepôts</code> (+ capacité).", // Updated fr
-            tutorialStep15: "Éclaireurs explorent plus vite. Ouvriers et Éclaireurs sont déployés via Maisons.", // Updated fr
-            tutorialStep16: "Unités gagnent <code>Exp</code>. Cliquez <code>Améliorations</code> pour dépenser l'Exp.",
+            tutorialStep3: "Allez sur <code>Arbre</code>/<code>Roche</code> et cliquez <code>Récolter Ressource</code>.",
+            tutorialStep4: "Récoltez Bois/Cailloux. Notez les limites d'<code>Inventaire</code>.",
+            tutorialStep5: "Cliquez <code>Recherche</code> et recherchez <code>Colonisation</code>.",
+            tutorialStep6: "Puis, cliquez <code>Bâtiments</code>, sélectionnez <code>Maison</code>.",
+            tutorialStep7: "Cliquez sur une case <code>Herbe</code> vide près du Colon.",
+            tutorialStep8: "Une Maison fournit un emplacement pour déployer une unité plus tard.", // New Flow fr
+            tutorialStep9: "Recherchez <code>Exploration</code> pour activer le déploiement d'Éclaireurs.", // New Flow fr
+            tutorialStep10: "Cliquez sur le bouton <code>Unités</code> (colonne centrale).", // New Flow fr
+            tutorialStep11: "Si la tech est recherchée et une Maison inutilisée existe, cliquez <code>Déployer Ouvrier/Éclaireur</code>.", // New Flow fr
+            tutorialStep12: "Les <code>Maisons</code> inutilisées seront surlignées. Cliquez une Maison surlignée pour déployer l'unité à proximité.", // New Flow fr
+            tutorialStep13: "Chaque Maison ne peut déployer qu'une seule unité.", // New Flow fr
+            tutorialStep14: "Recherchez <code>Agriculture</code> pour les Fermes (construites par Ouvriers).", // Renumbered fr
+            tutorialStep15: "Recherchez <code>Stockage</code> pour les <code>Entrepôts</code> (+ capacité).", // Renumbered fr
+            tutorialStep16: "Unités gagnent <code>Exp</code>. Cliquez <code>Améliorations</code> (droite) pour dépenser l'Exp.", // Renumbered fr
             closeButton: "Fermer",
         }
     };
@@ -531,7 +525,6 @@
     const getLangMsg = (key, args = []) => {
         let msg = getLang()[key] || key;
         args.forEach((arg, index) => {
-            // Attempt translation if arg is a known key, otherwise use the arg itself
             const translatedArg = getLang()[arg] !== undefined ? getLang()[arg] : arg;
             msg = msg.replace(`{${index}}`, translatedArg);
         });
@@ -545,8 +538,7 @@
 
         if (logIt) {
             const timeString = getFormattedTime();
-            // Ensure args are stored correctly for potential re-rendering on language switch
-            const storedArgs = args.map(arg => (typeof arg === 'number' || typeof arg === 'boolean' || arg === null) ? arg : String(arg)); // Store non-primitives as strings if necessary
+            const storedArgs = args.map(arg => (typeof arg === 'number' || typeof arg === 'boolean' || arg === null) ? arg : String(arg));
             gameState.eventLogs.push({ time: timeString, messageKey: messageKey, args: storedArgs, rendered: message });
             if (gameState.eventLogs.length > gameConfig.maxLogEntries) gameState.eventLogs.shift();
             if (DOMElements.logsPanel.style.display === 'block') updateLogsDisplay();
@@ -554,7 +546,7 @@
 
         DOMElements.alertMessageElement.textContent = message;
         DOMElements.alertMessageElement.style.display = 'block';
-        void DOMElements.alertMessageElement.offsetWidth;
+        void DOMElements.alertMessageElement.offsetWidth; // Trigger reflow for transition
         DOMElements.alertMessageElement.classList.add('show');
 
         gameState.alertTimeout = setTimeout(() => {
@@ -564,7 +556,7 @@
                       DOMElements.alertMessageElement.style.display = 'none';
                  }
                  DOMElements.alertMessageElement.removeEventListener('transitionend', handleTransitionEnd);
-             }, {once: true}); // Use {once: true} for cleaner event handling
+             }, {once: true});
         }, duration);
     }
 
@@ -573,7 +565,6 @@
         const searchTerm = DOMElements.logSearchInput.value.toLowerCase();
         const hideFiltered = DOMElements.logFilterCheckbox.checked;
         const filteredLogs = gameState.eventLogs.filter(log => {
-            // Re-render message in current language for filtering if needed
             const currentRendered = log.rendered || getLangMsg(log.messageKey, log.args);
             const messageLower = currentRendered.toLowerCase();
             const searchMatch = messageLower.includes(searchTerm);
@@ -597,7 +588,6 @@
             timeSpan.className = 'log-time';
             timeSpan.textContent = `[${log.time}]`;
             logEntry.appendChild(timeSpan);
-            // Use the potentially re-rendered message
             logEntry.appendChild(document.createTextNode(` ${log.rendered || getLangMsg(log.messageKey, log.args)}`));
             fragment.appendChild(logEntry);
         }
@@ -663,10 +653,16 @@
             if (isNearWater && type !== 'water') { type = 'sand'; }
         }
 
-        if (Math.abs(worldX - 5) <= 1 && Math.abs(worldY - 5) <= 1) { type = 'grass'; biome = 'forest'; }
+        // Ensure starting area is clear
         if (worldX === 5 && worldY === 5) { type = 'grass'; biome = 'forest'; }
+        else if (Math.abs(worldX - 5) <= 1 && Math.abs(worldY - 5) <= 1) {
+             if (type === 'water') type = 'grass'; // Force land near start
+             biome = 'forest';
+        }
 
-        const data = { type: type, building: null, biome: biome };
+
+        // Data object now includes unitDeployed for potential houses
+        const data = { type: type, building: null, biome: biome, unitDeployed: null };
         setTileData(worldX, worldY, data);
         return data;
     }
@@ -681,7 +677,7 @@
                 const wy = centerY + dy;
                 const coordString = `${wx},${wy}`;
                 if (!gameState.revealedTiles.has(coordString)) {
-                     generateTileContent(wx, wy);
+                     generateTileContent(wx, wy); // Generates tile data if it doesn't exist
                      newlyRevealed = true;
                 }
             }
@@ -690,114 +686,129 @@
     }
 
     // --- Update Functions ---
-    function updateGrid() {
-        const tiles = DOMElements.grid.querySelectorAll('.tile');
-        const lang = getLang();
+     function updateGrid() {
+         const tiles = DOMElements.grid.querySelectorAll('.tile');
+         const lang = getLang();
 
-        tiles.forEach(tile => {
-            const existingMarker = tile.querySelector('.unit-marker');
-            if (existingMarker) existingMarker.remove();
-            tile.className = 'tile';
-            tile.textContent = '';
-            tile.title = '';
-            tile.classList.remove('highlight', 'unknown');
-        });
+         // Clear existing state first
+         tiles.forEach(tile => {
+             const existingMarker = tile.querySelector('.unit-marker');
+             if (existingMarker) existingMarker.remove();
+             tile.className = 'tile'; // Reset classes
+             tile.textContent = '';
+             tile.title = '';
+             tile.classList.remove('highlight', 'unknown', 'highlight-house-target'); // Clear highlights
+         });
 
-        tiles.forEach(tile => {
-            const gx = parseInt(tile.dataset.gridX);
-            const gy = parseInt(tile.dataset.gridY);
-            const worldX = gx + gameState.viewOffsetX;
-            const worldY = gy + gameState.viewOffsetY;
-            const coordString = `${worldX},${worldY}`;
-            const isRevealed = gameState.revealedTiles.has(coordString);
+         // Process revealed tiles
+         tiles.forEach(tile => {
+             const gx = parseInt(tile.dataset.gridX);
+             const gy = parseInt(tile.dataset.gridY);
+             const worldX = gx + gameState.viewOffsetX;
+             const worldY = gy + gameState.viewOffsetY;
+             const coordString = `${worldX},${worldY}`;
+             const isRevealed = gameState.revealedTiles.has(coordString);
 
-            if (!isRevealed) {
-                tile.classList.add('unknown');
-                // No title for unknown tiles
-            } else {
-                const data = getTileData(worldX, worldY);
-                let tileTitle = lang.emptyTile;
+             if (!isRevealed) {
+                 tile.classList.add('unknown');
+             } else {
+                 const data = getTileData(worldX, worldY);
+                 let tileTitle = lang.emptyTile;
 
-                if (data) {
-                    tile.classList.add(data.type);
-                    tile.classList.add(`biome-${data.biome}`);
+                 if (data) {
+                     tile.classList.add(data.type);
+                     tile.classList.add(`biome-${data.biome}`);
 
-                    if (data.building) {
-                        const buildingInfo = gameConfig.buildings[data.building];
-                        tile.classList.add(data.building);
-                        tile.textContent = (buildingInfo?.nameKey ? lang[buildingInfo.nameKey] : data.building).substring(0, 4).toUpperCase();
-                        tileTitle = lang[buildingInfo?.nameKey] || data.building;
-                    } else if (data.type === 'tree') { tile.textContent = '🌳'; tileTitle = lang.tileResourceTree; }
-                    else if (data.type === 'stone') { tileTitle = lang.tileResourceStone; }
-                    else if (data.type === 'flint') { tileTitle = lang.tileResourceFlint; }
-                    else if (data.type === 'water') { tileTitle = lang.water; }
-                    else if (data.type === 'sand') { tileTitle = lang.sand; }
-                    else if (data.type === 'grass') { tileTitle = lang.grass; }
-                    else { tileTitle = lang.emptyTile; }
+                     if (data.building) {
+                         const buildingInfo = gameConfig.buildings[data.building];
+                         tile.classList.add(data.building);
+                         tile.textContent = (buildingInfo?.nameKey ? lang[buildingInfo.nameKey] : data.building).substring(0, 4).toUpperCase();
+                         tileTitle = lang[buildingInfo?.nameKey] || data.building;
 
-                    tile.title = tileTitle; // Set basic title
-                } else {
-                     tile.classList.add('unknown');
-                     console.warn(`Tile data missing for revealed tile at ${worldX}, ${worldY}`);
-                }
-            }
-        });
+                         // Highlight unused houses if selecting target
+                         if (gameState.unitToDeploy && data.building === 'house' && data.unitDeployed === false) {
+                             tile.classList.add('highlight-house-target');
+                             tile.classList.add('highlight'); // Optional general highlight too
+                             tileTitle += ` (${lang.unusedHouseTarget || 'Target'})`; // Add indicator to title
+                         } else if (data.building === 'house' && data.unitDeployed === true) {
+                              // Optional: Style for used houses (e.g., slightly faded)
+                              // tile.style.opacity = '0.8';
+                         }
 
-        gameState.units.forEach(unit => {
-            const unitGridX = unit.worldX - gameState.viewOffsetX;
-            const unitGridY = unit.worldY - gameState.viewOffsetY;
+                     } else if (data.type === 'tree') { tile.textContent = '🌳'; tileTitle = lang.tileResourceTree; }
+                     else if (data.type === 'stone') { tileTitle = lang.tileResourceStone; }
+                     else if (data.type === 'flint') { tileTitle = lang.tileResourceFlint; }
+                     else if (data.type === 'water') { tileTitle = lang.water; }
+                     else if (data.type === 'sand') { tileTitle = lang.sand; }
+                     else if (data.type === 'grass') { tileTitle = lang.grass; }
+                     else { tileTitle = lang.emptyTile; }
 
-            if (unitGridX >= 0 && unitGridX < gameConfig.gridSize && unitGridY >= 0 && unitGridY < gameConfig.gridSize) {
-                const tile = DOMElements.grid.querySelector(`.tile[data-grid-x="${unitGridX}"][data-grid-y="${unitGridY}"]`);
-                if (tile && !tile.classList.contains('unknown')) {
-                    const unitInfo = gameConfig.units[unit.type];
-                    const marker = document.createElement('div');
-                    marker.className = `unit-marker ${unit.type}`;
-                    marker.textContent = unitInfo?.icon || unit.type.charAt(0).toUpperCase();
-                    const translatedUnitType = lang[unitInfo?.nameKey] || unit.type;
-                    if (unit.id === gameState.selectedUnitId) {
-                        marker.classList.add('selected');
-                    }
-                    tile.appendChild(marker);
-                    // Append unit info to existing tile title if tile wasn't just empty
-                    if (tile.title !== lang.emptyTile) {
-                        tile.title = `${translatedUnitType} (${unit.id}) - ${tile.title}`;
-                    } else {
-                        tile.title = `${translatedUnitType} (${unit.id})`;
-                    }
-                }
-            }
-        });
+                     tile.title = tileTitle; // Set final title
+                 } else {
+                      tile.classList.add('unknown');
+                      console.warn(`Tile data missing for revealed tile at ${worldX}, ${worldY}`);
+                 }
+             }
+         });
 
-        const selectedUnit = gameState.units.find(u => u.id === gameState.selectedUnitId);
-        if (gameState.highlightEnabled && selectedUnit) {
-            const unitInfo = gameConfig.units[selectedUnit.type];
-            const unitGridX = selectedUnit.worldX - gameState.viewOffsetX;
-            const unitGridY = selectedUnit.worldY - gameState.viewOffsetY;
+         // Place unit markers
+         gameState.units.forEach(unit => {
+             const unitGridX = unit.worldX - gameState.viewOffsetX;
+             const unitGridY = unit.worldY - gameState.viewOffsetY;
 
              if (unitGridX >= 0 && unitGridX < gameConfig.gridSize && unitGridY >= 0 && unitGridY < gameConfig.gridSize) {
-                 let maxMove = unitInfo?.move || 1;
-                 if (selectedUnit.upgrades?.movement1) maxMove += gameConfig.upgrades.movement1.effect.moveBonus;
-
-                 tiles.forEach(tile => {
-                    const targetGridX = parseInt(tile.dataset.gridX);
-                    const targetGridY = parseInt(tile.dataset.gridY);
-                    const targetWorldX = targetGridX + gameState.viewOffsetX;
-                    const targetWorldY = targetGridY + gameState.viewOffsetY;
-                    const dist = Math.abs(targetGridX - unitGridX) + Math.abs(targetGridY - unitGridY);
-
-                    if (dist > 0 && dist <= maxMove && !tile.classList.contains('unknown')) {
-                         const targetData = getTileData(targetWorldX, targetWorldY);
-                         const targetOccupied = gameState.units.some(u => u.worldX === targetWorldX && u.worldY === targetWorldY);
-                         if (!targetOccupied && targetData?.type !== 'water') {
-                             tile.classList.add('highlight');
-                         }
+                 const tile = DOMElements.grid.querySelector(`.tile[data-grid-x="${unitGridX}"][data-grid-y="${unitGridY}"]`);
+                 if (tile && !tile.classList.contains('unknown')) {
+                     const unitInfo = gameConfig.units[unit.type];
+                     const marker = document.createElement('div');
+                     marker.className = `unit-marker ${unit.type}`;
+                     marker.textContent = unitInfo?.icon || unit.type.charAt(0).toUpperCase();
+                     const translatedUnitType = lang[unitInfo?.nameKey] || unit.type;
+                     if (unit.id === gameState.selectedUnitId) {
+                         marker.classList.add('selected');
                      }
-                 });
+                     tile.appendChild(marker);
+                     // Append unit info to existing tile title
+                     if (tile.title !== lang.emptyTile && !tile.title.startsWith(translatedUnitType)) {
+                         tile.title = `${translatedUnitType} (${unit.id}) - ${tile.title}`;
+                     } else if (!tile.title.startsWith(translatedUnitType)) {
+                         tile.title = `${translatedUnitType} (${unit.id})`;
+                     }
+                 }
              }
-        }
-        checkResource();
-    }
+         });
+
+         // Highlight movement for selected unit (only if not selecting a house target)
+         const selectedUnit = gameState.units.find(u => u.id === gameState.selectedUnitId);
+         if (gameState.highlightEnabled && selectedUnit && !gameState.unitToDeploy) { // Check we're not deploying
+             const unitInfo = gameConfig.units[selectedUnit.type];
+             const unitGridX = selectedUnit.worldX - gameState.viewOffsetX;
+             const unitGridY = selectedUnit.worldY - gameState.viewOffsetY;
+
+              if (unitGridX >= 0 && unitGridX < gameConfig.gridSize && unitGridY >= 0 && unitGridY < gameConfig.gridSize) {
+                  let maxMove = unitInfo?.move || 1;
+                  if (selectedUnit.upgrades?.movement1) maxMove += gameConfig.upgrades.movement1.effect.moveBonus;
+
+                  tiles.forEach(tile => {
+                     const targetGridX = parseInt(tile.dataset.gridX);
+                     const targetGridY = parseInt(tile.dataset.gridY);
+                     const targetWorldX = targetGridX + gameState.viewOffsetX;
+                     const targetWorldY = targetGridY + gameState.viewOffsetY;
+                     const dist = Math.abs(targetGridX - unitGridX) + Math.abs(targetGridY - unitGridY);
+
+                     if (dist > 0 && dist <= maxMove && !tile.classList.contains('unknown')) {
+                          const targetData = getTileData(targetWorldX, targetWorldY);
+                          const targetOccupied = gameState.units.some(u => u.worldX === targetWorldX && u.worldY === targetWorldY);
+                          // Don't highlight if it's already a house target highlight
+                          if (!targetOccupied && targetData?.type !== 'water' && !tile.classList.contains('highlight-house-target')) {
+                              tile.classList.add('highlight');
+                          }
+                      }
+                  });
+              }
+         }
+         checkResource();
+     }
 
     function updateInventoryDisplay() {
         const fragment = document.createDocumentFragment();
@@ -810,7 +821,7 @@
             const p = document.createElement('p');
             const currentAmount = gameState.inventory[resInfo.id] || 0;
             const capacity = gameState.inventoryCapacity[resInfo.id] || 0;
-            p.innerHTML = `${lang[resInfo.nameKey] || resInfo.id}: <span id="${resInfo.id}-count">${currentAmount}</span> / ${capacity}`; // Removed capacity label span
+            p.innerHTML = `${lang[resInfo.nameKey] || resInfo.id}: <span id="${resInfo.id}-count">${currentAmount}</span> / ${capacity}`;
             fragment.appendChild(p);
         });
         DOMElements.inventoryDisplay.appendChild(fragment);
@@ -885,7 +896,7 @@
                     const cost = upgradeConf.cost;
                     const upgradeButton = document.createElement('button');
                     upgradeButton.dataset.upgradeType = upgradeId;
-                    upgradeButton.textContent = `${getLangMsg(upgradeConf.nameKey)} (${cost} Exp)`; // Simplified text
+                    upgradeButton.textContent = `${getLangMsg(upgradeConf.nameKey)} (${cost} Exp)`;
                     upgradeButton.disabled = selectedUnit.exp < cost;
                     upgradeButton.title = getLangMsg(upgradeConf.nameKey + 'Desc', [cost]);
                     upgradeButton.addEventListener('click', handleUpgradeClick);
@@ -919,7 +930,7 @@
 
                 const listItem = document.createElement('li');
                 listItem.className = 'research-item';
-                if (isCompleted) listItem.classList.add('completed'); // Add completed class
+                if (isCompleted) listItem.classList.add('completed');
 
                 const button = document.createElement('button');
                 button.id = `${id}-research`;
@@ -935,7 +946,7 @@
                 const progressContainer = document.createElement('div');
                 progressContainer.id = `${id}-research-progress`;
                 progressContainer.className = 'research-progress-container';
-                progressContainer.style.display = (gameState.activeResearch === id) ? 'flex' : 'none'; // Show if active
+                progressContainer.style.display = (gameState.activeResearch === id) ? 'flex' : 'none';
 
                 const progressBar = document.createElement('div');
                 progressBar.id = `${id}-research-bar`;
@@ -974,7 +985,7 @@
         } else if (!isResearching && gameState.completedTech.size === 0) {
              DOMElements.researchStatusDisplay.textContent = lang.researchStatusInitial;
         }
-         DOMElements.researchStatusDisplay.style.display =  DOMElements.researchStatusDisplay.textContent ? 'block' : 'none';
+         DOMElements.researchStatusDisplay.style.display = DOMElements.researchStatusDisplay.textContent ? 'block' : 'none';
     }
 
 
@@ -1012,7 +1023,7 @@
             }
             updateResearchUI();
             updateBuildingsList();
-            updateUnitsPanel();
+            updateUnitsPanel(); // Update units panel as tech might enable deployment buttons
             updateInventoryCapacity();
             updateResearchPointsDisplay();
         }
@@ -1041,8 +1052,9 @@
             button.addEventListener('click', () => {
                 // Only select the building here, cost is spent on placement
                 gameState.selectedBuilding = id;
+                gameState.unitToDeploy = null; // Cancel unit deploy mode if selecting building
                 showAlert('alertBuildSelected', 4000, true, [building.nameKey]);
-                gameState.highlightEnabled = true;
+                gameState.highlightEnabled = true; // Enable generic highlight for placement
                 updateGrid();
                 updateBuildingsList(); // Refresh button states (affordability)
             });
@@ -1085,33 +1097,68 @@
             }
             icon.addEventListener('click', () => {
                 gameState.selectedUnitId = unit.id;
-                focusOnUnit(unit.id);
-                gameState.selectedBuilding = null;
+                gameState.selectedBuilding = null; // Cancel building placement
+                gameState.unitToDeploy = null; // Cancel unit deployment
                 gameState.highlightEnabled = false;
+                focusOnUnit(unit.id); // Focus will update grid
             });
             fragment.appendChild(icon);
         });
         DOMElements.unitDisplayBar.appendChild(fragment);
     }
 
-    function updateUnitsPanel() {
-        const listElement = DOMElements.unitsListUl;
-        listElement.innerHTML = ''; // Clear list
-        const lang = getLang();
-        let deployableUnits = 0; // Tracks units deployable *from this panel*
+    // --- Updated Units Panel (for triggering deployment via houses) ---
+     function updateUnitsPanel() {
+         const listElement = DOMElements.unitsListUl;
+         listElement.innerHTML = ''; // Clear list
+         const lang = getLang();
+         let deployableUnitsCount = 0;
 
-        // Example: If you add a unit deployable without a house later
-        // Object.entries(gameConfig.units).forEach(([unitId, unitConf]) => {
-        //     if (unitId === 'pawn' || unitId === 'worker' || unitId === 'scout') return; // Skip these
-        //     // ... logic for other unit deployment buttons ...
-        //     deployableUnits++;
-        // });
+         // Check if there are any unused houses on revealed tiles
+         let hasUnusedHouse = false;
+         gameState.revealedTiles.forEach(coordString => {
+             if (hasUnusedHouse) return;
+             const [x, y] = coordString.split(',').map(Number);
+             const data = getTileData(x, y);
+             if (data?.building === 'house' && data.unitDeployed === false) {
+                 hasUnusedHouse = true;
+             }
+         });
 
-        // If no panel-deployable units found:
-        if (deployableUnits === 0) {
-             listElement.innerHTML = `<li>${lang.noUnitsAvailablePanel}</li>`;
-        }
-    }
+         if (!hasUnusedHouse) {
+             listElement.innerHTML = `<li>${lang.noUnusedHouses}</li>`;
+             return; // No point showing buttons if no houses are available
+         }
+
+         Object.entries(gameConfig.units).forEach(([unitId, unitConf]) => {
+             // Check if deployable from panel AND tech is researched
+             if (unitConf.deployableFromPanel && unitConf.requiredTech && gameState.completedTech.has(unitConf.requiredTech)) {
+                 deployableUnitsCount++;
+                 const listItem = document.createElement('li');
+                 const button = document.createElement('button');
+                 button.dataset.unitType = unitId;
+                 button.textContent = getLangMsg('deployUnitButton', [unitConf.nameKey]);
+
+                 button.addEventListener('click', () => {
+                     gameState.unitToDeploy = unitId; // Set the unit type to deploy
+                     gameState.selectedBuilding = null; // Cancel building placement
+                     gameState.highlightEnabled = true; // Use general highlight for house target selection
+                     showAlert('alertSelectUnusedHouse', 4000);
+                     updateGrid(); // Update grid to show highlighted houses
+                     hideAllPanels(); // Close the panel
+                 });
+
+                 listItem.appendChild(button);
+                 listElement.appendChild(listItem);
+             }
+         });
+
+         // If no deployable units found (tech not researched) even if houses exist
+         if (deployableUnitsCount === 0 && hasUnusedHouse) {
+              listElement.innerHTML = `<li>${lang.noUnitsAvailablePanel}</li>`;
+         }
+     }
+
 
      function updateInventoryCapacity() {
          gameState.inventoryCapacity = { ...gameConfig.baseInventoryCapacity };
@@ -1141,10 +1188,8 @@
 
             if (data && !data.building) {
                 const unitType = selectedUnit.type;
-                if (unitType === 'pawn' || unitType === 'worker' || unitType === 'scout') { // Scouts can gather too now? Or keep original? Let's allow it for auto-gather.
-                     if (data.type === 'tree' || data.type === 'stone' || data.type === 'flint') {
-                         canGather = true;
-                     }
+                if (data.type === 'tree' || data.type === 'stone' || data.type === 'flint') {
+                    canGather = true;
                 }
                 const lang = getLang();
                 if (data.type === 'tree') { tileName = `${lang.onTile} ${lang.tileResourceTree}`; }
@@ -1209,7 +1254,7 @@
 
         const dx = Math.abs(targetWorldX - selectedUnit.worldX);
         const dy = Math.abs(targetWorldY - selectedUnit.worldY);
-        if (dx + dy > maxMove) { return; }
+        if (dx + dy > maxMove) { return; } // Manhattan distance check
 
         if (!gameState.revealedTiles.has(`${targetWorldX},${targetWorldY}`)) return;
         const targetData = getTileData(targetWorldX, targetWorldY);
@@ -1227,8 +1272,10 @@
 
         if (gameState.activeResearch) {
             const researchBonus = unitInfo?.researchBonus || 0;
-            gameState.researchPoints += researchBonus;
-             if(researchBonus > 0) updateResearchProgress();
+            if (researchBonus > 0) {
+                 gameState.researchPoints += researchBonus;
+                 updateResearchProgress();
+            }
         }
         updateResearchPointsDisplay();
 
@@ -1243,9 +1290,9 @@
         triggerRandomEvent(selectedUnit);
 
         if (selectedUnit.id === gameState.selectedUnitId) {
-            focusOnUnit(selectedUnit.id);
+            focusOnUnit(selectedUnit.id); // This calls updateGrid indirectly
         } else {
-            updateGrid();
+            updateGrid(); // Update grid if the moved unit wasn't selected
         }
     }
 
@@ -1264,7 +1311,7 @@
         if (data && !data.building) {
             let gatheredResourceKey = null;
             let baseTerrain = data.biome === 'desert' ? 'sand' : 'grass';
-            let quantity = 1; // Default gather amount
+            let quantity = 1;
 
             if (data.type === 'tree') gatheredResourceKey = 'wood';
             else if (data.type === 'stone') gatheredResourceKey = 'pebble';
@@ -1274,8 +1321,8 @@
                 if (updateResource(gatheredResourceKey, quantity)) {
                     data.type = baseTerrain;
                     setTileData(targetUnit.worldX, targetUnit.worldY, data);
-                    const langResourceName = getLangMsg(gatheredResourceKey); // Get translated name for alert/log
-                    if (!auto) showAlert('alertGathered', 1500, true, [langResourceName, quantity]); // Pass translated name and quantity
+                    const langResourceName = getLangMsg(gatheredResourceKey);
+                    if (!auto) showAlert('alertGathered', 1500, true, [langResourceName, quantity]);
                     else logEvent('alertGathered', [langResourceName, quantity], `[Auto] ${getLangMsg('alertGathered', [langResourceName, quantity])}`);
                     updateGrid();
                     checkResource();
@@ -1295,7 +1342,7 @@
              const buildingConf = gameConfig.buildings[data.building];
              if (!buildingConf || !buildingConf.produces || buildingConf.produces.interval !== productionType) return;
 
-             let canProduce = true; // Assume yes unless worker logic added
+             let canProduce = true; // Basic check for now
 
              if(canProduce) {
                  if (Array.isArray(buildingConf.produces.resource)) { // Quarry
@@ -1310,7 +1357,6 @@
                      const resourceKey = buildingConf.produces.resource;
                       if (updateResource(resourceKey, 1)) {
                           producedCount++;
-                          // Optional: Log Farm/Mine production
                       } else {
                            if (producedCount === 0) showAlert('alertStorageFull', 2000, true, [resourceKey]);
                       }
@@ -1319,7 +1365,7 @@
          });
     }
 
-    // Modified to find spawn near a SPECIFIC house/anchor
+    // Finds spawn point adjacent to given coordinates (anchor)
     function findSpawnPoint(anchorX, anchorY) {
         for (let dy = -1; dy <= 1; dy++) {
             for (let dx = -1; dx <= 1; dx++) {
@@ -1330,6 +1376,7 @@
                 const coordString = `${sx},${sy}`;
                 const isOccupied = gameState.units.some(u => u.worldX === sx && u.worldY === sy);
 
+                // Check if revealed, is land, not occupied, and no building
                 if (gameState.revealedTiles.has(coordString) && sData && (sData.type === 'grass' || sData.type === 'sand' || sData.type === 'empty') && !isOccupied && !sData.building) {
                     return { worldX: sx, worldY: sy }; // Found a valid spot
                 }
@@ -1349,11 +1396,15 @@
         gameState.viewOffsetX = newViewOffsetX;
         gameState.viewOffsetY = newViewOffsetY;
         const newlyRevealed = revealArea(unit.worldX, unit.worldY, unitConf?.revealRadius || gameConfig.revealRadiusBase);
-        gameState.selectedUnitId = unitId;
+
+        // Update selected unit and related UI
+        gameState.selectedUnitId = unitId; // Ensure selectedUnitId is set correctly
         updateUnitDisplayBar();
         updateUnitInfoDisplay();
-        if (viewChanged || newlyRevealed) { updateGrid(); } else { updateGrid(); }
-        checkResource();
+
+        // Refresh grid if view changed, area revealed, or selection changed (always refresh to show selection)
+        updateGrid(); // Update grid to show selection and potential new tiles
+        checkResource(); // Update action button state
     }
 
     // --- Event Log Helper ---
@@ -1367,78 +1418,135 @@
      }
 
     // --- Event Listeners ---
-    function setupEventListeners() {
-        DOMElements.grid.addEventListener('click', (event) => {
-            const tile = event.target.closest('.tile');
-            if (tile && !tile.classList.contains('unknown')) {
-                const gridX = parseInt(tile.dataset.gridX);
-                const gridY = parseInt(tile.dataset.gridY);
-                const worldX = gridX + gameState.viewOffsetX;
-                const worldY = gridY + gameState.viewOffsetY;
-                const clickedUnit = gameState.units.find(u => u.worldX === worldX && u.worldY === worldY);
+     function setupEventListeners() {
+         DOMElements.grid.addEventListener('click', (event) => {
+             const tile = event.target.closest('.tile');
+             if (tile && !tile.classList.contains('unknown')) {
+                 const gridX = parseInt(tile.dataset.gridX);
+                 const gridY = parseInt(tile.dataset.gridY);
+                 const worldX = gridX + gameState.viewOffsetX;
+                 const worldY = gridY + gameState.viewOffsetY;
 
-                if (clickedUnit) {
-                    gameState.selectedUnitId = clickedUnit.id;
-                    gameState.selectedBuilding = null;
-                    gameState.highlightEnabled = false;
-                    focusOnUnit(clickedUnit.id);
-                    showAlert('alertSelectedUnit', 1500, false, [gameConfig.units[clickedUnit.type]?.nameKey || clickedUnit.type, clickedUnit.id]);
-                } else if (gameState.selectedBuilding) {
-                    handlePlaceBuilding(worldX, worldY);
-                } else if (gameState.selectedUnitId) {
-                    moveUnit(gridX, gridY);
-                }
-                 if (!gameState.selectedBuilding) gameState.highlightEnabled = false;
-            }
-        });
+                 // *** Handle House Target Selection Click ***
+                 if (gameState.unitToDeploy) {
+                     const targetData = getTileData(worldX, worldY);
+                     if (targetData?.building === 'house' && targetData.unitDeployed === false) {
+                         // Valid house target clicked
+                         deployUnitNearHouse(gameState.unitToDeploy, worldX, worldY); // Calls updateGrid at the end
+                     } else {
+                         // Invalid target clicked - cancel deployment mode
+                         showAlert('alertInvalidHouseTarget', 2500, true);
+                         gameState.unitToDeploy = null;
+                         gameState.highlightEnabled = false;
+                         updateGrid(); // Remove highlights
+                     }
+                     return; // Stop further processing of this click
+                 }
 
-        DOMElements.actionButton.addEventListener('click', () => gatherResource(null, false));
-        DOMElements.middleControls.addEventListener('click', (event) => {
-            const button = event.target.closest('button[data-panel-target]');
-            if (button) { togglePanel(button.dataset.panelTarget); }
-        });
-        DOMElements.closeTutorialButton.addEventListener('click', () => { DOMElements.tutorialModal.style.display = 'none'; });
-        DOMElements.tutorialModal.addEventListener('click', (event) => { if (event.target === DOMElements.tutorialModal) { DOMElements.tutorialModal.style.display = 'none'; } });
-        DOMElements.logSearchInput.addEventListener('input', updateLogsDisplay);
-        DOMElements.logFilterCheckbox.addEventListener('change', updateLogsDisplay);
-        DOMElements.saveButton.addEventListener('click', saveGame);
-        DOMElements.loadButton.addEventListener('click', () => DOMElements.loadFileInput.click());
-        DOMElements.loadFileInput.addEventListener('change', loadGame);
-        DOMElements.languageSwitchButton.addEventListener('click', switchLanguage);
-        DOMElements.grid.addEventListener('mouseover', (event) => {
-            const tile = event.target.closest('.tile');
-            if (tile && !tile.classList.contains('unknown') && gameState.selectedUnitId != null && !gameState.selectedBuilding) {
-                gameState.highlightEnabled = true; updateGrid();
-            }
-        });
-        DOMElements.grid.addEventListener('mouseout', (event) => {
-            if (gameState.highlightEnabled && (!event.relatedTarget || !event.relatedTarget.closest || !event.relatedTarget.closest('#grid'))) {
-                gameState.highlightEnabled = false; updateGrid();
-            }
-        });
-        // Unit choice modal clicks handled in showUnitChoiceModal
-    }
+                 // --- Original Click Logic (if not deploying) ---
+                 const clickedUnit = gameState.units.find(u => u.worldX === worldX && u.worldY === worldY);
+
+                 if (clickedUnit) {
+                     gameState.selectedUnitId = clickedUnit.id;
+                     gameState.selectedBuilding = null; // Cancel building selection
+                     gameState.highlightEnabled = false;
+                     focusOnUnit(clickedUnit.id); // Focus handles grid update
+                     showAlert('alertSelectedUnit', 1500, false, [gameConfig.units[clickedUnit.type]?.nameKey || clickedUnit.type, clickedUnit.id]);
+                 } else if (gameState.selectedBuilding) {
+                     handlePlaceBuilding(worldX, worldY); // Handles grid update
+                 } else if (gameState.selectedUnitId) {
+                     moveUnit(gridX, gridY); // Handles grid update
+                 }
+
+                 // Update highlight status only if not building and not deploying unit
+                  if (!gameState.selectedBuilding && !gameState.unitToDeploy) gameState.highlightEnabled = false;
+                  // Grid is generally updated by the actions above, but a final call ensures consistency if needed
+                  // updateGrid();
+             } else if (tile && tile.classList.contains('unknown') && gameState.unitToDeploy) {
+                  // Clicked unknown tile while trying to deploy - cancel
+                  showAlert('alertInvalidHouseTarget', 2500, true);
+                  gameState.unitToDeploy = null;
+                  gameState.highlightEnabled = false;
+                  updateGrid(); // Remove highlights
+             } else if (!tile) {
+                  // Clicked outside grid while trying to deploy - cancel
+                  if(gameState.unitToDeploy) {
+                     gameState.unitToDeploy = null;
+                     gameState.highlightEnabled = false;
+                     updateGrid();
+                  }
+             }
+         });
+
+         DOMElements.actionButton.addEventListener('click', () => gatherResource(null, false));
+         DOMElements.middleControls.addEventListener('click', (event) => {
+             const button = event.target.closest('button[data-panel-target]');
+             if (button) { togglePanel(button.dataset.panelTarget); }
+         });
+         DOMElements.closeTutorialButton.addEventListener('click', () => { DOMElements.tutorialModal.style.display = 'none'; });
+         DOMElements.tutorialModal.addEventListener('click', (event) => { if (event.target === DOMElements.tutorialModal) { DOMElements.tutorialModal.style.display = 'none'; } });
+         DOMElements.logSearchInput.addEventListener('input', updateLogsDisplay);
+         DOMElements.logFilterCheckbox.addEventListener('change', updateLogsDisplay);
+         DOMElements.saveButton.addEventListener('click', saveGame);
+         DOMElements.loadButton.addEventListener('click', () => DOMElements.loadFileInput.click());
+         DOMElements.loadFileInput.addEventListener('change', loadGame);
+         DOMElements.languageSwitchButton.addEventListener('click', switchLanguage);
+
+         DOMElements.grid.addEventListener('mouseover', (event) => {
+             const tile = event.target.closest('.tile');
+             // Highlight potential moves ONLY if a unit is selected AND we are NOT placing a building OR selecting a house target
+             if (tile && !tile.classList.contains('unknown') && gameState.selectedUnitId != null && !gameState.selectedBuilding && !gameState.unitToDeploy) {
+                 gameState.highlightEnabled = true; updateGrid();
+             }
+          });
+          DOMElements.grid.addEventListener('mouseout', (event) => {
+             // Remove highlight when mouse leaves the grid area, only if it was move highlight
+             if (gameState.highlightEnabled && !gameState.unitToDeploy && (!event.relatedTarget || !event.relatedTarget.closest || !event.relatedTarget.closest('#grid'))) {
+                 gameState.highlightEnabled = false; updateGrid();
+             }
+          });
+          // Unit panel clicks are handled within updateUnitsPanel
+     }
 
     // --- Action Handlers ---
     function togglePanel(targetId) {
          const targetElement = document.getElementById(targetId);
          if (!targetElement) return;
-         if (targetId === 'tutorial-modal') { hideAllPanels(); targetElement.style.display = 'block'; updateLanguageUI(); return; }
+
+         // Always cancel deploy/build modes when opening panels
+         gameState.selectedBuilding = null;
+         gameState.unitToDeploy = null;
+         gameState.highlightEnabled = false;
+
+         if (targetId === 'tutorial-modal') {
+             hideAllPanels();
+             targetElement.style.display = 'block';
+             updateLanguageUI(); // Update tutorial text
+             updateGrid(); // Ensure grid highlights are off
+             return;
+         }
+
          const isVisible = targetElement.style.display === 'block';
-         hideAllPanels();
+         hideAllPanels(); // Hide all other panels first
          if (!isVisible) {
              targetElement.style.display = 'block';
+             // Update content of the opened panel
              if (targetId === 'tech-tree') updateResearchUI();
              else if (targetId === 'buildings-list') updateBuildingsList();
-             else if (targetId === 'units-panel') updateUnitsPanel();
+             else if (targetId === 'units-panel') updateUnitsPanel(); // Refresh deploy buttons
              else if (targetId === 'upgrade-info') updateUnitInfoDisplay();
              else if (targetId === 'logs-panel') updateLogsDisplay();
          }
+         updateGrid(); // Ensure grid highlights are off after closing/opening panels
     }
+
     function hideAllPanels() {
          document.querySelectorAll('.panel:not(#inventory)').forEach(panel => { panel.style.display = 'none'; });
          DOMElements.tutorialModal.style.display = 'none';
-         DOMElements.unitChoiceModal.style.display = 'none'; // Hide choice modal too
+         // gameState.unitToDeploy = null; // Reset deploy state when closing panels
+         // gameState.selectedBuilding = null; // Reset build state
+         // gameState.highlightEnabled = false;
+         // updateGrid(); // Update grid to remove highlights
      }
     function handleResearchClick(techId) {
         const tech = gameConfig.tech[techId];
@@ -1453,18 +1561,17 @@
         showAlert("alertResearchStarted", 2500, true, [tech.nameKey]);
     }
 
-    // REMOVED handleDeployUnitClick as deployment is now tied to houses
+    // REMOVED handleDeployUnitFromPanel
 
     function handlePlaceBuilding(worldX, worldY) {
         const builderUnit = gameState.units.find(u => u.id === gameState.selectedUnitId);
         const buildingId = gameState.selectedBuilding;
-        if (!builderUnit || !buildingId) { gameState.selectedBuilding = null; gameState.highlightEnabled = false; updateGrid(); return; } // Safety exit
+        if (!builderUnit || !buildingId) { gameState.selectedBuilding = null; gameState.highlightEnabled = false; updateGrid(); return; }
 
         const buildingConf = gameConfig.buildings[buildingId];
         const builderConf = gameConfig.units[builderUnit.type];
         const lang = getLang();
 
-        if (!builderUnit) { showAlert("alertSelectUnitToBuild", 2500); gameState.selectedBuilding = null; return; }
         if (!buildingConf) { console.error(`Invalid building selected: ${buildingId}`); gameState.selectedBuilding = null; return; }
         if (!builderConf?.build?.includes(buildingId)) {
             showAlert('alertUnitCannotBuild', 3000, true, [builderConf.nameKey, buildingConf.nameKey]);
@@ -1477,7 +1584,7 @@
         if (!tileData || (tileData.type !== 'grass' && tileData.type !== 'empty')) {
             canPlace = false; failReasonKey = 'alertCannotBuildNonEmpty';
             if (tileData?.type === 'water' || tileData?.type === 'sand') { failReasonKey = 'alertCannotBuildOnTerrain'; failArgs = [tileData.type]; }
-            else if (tileData?.type) { failReasonKey = 'alertCannotBuildOnResource'; failArgs = [lang[`tileResource${tileData.type.charAt(0).toUpperCase() + tileData.type.slice(1)}`] || tileData.type]; }
+            else if (tileData?.type === 'tree' || tileData?.type === 'stone' || tileData?.type === 'flint') { failReasonKey = 'alertCannotBuildOnResource'; failArgs = [lang[`tileResource${tileData.type.charAt(0).toUpperCase() + tileData.type.slice(1)}`] || tileData.type]; }
         } else if (tileData.building) {
             canPlace = false; failReasonKey = 'alertCannotBuildExists'; failArgs = [lang[gameConfig.buildings[tileData.building]?.nameKey] || tileData.building];
         }
@@ -1487,32 +1594,29 @@
             gameState.selectedBuilding = null; gameState.highlightEnabled = false; updateGrid(); return;
         }
 
-        if (!spendResources(buildingConf.cost)) { // Spend resources AFTER validation
+        if (!spendResources(buildingConf.cost)) {
             showAlert('alertNotEnoughResources', 3000, true, [buildingConf.nameKey]);
             gameState.selectedBuilding = null; gameState.highlightEnabled = false; updateGrid(); return;
         }
 
         // --- Placement Success ---
         tileData.building = buildingId;
-        // tileData.houseClaimed = false; // Flag for unit choice (might not be needed if choice is immediate)
+        // Mark house as unused for deployment when built
+        if (buildingId === 'house') {
+            tileData.unitDeployed = false; // Initialize as unused
+        }
         setTileData(worldX, worldY, tileData);
         showAlert('alertBuildingBuilt', 2500, true, [buildingConf.nameKey]);
-        gameState.selectedBuilding = null; gameState.highlightEnabled = false;
+        gameState.selectedBuilding = null; gameState.highlightEnabled = false; // Clear selection
 
-        // Grant XP
         builderUnit.exp = (builderUnit.exp || 0) + gameConfig.expPerBuild;
         logEvent('logGainedExp', [builderConf.nameKey, builderUnit.id, gameConfig.expPerBuild, buildingConf.nameKey]);
         if (builderUnit.id === gameState.selectedUnitId) updateUnitInfoDisplay();
 
-        // Trigger Unit Choice/Deployment if it's a House
-        if (buildingId === 'house') {
-            promptUnitChoice(worldX, worldY);
-        }
-
-        // Update other UI
         if (buildingConf.provides?.capacityBonus) { updateInventoryCapacity(); }
         updateGrid();
-        updateBuildingsList(); // Update affordabilty status
+        updateBuildingsList();
+        updateUnitsPanel(); // Update panel in case this was the first house
     }
 
     function handleUpgradeClick(event) {
@@ -1523,121 +1627,98 @@
         const cost = upgradeConf.cost; const currentLevel = selectedUnit.upgrades?.[upgradeId] || 0;
         if (currentLevel >= upgradeConf.maxLevel) { showAlert('alertUpgradeMaxLevel', 3000, true, [upgradeConf.nameKey]); return; }
         if (selectedUnit.exp >= cost) {
-            selectedUnit.exp -= cost; if (!selectedUnit.upgrades) selectedUnit.upgrades = {};
+            selectedUnit.exp -= cost;
+            if (!selectedUnit.upgrades) selectedUnit.upgrades = {};
              if (upgradeConf.effect.moveBonus) { selectedUnit.upgrades[upgradeId] = (selectedUnit.upgrades[upgradeId] || 0) + 1; }
              else if (upgradeConf.effect.autoGather) { selectedUnit.upgrades[upgradeId] = true; }
             showAlert('alertUpgradeSuccess', 2500, true, [upgradeConf.nameKey, selectedUnit.id]);
             logEvent('alertUpgradeSuccess', [upgradeConf.nameKey, selectedUnit.id]);
-            updateUnitInfoDisplay(); updateGrid();
+            updateUnitInfoDisplay(); updateGrid(); // Refresh UI
         } else { showAlert('alertNotEnoughExp', 3000, true, [upgradeConf.nameKey]); }
     }
 
-    // --- New Functions for House Unit Choice ---
-    function promptUnitChoice(houseX, houseY) {
-        const lang = getLang();
-        const availableChoices = [];
+    // --- New Function for Deploying Unit at a House ---
+     function deployUnitNearHouse(unitType, houseX, houseY) {
+         const unitConf = gameConfig.units[unitType];
+         const lang = getLang();
 
-        // Check if Worker is deployable (always true after Settlement tech)
-        if (gameState.completedTech.has('settlement')) { // Implicitly true if house is built
-            availableChoices.push('worker');
-        }
-        // Check if Scout is deployable (requires Exploration tech)
-        if (gameState.completedTech.has('exploration')) {
-            availableChoices.push('scout');
-        }
+         if (!unitConf) {
+             console.error("Invalid unit type for house deployment:", unitType);
+             gameState.unitToDeploy = null; // Reset state
+             gameState.highlightEnabled = false;
+             updateGrid();
+             return;
+         }
 
-        if (availableChoices.length === 0) {
-            console.log("House built, but no units available to deploy yet.");
-            // Optionally show a message?
-            return;
-        } else if (availableChoices.length === 1) {
-            // Auto-deploy the only available unit
-            deployChosenUnit(availableChoices[0], houseX, houseY);
-        } else {
-            // Show modal for choice
-            showUnitChoiceModal(houseX, houseY, availableChoices);
-        }
-    }
+         // Find spawn point near the *clicked house*
+         const spawnDetails = findSpawnPoint(houseX, houseY);
 
-    function showUnitChoiceModal(houseX, houseY, choices) {
-        const lang = getLang();
-        DOMElements.unitChoiceTitle.textContent = lang.unitChoiceModalTitle;
-        DOMElements.unitChoiceButtons.innerHTML = ''; // Clear previous buttons
+         if (spawnDetails) {
+             // Create and add the new unit
+             const newUnit = {
+                 id: `unit-${gameState.nextUnitId++}`, type: unitType,
+                 worldX: spawnDetails.worldX, worldY: spawnDetails.worldY,
+                 exp: 0, upgrades: {}
+             };
+             gameState.units.push(newUnit);
 
-        choices.forEach(unitType => {
-            const unitConf = gameConfig.units[unitType];
-            const button = document.createElement('button');
-            button.id = `unit-choice-${unitType}-button`; // Add specific ID for styling if needed
-            button.textContent = lang[unitConf.nameKey] || unitType;
-            button.onclick = () => { // Use onclick for simplicity here
-                deployChosenUnit(unitType, houseX, houseY);
-                DOMElements.unitChoiceModal.style.display = 'none'; // Hide modal after choice
-            };
-            DOMElements.unitChoiceButtons.appendChild(button);
-        });
+             // Mark the house as used
+             const houseTileData = getTileData(houseX, houseY);
+             if (houseTileData) {
+                 houseTileData.unitDeployed = true; // Set the flag
+                 setTileData(houseX, houseY, houseTileData);
+             } else {
+                 console.error("Could not find house data to mark as deployed at", houseX, houseY);
+             }
 
-        DOMElements.unitChoiceModal.style.display = 'block';
-    }
+             revealArea(newUnit.worldX, newUnit.worldY, unitConf?.revealRadius || gameConfig.revealRadiusBase);
+             showAlert("alertUnitDeployed", 2000, true, [unitConf.nameKey]);
 
-    function deployChosenUnit(unitType, houseX, houseY) {
-        const spawnDetails = findSpawnPoint(houseX, houseY); // Find spot near THIS house
-        const unitConf = gameConfig.units[unitType];
-        const lang = getLang();
+         } else {
+             // No space available near the house
+             showAlert("alertNoSpaceForUnit", 3000, true, [unitConf.nameKey]);
+             // Note: House remains unused (unitDeployed stays false)
+         }
 
-        if (spawnDetails && unitConf) {
-            const newUnit = {
-                id: `unit-${gameState.nextUnitId++}`, type: unitType,
-                worldX: spawnDetails.worldX, worldY: spawnDetails.worldY,
-                exp: 0, upgrades: {}
-            };
-            gameState.units.push(newUnit);
-            revealArea(newUnit.worldX, newUnit.worldY, unitConf?.revealRadius || gameConfig.revealRadiusBase);
-            showAlert("alertUnitDeployed", 2000, true, [unitConf.nameKey]);
-
-            // Mark the house tile as 'claimed'? Optional, depends on desired mechanic.
-            // const houseTileData = getTileData(houseX, houseY);
-            // if (houseTileData) { houseTileData.houseClaimed = true; setTileData(houseX, houseY, houseTileData); }
-
-            updateGrid();
-            updateUnitDisplayBar();
-            updateUnitsPanel(); // Refresh panel (though it likely won't show W/S)
-        } else {
-            showAlert("alertNoSpaceForUnit", 3000, true, [unitConf?.nameKey || unitType]);
-            // House deployment opportunity is lost if no space? Or should it retry?
-            // For now, it's lost.
-        }
-    }
+         // --- Cleanup ---
+         gameState.unitToDeploy = null; // Exit deployment mode regardless of success
+         gameState.highlightEnabled = false;
+         updateGrid(); // Refresh grid (remove highlights, show new unit, update house appearance)
+         updateUnitDisplayBar(); // Add new unit icon
+         updateUnitsPanel(); // Update panel (deploy button might disable if no more houses)
+     }
 
 
     // --- Save/Load Functions ---
      function gatherSaveData() {
+         // Ensure all relevant state is captured
          const saveData = {
-             version: "1.2", // Increment version due to House/Unit changes
+             version: "1.3", // Increment version due to house deployment changes
              gameState: {
                  units: gameState.units, nextUnitId: gameState.nextUnitId, selectedUnitId: gameState.selectedUnitId,
                  inventory: gameState.inventory,
                  researchPoints: gameState.researchPoints, activeResearch: gameState.activeResearch,
                  completedTech: Array.from(gameState.completedTech),
-                 // maxWorkers removed
                  productionProgress: gameState.productionProgress,
                  colonyName: gameState.colonyName, currentLanguage: gameState.currentLanguage,
                  eventLogs: gameState.eventLogs.map(log => ({ time: log.time, messageKey: log.messageKey, args: log.args || [] })),
                  viewOffsetX: gameState.viewOffsetX, viewOffsetY: gameState.viewOffsetY,
-                 worldData: gameState.worldData, revealedTiles: Array.from(gameState.revealedTiles)
+                 worldData: gameState.worldData, // This now includes unitDeployed flag on house tiles
+                 revealedTiles: Array.from(gameState.revealedTiles)
+                 // unitToDeploy is transient, not saved
              }
          };
          return saveData;
      }
-    function saveGame() { /* ... (same as before, but uses new gatherSaveData) ... */
+    function saveGame() {
         try {
-            const saveData = gatherSaveData(); // Uses updated function
-            const saveDataJson = JSON.stringify(saveData);
+            const saveData = gatherSaveData();
+            const saveDataJson = JSON.stringify(saveData, null, 2);
             const blob = new Blob([saveDataJson], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
-            const safeColonyName = gameState.colonyName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-            // Update filename version
+            const safeColonyName = gameState.colonyName.replace(/[^a-z0-9]/gi, '_').toLowerCase() || 'colony';
             link.download = `tinyciv_${safeColonyName}_save_v${saveData.version}.json`;
             document.body.appendChild(link); link.click(); document.body.removeChild(link);
             URL.revokeObjectURL(url);
@@ -1645,13 +1726,13 @@
         } catch (error) { console.error("Error saving game:", error); showAlert('alertSaveError', 4000); }
     }
     function applyLoadedData(data) {
-         const requiredVersion = "1.2"; // Update required version
-         if (!data || !data.gameState || data.version !== requiredVersion) {
-             showAlert('alertLoadInvalidFormat', 5000, true);
-             if (data?.version && data.version !== requiredVersion) {
-                  showAlert('alertSaveVersionMismatch', 6000, true, [requiredVersion, data.version]); // Add versions to mismatch msg?
-             }
-             return false;
+         const requiredVersion = "1.3"; // Update required version for loading check
+         if (!data || !data.gameState) { showAlert('alertLoadInvalidFormat', 5000, true); return false; }
+
+         if (data.version !== requiredVersion) {
+              showAlert('alertSaveVersionMismatch', 6000, true, [requiredVersion, data.version || 'Unknown']);
+              // Decide whether to proceed or return false - for now, allow loading older saves potentially
+              // return false;
          }
         const loadedState = data.gameState;
         gameState.units = loadedState.units || [];
@@ -1661,7 +1742,6 @@
         gameState.researchPoints = loadedState.researchPoints || 0;
         gameState.activeResearch = loadedState.activeResearch || null;
         gameState.completedTech = new Set(loadedState.completedTech || []);
-        // gameState.maxWorkers = loadedState.maxWorkers || 0; // REMOVED
         gameState.productionProgress = loadedState.productionProgress || { wheat: 0, coal: 0, quarry: 0 };
         gameState.colonyName = loadedState.colonyName || "Loaded Colony";
         gameState.currentLanguage = loadedState.currentLanguage || 'en';
@@ -1673,18 +1753,40 @@
              time: logData.time, messageKey: logData.messageKey, args: logData.args || [],
              rendered: getLangMsg(logData.messageKey, logData.args || [])
          }));
+        // Ensure loaded units have expected properties
         gameState.units.forEach(unit => {
-             if (unit.exp === undefined) unit.exp = 0; if (unit.upgrades === undefined) unit.upgrades = {};
+             if (unit.exp === undefined) unit.exp = 0;
+             if (unit.upgrades === undefined) unit.upgrades = {};
         });
-        gameState.selectedBuilding = null; gameState.highlightEnabled = false;
-        updateInventoryCapacity(); updateLanguageUI(); hideAllPanels();
+         // Ensure loaded house tiles have unitDeployed property (for backward compatibility if needed)
+         Object.values(gameState.worldData).forEach(row => {
+             Object.values(row).forEach(tile => {
+                 if (tile.building === 'house' && tile.unitDeployed === undefined) {
+                      // Assume older saves' houses were used or handle differently?
+                      // For simplicity, assume they are used if undefined on load.
+                      // tile.unitDeployed = true;
+                      // OR assume unused:
+                      tile.unitDeployed = false; // More likely intended for loading old saves
+                 }
+             });
+         });
+
+        // Reset transient UI state
+        gameState.selectedBuilding = null;
+        gameState.unitToDeploy = null;
+        gameState.highlightEnabled = false;
+
+        updateInventoryCapacity();
+        updateLanguageUI();
+        hideAllPanels();
         updateInventoryDisplay(); updateResearchPointsDisplay(); updateUnitDisplayBar();
         updateGrid(); updateResearchUI(); updateBuildingsList(); updateUnitsPanel(); updateUnitInfoDisplay();
         if (gameState.selectedUnitId) { focusOnUnit(gameState.selectedUnitId); }
         showAlert('alertLoadSuccess', 3000, false, [gameState.colonyName]);
+        gameState.gameInitialized = true; // Mark game as initialized
         return true;
     }
-    function loadGame(event) { /* ... (same as before, uses new applyLoadedData) ... */
+    function loadGame(event) {
         const file = event.target.files[0]; if (!file) return;
         const reader = new FileReader();
         reader.onload = function(e) {
@@ -1719,28 +1821,26 @@
          document.getElementById('unit-exp-display-container').childNodes[0].nodeValue = `${lang.unitExpLabel} `;
          const techTitle = DOMElements.techTree.querySelector('h2'); if (techTitle) techTitle.textContent = lang.researchPanelTitle;
          const buildTitle = DOMElements.buildingsList.querySelector('h2'); if (buildTitle) buildTitle.textContent = lang.buildingsPanelTitle;
-         const unitsTitle = DOMElements.unitsPanel.querySelector('h2'); if (unitsTitle) unitsTitle.textContent = lang.unitsPanelTitle;
+         const unitsTitle = DOMElements.unitsPanel.querySelector('h2'); if (unitsTitle) unitsTitle.textContent = lang.unitsPanelTitle; // Update units panel title
          const upgradeTitleH4 = DOMElements.upgradeInfoDisplay.querySelector('h4'); if (upgradeTitleH4) upgradeTitleH4.textContent = lang.upgradeSectionTitle;
-         // Update Tutorial Content (with updated steps)
+
+         // Update Tutorial Content (with updated flow)
          DOMElements.tutorialTitle.textContent = lang.tutorialTitle;
          DOMElements.tutorialStepsList.innerHTML = `
-              <li>${lang.tutorialStep1}</li><li>${lang.tutorialStep2}</li>
-              <li>${lang.tutorialStep3}</li><li>${lang.tutorialStep4}</li>
-              <li>${lang.tutorialStep5}</li><li>${lang.tutorialStep6}</li>
-              <li>${lang.tutorialStep7}</li><li>${lang.tutorialStep8}</li>
-              <li>${lang.tutorialStep9}</li><li>${lang.tutorialStep10}</li>
+              <li>${lang.tutorialStep1}</li> <li>${lang.tutorialStep2}</li>
+              <li>${lang.tutorialStep3}</li> <li>${lang.tutorialStep4}</li>
+              <li>${lang.tutorialStep5}</li> <li>${lang.tutorialStep6}</li>
+              <li>${lang.tutorialStep7}</li> <li>${lang.tutorialStep8}</li>
+              <li>${lang.tutorialStep9}</li> <li>${lang.tutorialStep10}</li>
               <li>${lang.tutorialStep11}</li><li>${lang.tutorialStep12}</li>
               <li>${lang.tutorialStep13}</li><li>${lang.tutorialStep14}</li>
-              <li>${lang.tutorialStep15}</li><li>${lang.tutorialStep16}</li>`;
+              <li>${lang.tutorialStep15}</li><li>${lang.tutorialStep16}</li>`; // Adjusted steps
          DOMElements.closeTutorialButton.textContent = lang.closeButton;
+
+         // Refresh displays that depend on language
          updateInventoryDisplay(); updateGrid(); updateUnitDisplayBar();
          updateResearchUI(); updateBuildingsList(); updateUnitsPanel();
          updateUnitInfoDisplay(); updateLogsDisplay(); checkResource();
-         // Update unit choice modal title if visible (though unlikely on language switch)
-         if (DOMElements.unitChoiceModal.style.display === 'block') {
-             DOMElements.unitChoiceTitle.textContent = lang.unitChoiceModalTitle;
-             // Button text inside modal is updated when modal is shown
-         }
      }
 
     // --- Language Switching ---
@@ -1752,33 +1852,59 @@
 
     // --- Game Start ---
     function initializeGame() {
-        if (gameState.gameInitialized) return;
-        noise.biome = SimplexNoise.create(Math.random()); noise.feature = SimplexNoise.create(Math.random() + 1); noise.water = SimplexNoise.create(Math.random() + 2);
+        if (gameState.gameInitialized && !confirm("Start a new game? Current progress will be lost.")) return;
+
+        const seed = Math.random();
+        noise.biome = SimplexNoise.create(seed);
+        noise.feature = SimplexNoise.create(seed + 1);
+        noise.water = SimplexNoise.create(seed + 2);
+
         gameState.units = []; gameState.nextUnitId = 0; gameState.selectedUnitId = null;
         gameState.inventory = {}; gameState.inventoryCapacity = {};
         gameState.researchPoints = 0; gameState.activeResearch = null; gameState.completedTech = new Set();
-        // gameState.maxWorkers = 0; // REMOVED
-        gameState.selectedBuilding = null;
+        gameState.selectedBuilding = null; gameState.unitToDeploy = null; // Reset deploy state
         gameState.productionProgress = { wheat: 0, coal: 0, quarry: 0 };
         gameState.eventLogs = []; gameState.worldData = {}; gameState.revealedTiles = new Set();
         gameState.highlightEnabled = false; clearTimeout(gameState.alertTimeout);
+        gameState.gameInitialized = false;
 
-        // Initialize inventory TO ZERO
         gameConfig.resources.forEach(res => { gameState.inventory[res.id] = 0; });
-        // Base capacity set later by updateInventoryCapacity
 
-        gameState.currentLanguage = 'en'; const lang = getLang();
-        gameState.colonyName = prompt(lang.promptColonyName, lang.defaultColonyName) || lang.defaultColonyName;
+        gameState.currentLanguage = gameState.currentLanguage || 'en';
+        const lang = getLang();
+        if (!gameState.colonyName || !DOMElements.colonyNameDisplay.textContent.includes(gameState.colonyName)) {
+            gameState.colonyName = prompt(lang.promptColonyName, lang.defaultColonyName) || lang.defaultColonyName;
+        }
         logEvent('logNewGame', [gameState.colonyName]);
 
         const startWorldX = 5, startWorldY = 5; let startValid = false, attemptCount = 0;
-        do { /* ... (world gen validation same as before) ... */
+        do {
              attemptCount++;
-             if (attemptCount > 1) { logEvent('logInvalidStartRegen'); noise.biome = SimplexNoise.create(Math.random()); noise.feature = SimplexNoise.create(Math.random() + 1); noise.water = SimplexNoise.create(Math.random() + 2); gameState.worldData = {}; gameState.revealedTiles = new Set(); }
-             revealArea(startWorldX, startWorldY, 1); const startData = getTileData(startWorldX, startWorldY);
+             if (attemptCount > 1) {
+                 logEvent('logInvalidStartRegen');
+                 const newSeed = Math.random();
+                 noise.biome = SimplexNoise.create(newSeed); noise.feature = SimplexNoise.create(newSeed + 1); noise.water = SimplexNoise.create(newSeed + 2);
+                 gameState.worldData = {}; gameState.revealedTiles = new Set();
+             }
+             generateTileContent(startWorldX, startWorldY); // Generate center
+             revealArea(startWorldX, startWorldY, 1); // Generate & reveal neighbors
+
+             const startData = getTileData(startWorldX, startWorldY);
              if (startData && startData.type !== 'water') {
-                  let hasAdjLand = false; for (let dy=-1; dy<=1; dy++) { for (let dx=-1; dx<=1; dx++) { if(dx===0 && dy===0) continue; const adj = getTileData(startWorldX+dx,startWorldY+dy) || generateTileContent(startWorldX+dx,startWorldY+dy); if(adj && adj.type !== 'water') { hasAdjLand=true; break; } } if(hasAdjLand) break; } if(hasAdjLand) startValid=true;
-             } if (!startValid && attemptCount >= gameConfig.maxStartRegenAttempts) { logEvent('logInvalidStartGiveUp', [attemptCount]); startValid=true; }
+                  let hasAdjLand = false;
+                  for (let dy=-1; dy<=1; dy++) {
+                      for (let dx=-1; dx<=1; dx++) {
+                          if(dx===0 && dy===0) continue;
+                          const adj = getTileData(startWorldX+dx,startWorldY+dy);
+                          if(adj && adj.type !== 'water') { hasAdjLand=true; break; }
+                      }
+                      if(hasAdjLand) break;
+                  }
+                  if(hasAdjLand) startValid=true;
+             }
+             if (!startValid && attemptCount >= gameConfig.maxStartRegenAttempts) {
+                 logEvent('logInvalidStartGiveUp', [attemptCount]); startValid=true;
+             }
         } while (!startValid);
 
          gameState.units.push({ id: `unit-${gameState.nextUnitId++}`, type: 'pawn', worldX: startWorldX, worldY: startWorldY, exp: 0, upgrades: {} });
@@ -1786,17 +1912,21 @@
          gameState.viewOffsetX = startWorldX - gameConfig.viewCenterOffset; gameState.viewOffsetY = startWorldY - gameConfig.viewCenterOffset;
          revealArea(startWorldX, startWorldY, gameConfig.units.pawn.revealRadius);
 
-        initializeGridDOM(); setupEventListeners(); hideAllPanels();
-        updateLanguageUI(); updateInventoryCapacity(); // Sets base capacity and updates display
-        // updateInventoryDisplay(); // Called by updateInventoryCapacity
+        initializeGridDOM();
+        setupEventListeners();
+        hideAllPanels();
+        updateLanguageUI();
+        updateInventoryCapacity();
         updateUnitDisplayBar(); updateResearchPointsDisplay(); updateResearchUI(); updateBuildingsList(); updateUnitsPanel(); updateUnitInfoDisplay();
         DOMElements.researchStatusDisplay.textContent = lang.researchStatusInitial; DOMElements.researchStatusDisplay.style.display = 'block';
+        focusOnUnit(gameState.selectedUnitId); // Center view and initial grid update
         showAlert('alertWelcome', 4000, false, [gameState.colonyName]);
         gameState.gameInitialized = true;
     }
 
     // --- Start Game ---
-    initializeGame();
+    document.addEventListener('DOMContentLoaded', initializeGame);
+
   </script>
 </body>
 </html>
