@@ -305,9 +305,6 @@
         unitsListUl: document.getElementById('units-list'), // Reference to units panel UL
         upgradeInfoContent: document.querySelector('#upgrade-info .panel-content'),
         saveButton: document.getElementById('save-button'), loadButton: document.getElementById('load-button'),
-        // unitChoiceModal: document.getElementById('unit-choice-modal'), // REMOVED
-        // unitChoiceTitle: document.getElementById('unit-choice-title'), // REMOVED
-        // unitChoiceButtons: document.getElementById('unit-choice-buttons') // REMOVED
     };
 
     // --- Game Configuration ---
@@ -1543,10 +1540,6 @@
     function hideAllPanels() {
          document.querySelectorAll('.panel:not(#inventory)').forEach(panel => { panel.style.display = 'none'; });
          DOMElements.tutorialModal.style.display = 'none';
-         // gameState.unitToDeploy = null; // Reset deploy state when closing panels
-         // gameState.selectedBuilding = null; // Reset build state
-         // gameState.highlightEnabled = false;
-         // updateGrid(); // Update grid to remove highlights
      }
     function handleResearchClick(techId) {
         const tech = gameConfig.tech[techId];
@@ -1560,8 +1553,6 @@
         updateResearchPointsDisplay(); updateResearchUI();
         showAlert("alertResearchStarted", 2500, true, [tech.nameKey]);
     }
-
-    // REMOVED handleDeployUnitFromPanel
 
     function handlePlaceBuilding(worldX, worldY) {
         const builderUnit = gameState.units.find(u => u.id === gameState.selectedUnitId);
