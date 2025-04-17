@@ -44,7 +44,7 @@
 
         h2 {
             font-family: 'Poppins', sans-serif;
-            font-weight: 700; /* Make h2 bolder */
+            /* font-weight: 700; *//* Make h2 bolder */ /* Overridden below */
             color: var(--text-color);
             margin-top: 0;
             padding-bottom: 10px;
@@ -54,6 +54,21 @@
             font-weight: 500; /* This overrides the previous font-weight, keep only one */
             font-size: 1.8em; /* Slightly smaller than old h1 */
         }
+        h3 { /* Added basic styling for h3 consistency */
+             font-family: 'Poppins', sans-serif;
+             font-weight: 700;
+             margin-top: 25px;
+             margin-bottom: 15px;
+             color: var(--text-color);
+        }
+        h4 { /* Added basic styling for h4 consistency */
+             font-family: 'Poppins', sans-serif;
+             font-weight: 500;
+             margin-top: 20px;
+             margin-bottom: 10px;
+             color: var(--text-color);
+        }
+
 
         /* --- NEW HEADER STYLES --- */
         .main-header {
@@ -92,7 +107,7 @@
             font-family: 'Poppins', sans-serif;
             font-size: 0.95em;
             font-weight: 500;
-            transition: color 0.3s ease;
+            transition: color 0.3s ease, background-color 0.3s ease; /* Added background-color transition */
             padding: 5px 8px; /* Add some padding for easier clicking */
             border-radius: 4px; /* Slightly rounded corners */
              white-space: nowrap; /* Prevent wrapping */
@@ -179,10 +194,11 @@
         }
         /* ----------------------------- */
 
-        /* Project Link */
+        /* Project Link Button Style */
         .project-link {
             display: inline-block;
             margin-top: 15px;
+            margin-bottom: 10px; /* Added margin bottom */
             padding: 12px 20px;
             background-color: var(--primary-color);
             color: var(--light-text);
@@ -190,6 +206,7 @@
             border-radius: 5px;
             transition: background-color 0.2s ease, transform 0.2s ease;
             font-weight: 700;
+            font-family: 'Poppins', sans-serif; /* Ensure font consistency */
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
         }
         .project-link:hover {
@@ -197,6 +214,31 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
+
+        /* --- NEW CV Button Style --- */
+        .cv-button {
+            display: inline-block; /* Allows padding/margin */
+            margin-top: 15px; /* Space above the button */
+            margin-bottom: 10px; /* Space below the button */
+            padding: 10px 25px; /* Adjust padding for appearance */
+            background-color: black; /* Black background */
+            color: white; /* White text */
+            text-decoration: none; /* Remove underline */
+            border-radius: 8px; /* Rounded corners */
+            font-weight: 500; /* Match nav link weight */
+            font-family: 'Poppins', sans-serif; /* Match other button/nav fonts */
+            text-align: center; /* Ensure text is centered */
+            transition: background-color 0.3s ease, box-shadow 0.2s ease, transform 0.2s ease; /* Smooth transition */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Subtle shadow */
+        }
+
+        .cv-button:hover {
+            background-color: #333; /* Dark grey on hover */
+            transform: translateY(-1px); /* Slight lift on hover */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Enhanced shadow on hover */
+            color: white; /* Ensure text stays white */
+        }
+        /* --- END CV Button Style --- */
 
         /* Placeholder blocks styling */
         .placeholder-block {
@@ -220,6 +262,19 @@
             margin: 30px 0;
         }
 
+        /* Utility class for simple links within content */
+         .content-nav-link {
+             color: var(--primary-color);
+             text-decoration: none;
+             font-weight: 500;
+             transition: color 0.2s ease;
+         }
+         .content-nav-link:hover {
+             text-decoration: underline;
+             color: var(--primary-hover);
+         }
+
+
     </style>
 </head>
 <body>
@@ -229,8 +284,8 @@
         <div class="header-name">PANTEIX Dylan</div>
         <nav class="header-nav">
             <a href="#tab1" class="nav-link active" data-tab="tab1">Accueil</a>
-            <a href="#tab3" class="nav-link" data-tab="tab3">Contact</a>
             <a href="#tab2" class="nav-link" data-tab="tab2">Projets</a>
+            <a href="#tab3" class="nav-link" data-tab="tab3">Contact</a>
             <!-- Icons -->
             <a href="https://www.linkedin.com/in/dylan-panteix-79690225b/" target="_blank" rel="noopener noreferrer" class="nav-icon" title="LinkedIn">
                  <!-- Placeholder: Replace with actual LinkedIn icon (e.g., Font Awesome <i class="fab fa-linkedin-in"></i> or SVG) -->
@@ -263,16 +318,22 @@
             <p>
                 Je suis Dylan PANTEIX, un étudiant du Lycée Polyvalent Algoud-Laffemas, en cours de formation du Brevet de technicien supérieur (BTS) Services informatiques aux organisations (SIO) dans l’option SISR (Solutions d’Infrastructure, Systèmes et Réseaux). J’ai réalisé une formation en BTS SIO car précédemment, j’ai fait un BAC Pro MELEC (Métiers de l’Électricité et de ses Environnements Connectés) et j’ai pu décrocher un diplôme avec mention “Assez Bien”, puis j’ai voulu me réorienter dans le domaine de l’informatique qui est ma passion principale.
             </p>
+            <!-- === ADDED CV BUTTON HERE === -->
+            <a href="cv_panteix_dylan.pdf" target="_blank" rel="noopener noreferrer" class="cv-button">CV</a>
+            <!-- === END CV BUTTON === -->
+
             <hr class="content-divider">
+
             <!-- Projets Section (Short summary for Accueil) -->
             <h3>Aperçu des Projets</h3>
             <p>Quelques projets notables incluent :</p>
             <ul>
-                <li><a href="#" class="nav-link" data-tab="tab2">HTML - Civilization Simulator</a></li>
-                <li><a href="#" class="nav-link" data-tab="tab2">HTML - Alchemy Book</a></li>
+                <!-- UPDATED Links to point directly to external sites -->
+                <li><a href="https://panteixd.github.io/civgame" target="_blank" rel="noopener noreferrer" class="content-nav-link">HTML - Civilization Simulator</a></li>
+                <li><a href="https://panteixd.github.io/alchemy" target="_blank" rel="noopener noreferrer" class="content-nav-link">HTML - Alchemy Book</a></li>
             </ul>
-             <p>Voir la section <a href="#tab2" class="nav-link" data-tab="tab2">Projets</a> pour plus de détails.</p>
-            <!-- Note: Made these links trigger the Projects tab -->
+             <!-- Link to projects tab remains, but uses nav-link class for JS -->
+             <p>Voir la section <a href="#tab2" class="content-nav-link nav-link" data-tab="tab2">Projets</a> pour plus de détails.</p>
             <hr class="content-divider">
 
             <!-- Mes passions Section -->
@@ -317,9 +378,10 @@
             <h2>Contact</h2>
             <p>Vous pouvez me contacter via les méthodes suivantes :</p>
             <ul>
-                <li>Email: <a href="mailto:dylanpanteix.promail@gmail.com">dylanpanteix.promail@gmail.com</a></li>
-                <li>LinkedIn: <a href="https://www.linkedin.com/in/dylan-panteix-79690225b/" target="_blank" rel="noopener noreferrer">Mon profil LinkedIn</a></li>
-                <li>GitHub: <a href="https://github.com/PanteixD" target="_blank" rel="noopener noreferrer">Mon profil GitHub</a></li>
+                 <!-- Added content-nav-link class for consistency -->
+                <li>Email: <a href="mailto:dylanpanteix.promail@gmail.com" class="content-nav-link">dylanpanteix.promail@gmail.com</a></li>
+                <li>LinkedIn: <a href="https://www.linkedin.com/in/dylan-panteix-79690225b/" target="_blank" rel="noopener noreferrer" class="content-nav-link">Mon profil LinkedIn</a></li>
+                <li>GitHub: <a href="https://github.com/PanteixD" target="_blank" rel="noopener noreferrer" class="content-nav-link">Mon profil GitHub</a></li>
             </ul>
             <p>N'hésitez pas à prendre contact !</p>
              <!-- Removed Placeholder -->
@@ -329,54 +391,80 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Select all navigation links with a data-tab attribute
+            // Select all navigation links with a data-tab attribute (in header and content)
             const navLinks = document.querySelectorAll('.nav-link[data-tab]');
-            const tabContents = document.querySelectorAll('.content-container .tab-content'); // Be more specific
+            const tabContents = document.querySelectorAll('.content-container .tab-content'); // Target only content tabs
+            const headerLinks = document.querySelectorAll('.main-header .nav-link[data-tab]'); // Target only header links for active state
 
             function activateTab(targetTabId) {
                 const targetTabContent = document.getElementById(targetTabId);
 
-                // Deactivate all links and content first
-                navLinks.forEach(lnk => lnk.classList.remove('active'));
+                // Deactivate all header links and content first
+                headerLinks.forEach(lnk => lnk.classList.remove('active')); // Only remove active from header links
                 tabContents.forEach(content => content.classList.remove('active'));
 
-                // Activate the target link(s) and content
-                // Note: Multiple links might point to the same tab (e.g., Accueil and Qui suis-je?)
-                const activeLinks = document.querySelectorAll(`.nav-link[data-tab="${targetTabId}"]`);
-                activeLinks.forEach(link => link.classList.add('active'));
+                // Activate the target header link(s) and content
+                const activeHeaderLinks = document.querySelectorAll(`.main-header .nav-link[data-tab="${targetTabId}"]`);
+                activeHeaderLinks.forEach(link => link.classList.add('active'));
 
                 if (targetTabContent) {
                     targetTabContent.classList.add('active');
                 }
             }
 
-            // Add click listeners to navigation links
+            // Add click listeners to ALL navigation links (header and content links with data-tab)
             navLinks.forEach(link => {
                 link.addEventListener('click', (event) => {
-                    // Don't prevent default for hash links if you want the URL to update
-                    // event.preventDefault();
                     const targetTabId = link.dataset.tab;
-                    activateTab(targetTabId);
+
+                    // Check if it's a link within the page content intended to switch tabs
+                    if (link.getAttribute('href').startsWith('#')) {
+                        // Prevent default jump if it's just a tab control
+                        // Let browser handle hash change, which our hashchange listener will pick up
+                        // event.preventDefault(); // Removed this to allow hash to change
+                        // Manually update hash if needed, or let default behavior work
+                        // window.location.hash = '#' + targetTabId;
+                        activateTab(targetTabId); // Activate immediately on click too
+                    } else {
+                        // If it's not a hash link starting with # (shouldn't happen for tabs),
+                        // let the browser handle it (e.g., external link).
+                        // But we might still want to activate the tab visually if applicable?
+                        // For now, only handle hash links for tab activation.
+                    }
                 });
             });
 
-            // --- Set Initial Active State ---
-            // Check URL hash first
-            let initialTabId = window.location.hash.substring(1); // Get hash without #
-            const initiallyActiveContentFromHtml = document.querySelector('.content-container .tab-content.active');
+            // --- Set Initial Active State & Handle Hash Changes ---
+            function setTabFromUrlHash() {
+                 let targetTabId = window.location.hash.substring(1); // Get hash without #
 
-            if (initialTabId && document.getElementById(initialTabId)) {
-                 // If a valid hash exists, use it
-                 activateTab(initialTabId);
-            } else if (initiallyActiveContentFromHtml) {
-                // Otherwise, use the one marked active in HTML
-                initialTabId = initiallyActiveContentFromHtml.id;
-                activateTab(initialTabId);
-            } else if (navLinks.length > 0) {
-                // Fallback: activate the first link's tab if nothing else is set
-                initialTabId = navLinks[0].dataset.tab;
-                activateTab(initialTabId);
+                 if (targetTabId && document.getElementById(targetTabId)) {
+                     // If a valid hash exists and corresponds to a tab, use it
+                     activateTab(targetTabId);
+                 } else {
+                     // Otherwise, find the one marked active in HTML (usually the first one)
+                     const initiallyActiveLink = document.querySelector('.main-header .nav-link.active[data-tab]');
+                     if (initiallyActiveLink) {
+                        targetTabId = initiallyActiveLink.dataset.tab;
+                         activateTab(targetTabId);
+                         // Optional: Set the hash to the default active tab if none was specified
+                         // window.location.hash = '#' + targetTabId;
+                     } else if (headerLinks.length > 0) {
+                         // Fallback: activate the first header link's tab if nothing else is set
+                         targetTabId = headerLinks[0].dataset.tab;
+                         activateTab(targetTabId);
+                         // Optional: Set the hash to the default active tab if none was specified
+                         // window.location.hash = '#' + targetTabId;
+                     }
+                 }
             }
+
+            // Set initial tab on load based on hash or default
+            setTabFromUrlHash();
+
+            // Listen for hash changes (e.g., back/forward buttons, clicking hash links)
+            window.addEventListener('hashchange', setTabFromUrlHash);
+
         });
     </script>
 
