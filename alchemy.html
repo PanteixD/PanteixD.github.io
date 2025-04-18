@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Alchemy Book</title>
+    <title>Doodle Book Clone - Manual Save/Load</title>
     <style>
-        /* CSS remains the same */
+        /* CSS remains mostly the same */
         :root { --parchment-bg: #f5e8c9; --book-border: #8a6a4a; --text-color: #4a3a2a; --icon-size: 55px; --slot-size: 70px; --selected-glow: 0 0 10px 3px #4a90e2; --hint-glow: 0 0 10px 3px #ffcc00; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #2a5a7a; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 10px; box-sizing: border-box; color: var(--text-color); user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; }
         #book { display: flex; width: 98%; max-width: 1150px; height: 90vh; background-color: var(--parchment-bg); border: 5px solid var(--book-border); border-radius: 10px; box-shadow: 10px 10px 20px rgba(0,0,0,0.5); position: relative; }
@@ -23,14 +23,26 @@
         #feedback.success { background-color: #d4edda; border-color: #c3e6cb; color: #155724; }
         #feedback.fail { background-color: #f8d7da; border-color: #f5c6cb; color: #721c24; }
         #feedback.hint { background-color: #fff3cd; border-color: #ffeeba; color: #856404; }
-        #controls { display: flex; justify-content: center; gap: 15px; margin-top: 10px; }
+        #feedback.info { background-color: #d1ecf1; border-color: #bee5eb; color: #0c5460; } /* Style for info feedback */
+        #controls { display: flex; justify-content: center; gap: 8px; /* Slightly smaller gap */ margin-top: 10px; flex-wrap: wrap; }
         .action-button { padding: 6px 12px; cursor: pointer; border: 2px solid var(--book-border); border-radius: 20px; background-color: #eee; color: var(--text-color); font-weight: bold; font-size: 0.9em; transition: background-color 0.2s, transform 0.1s; }
         .action-button:hover { background-color: #ddd; }
         .action-button:active { transform: scale(0.95); }
         #hint-button { background-color: #fffacd; }
         #hint-button:hover { background-color: #fff0a0; }
-        #left-page-decoration { flex-grow: 1; display: flex; align-items: center; justify-content: center; opacity: 0.1; padding: 10px 0; min-height: 100px; }
-        #left-page-decoration svg { width: 50%; height: auto; max-width: 150px; }
+        #save-button { background-color: #d4edda; } /* Style for Save */
+        #save-button:hover { background-color: #b8dbbd; }
+        #load-button { background-color: #d1ecf1; } /* Style for Load */
+        #load-button:hover { background-color: #b3dce6; }
+        #reset-progress-button { background-color: #f8d7da; }
+        #reset-progress-button:hover { background-color: #f1b0b7; }
+
+        /* --- Quote Display Area --- */
+        #left-page-decoration { flex-grow: 1; display: flex; align-items: center; justify-content: center; padding: 20px; text-align: center; min-height: 100px; width: 100%; }
+        #quote-display { font-style: italic; font-size: 1.1em; color: #6a4a2a; max-width: 80%; opacity: 0; transition: opacity 0.6s ease-in-out; }
+        #quote-display.fade-in { opacity: 1; }
+
+        /* --- Inventory Styles (unchanged) --- */
         #inventory-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 2px solid var(--book-border); }
         #inventory-header h2 { margin: 0; font-size: 1.3em; }
         #progress-counter { font-weight: bold; font-size: 0.9em; color: #6a4a2a; }
@@ -55,6 +67,16 @@
         #right-page::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 5px; }
         #right-page::-webkit-scrollbar-thumb { background: var(--book-border); border-radius: 5px; }
         #right-page::-webkit-scrollbar-thumb:hover { background: #6a4a2a; }
+
+        @media (max-width: 550px) { /* Adjust breakpoint as needed */
+             #controls {
+                gap: 5px;
+            }
+            .action-button {
+                padding: 5px 8px; /* Smaller padding */
+                font-size: 0.8em;
+            }
+        }
     </style>
 </head>
 <body>
@@ -72,12 +94,16 @@
                     <div id="feedback">Select two elements to combine.</div>
                     <div id="controls">
                         <button id="hint-button" class="action-button">Hint</button>
-                        <button id="reset-button" class="action-button">Clear</button>
+                        <button id="reset-button" class="action-button">Clear Slots</button>
+                        <button id="save-button" class="action-button">Save</button>   <!-- New Save Button -->
+                        <button id="load-button" class="action-button">Load</button>   <!-- New Load Button -->
+                        <button id="reset-progress-button" class="action-button">Reset All</button> <!-- Renamed -->
                     </div>
                 </div>
             </div>
+            <!-- Decoration Area Now for Quotes -->
             <div id="left-page-decoration">
-                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-14h2v6h-2zm0 8h2v2h-2z"/></svg>
+                <div id="quote-display"></div>
             </div>
         </div>
 
@@ -96,1130 +122,379 @@
 
     <script>
         // --- Game Data ---
-        const ALL_ELEMENTS = {
-            // Contains all element definitions (same as previous version)
-            // Basic (4)
-            'fire':  { name: 'Fire',  group: 'Basic', icon: '🔥' }, 'water': { name: 'Water', group: 'Basic', icon: '💧' }, 'earth': { name: 'Earth', group: 'Basic', icon: '🌍' }, 'air':   { name: 'Air',   group: 'Basic', icon: '💨' },
-            // Natural & Weather (23)
-            'steam': { name: 'Steam', group: 'Natural', icon: '☁️' }, 'lava':  { name: 'Lava',  group: 'Natural', icon: '🌋' }, 'energy':{ name: 'Energy',group: 'Natural', icon: '⚡' }, 'dust':  { name: 'Dust',  group: 'Natural', icon: '✨' }, 'mud':   { name: 'Mud',   group: 'Natural', icon: '🟤' }, 'rain':  { name: 'Rain', group: 'Weather', icon: '🌧️'}, 'stone': { name: 'Stone', group: 'Natural', icon: '🗿' }, 'sand':  { name: 'Sand', group: 'Natural', icon: '⏳' }, 'storm': { name: 'Storm', group: 'Weather', icon: '⛈️'}, 'volcano': { name: 'Volcano', group: 'Natural', icon: '🌋' }, 'clay': { name: 'Clay', group: 'Natural', icon: '🏺' }, 'coal': { name: 'Coal', group: 'Natural', icon: '⚫' }, 'oil': { name: 'Oil', group: 'Natural', icon: '⚫' }, 'swamp': { name: 'Swamp', group: 'Natural', icon: '🐊' }, 'geyser': { name: 'Geyser', group: 'Natural', icon: '♨️' }, 'ice': { name: 'Ice', group: 'Weather', icon: '🧊' }, 'snow': { name: 'Snow', group: 'Weather', icon: '❄️' }, 'wind': { name: 'Wind', group: 'Weather', icon: '🌬️' }, 'cloud': { name: 'Cloud', group: 'Weather', icon: '☁️' }, 'sky': { name: 'Sky', group: 'Weather', icon: '☀️' }, 'sea': { name: 'Sea', group: 'Natural', icon: '🌊' }, 'wave': { name: 'Wave', group: 'Natural', icon: '🌊' }, 'sun': { name: 'Sun', group: 'Natural', icon: '☀️' }, 'cold': { name: 'Cold', group: 'Weather', icon: '🥶' }, 'moon': { name: 'Moon', group: 'Natural', icon: '🌙' }, 'star': { name: 'Star', group: 'Natural', icon: '⭐' }, 'night': { name: 'Night', group: 'Weather', icon: '🌃' }, 'shell': { name: 'Shell', group: 'Natural', icon: '🐚' }, 'silicon': { name: 'Silicon', group: 'Materials', icon: '✨' },
-             // Life & Organic (26)
-            'plant': { name: 'Plant', group: 'Life', icon: '🌱' }, 'life':  { name: 'Life',  group: 'Life', icon: '🧬' }, 'seeds': { name: 'Seeds', group: 'Life', icon: '🌰' }, 'tree': { name: 'Tree', group: 'Life', icon: '🌳' }, 'human': { name: 'Human', group: 'Life', icon: '🚶' }, 'bacteria': { name: 'Bacteria', group: 'Life', icon: '🦠' }, 'plankton': { name: 'Plankton', group: 'Life', icon: '🦐' }, 'fish': { name: 'Fish', group: 'Life', icon: '🐠' }, 'bird': { name: 'Bird', group: 'Life', icon: '🐦' }, 'animal': { name: 'Animal', group: 'Life', icon: '🐾' }, 'flower': { name: 'Flower', group: 'Life', icon: '🌸' }, 'grass': { name: 'Grass', group: 'Life', icon: '🌿' }, 'moss': { name: 'Moss', group: 'Life', icon: '🌲' }, 'mushroom': { name: 'Mushroom', group: 'Life', icon: '🍄' }, 'worm': { name: 'Worm', group: 'Life', icon: '🐛' }, 'beetle': { name: 'Beetle', group: 'Life', icon: '🐞' }, 'lizard': { name: 'Lizard', group: 'Life', icon: '🦎' }, 'egg': { name: 'Egg', group: 'Life', icon: '🥚' }, 'dna': { name: 'DNA', group: 'Life', icon: '🧬' }, 'feather': { name: 'Feather', group: 'Life', icon: '🪶' }, 'phoenix': { name: 'Phoenix', group: 'Magic', icon: '🐦' }, 'ent': { name: 'Ent', group: 'Magic', icon: '🌳' }, 'butterfly': { name: 'Butterfly', group: 'Life', icon: '🦋' }, 'whale': { name: 'Whale', group: 'Life', icon: '🐳' }, 'cow': { name: 'Cow', group: 'Life', icon: '🐄' }, 'reed': { name: 'Reed', group: 'Life', icon: '🎋' }, 'livestock': { name: 'Livestock', group: 'Life', icon: '🐑' },
-            // Materials & Tools (35)
-            'metal': { name: 'Metal', group: 'Materials', icon: '⚙️' }, 'glass': { name: 'Glass', group: 'Materials', icon: '🍸' }, 'pottery': { name: 'Pottery', group: 'Materials', icon: '🏺' }, 'bricks': { name: 'Bricks', group: 'Materials', icon: '🧱' }, 'wood': { name: 'Wood', group: 'Materials', icon: '🪵' }, 'fabric': { name: 'Fabric', group: 'Materials', icon: '🧵' }, 'paper': { name: 'Paper', group: 'Materials', icon: '📄' }, 'tools': { name: 'Tools', group: 'Tools', icon: '🛠️' }, 'weapon': { name: 'Weapon', group: 'Tools', icon: '⚔️' }, 'knife': { name: 'Knife', group: 'Tools', icon: '🔪' }, 'axe': { name: 'Axe', group: 'Tools', icon: '🪓' }, 'hammer': { name: 'Hammer', group: 'Tools', icon: '🔨' }, 'plow': { name: 'Plow', group: 'Tools', icon: '🚜' }, 'cart': { name: 'Cart', group: 'Tools', icon: '🛒' }, 'wheel': { name: 'Wheel', group: 'Tools', icon: '☸️' }, 'boat': { name: 'Boat', group: 'Tools', icon: '⛵' }, 'rope': { name: 'Rope', group: 'Materials', icon: '🪢' }, 'leather': { name: 'Leather', group: 'Materials', icon: '👢' }, 'charcoal': { name: 'Charcoal', group: 'Materials', icon: '⚫' }, 'gunpowder': { name: 'Gunpowder', group: 'Materials', icon: '💥' }, 'cement': { name: 'Cement', group: 'Materials', icon: '🏢' }, 'concrete': { name: 'Concrete', group: 'Materials', icon: '🏛️' }, 'wire': { name: 'Wire', group: 'Materials', icon: '〰️' }, 'sword': { name: 'Sword', group: 'Tools', icon: '⚔️' }, 'armor': { name: 'Armor', group: 'Tools', icon: '🛡️' }, 'blade': { name: 'Blade', group: 'Tools', icon: '🔪' }, 'wall': { name: 'Wall', group: 'Domestic', icon: '🧱' }, 'thread': { name: 'Thread', group: 'Materials', icon: '🧵' }, 'clothes': { name: 'Clothes', group: 'Domestic', icon: '👕' }, 'quill': { name: 'Quill', group: 'Tools', icon: '✒️' }, 'bullet': { name: 'Bullet', group: 'Tools', icon: '⚪' }, 'spear': { name: 'Spear', group: 'Tools', icon: '🔱' }, 'ship': { name: 'Ship', group: 'Tools', icon: '🚢' }, 'bomb': { name: 'Bomb', group: 'Tools', icon: '💣' }, 'firearm': { name: 'Firearm', group: 'Tools', icon: '🔫' }, 'frigate': { name: 'Frigate', group: 'Tools', icon: '⛵' },
-            // Technology (23)
-            'electricity': { name: 'Electricity', group: 'Technology', icon: '💡' }, 'lightbulb': { name: 'Light Bulb', group: 'Technology', icon: '💡' }, 'computer': { name: 'Computer', group: 'Technology', icon: '💻' }, 'radio': { name: 'Radio', group: 'Technology', icon: '📻' }, 'television': { name: 'Television', group: 'Technology', icon: '📺' }, 'car': { name: 'Car', group: 'Technology', icon: '🚗' }, 'airplane': { name: 'Airplane', group: 'Technology', icon: '✈️' }, 'robot': { name: 'Robot', group: 'Technology', icon: '🤖' }, 'internet': { name: 'Internet', group: 'Technology', icon: '🌐' }, 'steamengine': { name: 'Steam Engine', group: 'Technology', icon: '🚂' }, 'clock': { name: 'Clock', group: 'Technology', icon: '⏰' }, 'calculator': { name: 'Calculator', group: 'Technology', icon: '🧮' }, 'telephone': { name: 'Telephone', group: 'Technology', icon: '☎️' }, 'camera': { name: 'Camera', group: 'Technology', icon: '📷' }, 'battery': { name: 'Battery', group: 'Technology', icon: '🔋' }, 'train': { name: 'Train', group: 'Technology', icon: '🚆' }, 'cyborg': { name: 'Cyborg', group: 'Technology', icon: '🤖' }, 'website': { name: 'Website', group: 'Technology', icon: '🕸️' }, 'ai': { name: 'AI', group: 'Technology', icon: '💡' }, 'chip': { name: 'Chip', group: 'Technology', icon: '💾' }, 'transistor': { name: 'Transistor', group: 'Technology', icon: '〰️' }, 'vacuumtube': { name: 'Vacuum Tube', group: 'Technology', icon: '💡' }, 'radiowave': { name: 'Radio Wave', group: 'Technology', icon: '📡' }, 'cellphone': { name: 'Cellphone', group: 'Technology', icon: '📱' }, 'motorcycle': { name: 'Motorcycle', group: 'Technology', icon: '🏍️' },
-            // Food & Domestic (13)
-            'wheat': { name: 'Wheat', group: 'Food', icon: '🌾' }, 'flour': { name: 'Flour', group: 'Food', icon: '🍚' }, 'dough': { name: 'Dough', group: 'Food', icon: '🍪' }, 'bread': { name: 'Bread', group: 'Food', icon: '🍞' }, 'milk': { name: 'Milk', group: 'Food', icon: '🥛' }, 'cheese': { name: 'Cheese', group: 'Food', icon: '🧀' }, 'meat': { name: 'Meat', group: 'Food', icon: '🥩' }, 'house': { name: 'House', group: 'Domestic', icon: '🏠' }, 'hut': { name: 'Hut', group: 'Domestic', icon: '🛖' }, 'village': { name: 'Village', group: 'Domestic', icon: '🏘️' }, 'fruit': { name: 'Fruit', group: 'Food', icon: '🍎' }, 'coffee': { name: 'Coffee', group: 'Food', icon: '☕' }, 'steak': { name: 'Steak', group: 'Food', icon: '🥩' }, 'pie': { name: 'Pie', group: 'Food', icon: '🥧' },
-            // Concepts & Magic (26)
-            'philosophy': { name: 'Philosophy', group: 'Concepts', icon: '🧠' }, 'religion': { name: 'Religion', group: 'Concepts', icon: '⛪' }, 'myth': { name: 'Myth', group: 'Concepts', icon: '🦄' }, 'magic': { name: 'Magic', group: 'Magic', icon: '🪄' }, 'spell': { name: 'Spell', group: 'Magic', icon: '📜' }, 'potion': { name: 'Potion', group: 'Magic', icon: '🧪' }, 'ghost': { name: 'Ghost', group: 'Magic', icon: '👻' }, 'undead': { name: 'Undead', group: 'Magic', icon: '💀' }, 'demon': { name: 'Demon', group: 'Magic', icon: '👿' }, 'angel': { name: 'Angel', group: 'Magic', icon: '😇' }, 'time': { name: 'Time', group: 'Concepts', icon: '⏳' }, 'death': { name: 'Death', group: 'Concepts', icon: '💀' }, 'love': { name: 'Love', group: 'Concepts', icon: '❤️' }, 'music': { name: 'Music', group: 'Concepts', icon: '🎵' }, 'knowledge':{ name: 'Knowledge', group: 'Concepts', icon: '📚' }, 'void': { name: 'Void', group: 'Concepts', icon: '⚫' }, 'light': { name: 'Light', group: 'Concepts', icon: '💡' }, 'darkness': { name: 'Darkness', group: 'Concepts', icon: '🌑' }, 'shadow': { name: 'Shadow', group: 'Concepts', icon: '👥' }, 'zombie': { name: 'Zombie', group: 'Magic', icon: '🧟' }, 'elf': { name: 'Elf', group: 'Magic', icon: '🧝' }, 'golem': { name: 'Golem', group: 'Magic', icon: '🗿' }, 'bard': { name: 'Bard', group: 'Magic', icon: '🎶' }, 'hero': { name: 'Hero', group: 'Magic', icon: '🦸' }, 'priest': { name: 'Priest', group: 'Concepts', icon: '⛪' }, 'wizard': { name: 'Wizard', group: 'Magic', icon: '🧙' }, 'elixir': { name: 'Elixir', group: 'Magic', icon: '🧪' }, 'blackhole': { name: 'Black Hole', group: 'Concepts', icon: '⚫' }, 'commandment': { name: 'Commandment', group: 'Concepts', icon: '📜' },
+        const ALL_ELEMENTS = { /* ... (Your extensive ALL_ELEMENTS object with quotes) ... */
+            // Add 'quote' property to elements
+            // NOTE: Add many more quotes for a better experience!
+            'fire':  { name: 'Fire',  group: 'Basic', icon: '🔥', quote: 'The spark that changes everything.' },
+            'water': { name: 'Water', group: 'Basic', icon: '💧', quote: 'The source of life, the shaper of stone.' },
+            'earth': { name: 'Earth', group: 'Basic', icon: '🌍', quote: 'Solid ground, fertile soil.' },
+            'air':   { name: 'Air',   group: 'Basic', icon: '💨', quote: 'Invisible force, the breath of the world.' },
+            'steam': { name: 'Steam', group: 'Natural', icon: '☁️', quote: 'Water embracing the heat.' },
+            'lava':  { name: 'Lava',  group: 'Natural', icon: '🌋', quote: 'Earth\'s fiery blood.' },
+            'energy':{ name: 'Energy',group: 'Natural', icon: '⚡', quote: 'The potential for action, unseen but powerful.' },
+            'dust':  { name: 'Dust',  group: 'Natural', icon: '✨', quote: 'The remnants of existence.' },
+            'mud':   { name: 'Mud',   group: 'Natural', icon: '🟤', quote: 'Where earth and water meet.' },
+            'rain':  { name: 'Rain', group: 'Weather', icon: '🌧️', quote: 'The sky weeping life.'},
+            'stone': { name: 'Stone', group: 'Natural', icon: '🗿', quote: 'The bones of the earth, patient and strong.' },
+            'sand':  { name: 'Sand', group: 'Natural', icon: '⏳', quote: 'Stone worn down by time.' },
+            'storm': { name: 'Storm', group: 'Weather', icon: '⛈️', quote: 'Nature\'s fury unleashed.'},
+            'volcano': { name: 'Volcano', group: 'Natural', icon: '🌋', quote: 'A mountain breathing fire.' },
+            'clay': { name: 'Clay', group: 'Natural', icon: '🏺', quote: 'Earth, water, and potential.' },
+            'plant': { name: 'Plant', group: 'Life', icon: '🌱', quote: 'Life reaching for the sun.' },
+            'life':  { name: 'Life',  group: 'Life', icon: '🧬', quote: 'The miracle of existence.' },
+            'tree': { name: 'Tree', group: 'Life', icon: '🌳', quote: 'A silent witness to the passage of time.' },
+            'human': { name: 'Human', group: 'Life', icon: '🚶', quote: 'Curious, creative, and complex.' },
+            'metal': { name: 'Metal', group: 'Materials', icon: '⚙️', quote: 'Stone refined by fire.' },
+            'glass': { name: 'Glass', group: 'Materials', icon: '🍸', quote: 'Sand transformed by heat.' },
+            'electricity': { name: 'Electricity', group: 'Technology', icon: '💡', quote: 'Harnessed lightning.' },
+            'tools': { name: 'Tools', group: 'Tools', icon: '🛠️', quote: 'Extending the reach of hands.' },
+            'love': { name: 'Love', group: 'Concepts', icon: '❤️', quote: 'The ultimate connection.' },
+            'time': { name: 'Time', group: 'Concepts', icon: '⏳', quote: 'The relentless river.' },
+            'death': { name: 'Death', group: 'Concepts', icon: '💀', quote: 'The end, or perhaps a beginning?' },
+            'magic': { name: 'Magic', group: 'Magic', icon: '🪄', quote: 'Weaving wonder from the mundane.' },
+            // ... (add quotes to many more elements)
+
+            // Existing elements without quotes yet (will show nothing or default)
+            'seeds': { name: 'Seeds', group: 'Life', icon: '🌰' },
+            'bacteria': { name: 'Bacteria', group: 'Life', icon: '🦠' },
+            'plankton': { name: 'Plankton', group: 'Life', icon: '🦐' },
+            'fish': { name: 'Fish', group: 'Life', icon: '🐠' },
+            'bird': { name: 'Bird', group: 'Life', icon: '🐦' },
+            'animal': { name: 'Animal', group: 'Life', icon: '🐾' },
+            'flower': { name: 'Flower', group: 'Life', icon: '🌸' },
+            'grass': { name: 'Grass', group: 'Life', icon: '🌿' },
+            'moss': { name: 'Moss', group: 'Life', icon: '🌲' },
+            'mushroom': { name: 'Mushroom', group: 'Life', icon: '🍄' },
+            'worm': { name: 'Worm', group: 'Life', icon: '🐛' },
+            'beetle': { name: 'Beetle', group: 'Life', icon: '🐞' },
+            'lizard': { name: 'Lizard', group: 'Life', icon: '🦎' },
+            'egg': { name: 'Egg', group: 'Life', icon: '🥚' },
+            'dna': { name: 'DNA', group: 'Life', icon: '🧬' },
+            'feather': { name: 'Feather', group: 'Life', icon: '🪶' },
+            'phoenix': { name: 'Phoenix', group: 'Magic', icon: '🐦' },
+            'ent': { name: 'Ent', group: 'Magic', icon: '🌳' },
+            'butterfly': { name: 'Butterfly', group: 'Life', icon: '🦋' },
+            'whale': { name: 'Whale', group: 'Life', icon: '🐳' },
+            'cow': { name: 'Cow', group: 'Life', icon: '🐄' },
+            'reed': { name: 'Reed', group: 'Life', icon: '🎋' },
+            'livestock': { name: 'Livestock', group: 'Life', icon: '🐑' },
+            'pottery': { name: 'Pottery', group: 'Materials', icon: '🏺' },
+            'bricks': { name: 'Bricks', group: 'Materials', icon: '🧱' },
+            'wood': { name: 'Wood', group: 'Materials', icon: '🪵' },
+            'fabric': { name: 'Fabric', group: 'Materials', icon: '🧵' },
+            'paper': { name: 'Paper', group: 'Materials', icon: '📄' },
+            'weapon': { name: 'Weapon', group: 'Tools', icon: '⚔️' },
+            'knife': { name: 'Knife', group: 'Tools', icon: '🔪' },
+            'axe': { name: 'Axe', group: 'Tools', icon: '🪓' },
+            'hammer': { name: 'Hammer', group: 'Tools', icon: '🔨' },
+            'plow': { name: 'Plow', group: 'Tools', icon: '🚜' },
+            'cart': { name: 'Cart', group: 'Tools', icon: '🛒' },
+            'wheel': { name: 'Wheel', group: 'Tools', icon: '☸️' },
+            'boat': { name: 'Boat', group: 'Tools', icon: '⛵' },
+            'rope': { name: 'Rope', group: 'Materials', icon: '🪢' },
+            'leather': { name: 'Leather', group: 'Materials', icon: '👢' },
+            'charcoal': { name: 'Charcoal', group: 'Materials', icon: '⚫' },
+            'gunpowder': { name: 'Gunpowder', group: 'Materials', icon: '💥' },
+            'cement': { name: 'Cement', group: 'Materials', icon: '🏢' },
+            'concrete': { name: 'Concrete', group: 'Materials', icon: '🏛️' },
+            'wire': { name: 'Wire', group: 'Materials', icon: '〰️' },
+            'sword': { name: 'Sword', group: 'Tools', icon: '⚔️' },
+            'armor': { name: 'Armor', group: 'Tools', icon: '🛡️' },
+            'blade': { name: 'Blade', group: 'Tools', icon: '🔪' },
+            'wall': { name: 'Wall', group: 'Domestic', icon: '🧱' },
+            'thread': { name: 'Thread', group: 'Materials', icon: '🧵' },
+            'clothes': { name: 'Clothes', group: 'Domestic', icon: '👕' },
+            'quill': { name: 'Quill', group: 'Tools', icon: '✒️' },
+            'bullet': { name: 'Bullet', group: 'Tools', icon: '⚪' },
+            'spear': { name: 'Spear', group: 'Tools', icon: '🔱' },
+            'ship': { name: 'Ship', group: 'Tools', icon: '🚢' },
+            'bomb': { name: 'Bomb', group: 'Tools', icon: '💣' },
+            'firearm': { name: 'Firearm', group: 'Tools', icon: '🔫' },
+            'frigate': { name: 'Frigate', group: 'Tools', icon: '⛵' },
+            'lightbulb': { name: 'Light Bulb', group: 'Technology', icon: '💡' },
+            'computer': { name: 'Computer', group: 'Technology', icon: '💻' },
+            'radio': { name: 'Radio', group: 'Technology', icon: '📻' },
+            'television': { name: 'Television', group: 'Technology', icon: '📺' },
+            'car': { name: 'Car', group: 'Technology', icon: '🚗' },
+            'airplane': { name: 'Airplane', group: 'Technology', icon: '✈️' },
+            'robot': { name: 'Robot', group: 'Technology', icon: '🤖' },
+            'internet': { name: 'Internet', group: 'Technology', icon: '🌐' },
+            'steamengine': { name: 'Steam Engine', group: 'Technology', icon: '🚂' },
+            'clock': { name: 'Clock', group: 'Technology', icon: '⏰' },
+            'calculator': { name: 'Calculator', group: 'Technology', icon: '🧮' },
+            'telephone': { name: 'Telephone', group: 'Technology', icon: '☎️' },
+            'camera': { name: 'Camera', group: 'Technology', icon: '📷' },
+            'battery': { name: 'Battery', group: 'Technology', icon: '🔋' },
+            'train': { name: 'Train', group: 'Technology', icon: '🚆' },
+            'cyborg': { name: 'Cyborg', group: 'Technology', icon: '🤖' },
+            'website': { name: 'Website', group: 'Technology', icon: '🕸️' },
+            'ai': { name: 'AI', group: 'Technology', icon: '💡' },
+            'chip': { name: 'Chip', group: 'Technology', icon: '💾' },
+            'transistor': { name: 'Transistor', group: 'Technology', icon: '〰️' },
+            'vacuumtube': { name: 'Vacuum Tube', group: 'Technology', icon: '💡' },
+            'radiowave': { name: 'Radio Wave', group: 'Technology', icon: '📡' },
+            'cellphone': { name: 'Cellphone', group: 'Technology', icon: '📱' },
+            'motorcycle': { name: 'Motorcycle', group: 'Technology', icon: '🏍️' },
+            'wheat': { name: 'Wheat', group: 'Food', icon: '🌾' },
+            'flour': { name: 'Flour', group: 'Food', icon: '🍚' },
+            'dough': { name: 'Dough', group: 'Food', icon: '🍪' },
+            'bread': { name: 'Bread', group: 'Food', icon: '🍞' },
+            'milk': { name: 'Milk', group: 'Food', icon: '🥛' },
+            'cheese': { name: 'Cheese', group: 'Food', icon: '🧀' },
+            'meat': { name: 'Meat', group: 'Food', icon: '🥩' },
+            'house': { name: 'House', group: 'Domestic', icon: '🏠' },
+            'hut': { name: 'Hut', group: 'Domestic', icon: '🛖' },
+            'village': { name: 'Village', group: 'Domestic', icon: '🏘️' },
+            'fruit': { name: 'Fruit', group: 'Food', icon: '🍎' },
+            'coffee': { name: 'Coffee', group: 'Food', icon: '☕' },
+            'steak': { name: 'Steak', group: 'Food', icon: '🥩' },
+            'pie': { name: 'Pie', group: 'Food', icon: '🥧' },
+            'philosophy': { name: 'Philosophy', group: 'Concepts', icon: '🧠' },
+            'religion': { name: 'Religion', group: 'Concepts', icon: '⛪' },
+            'myth': { name: 'Myth', group: 'Concepts', icon: '🦄' },
+            'spell': { name: 'Spell', group: 'Magic', icon: '📜' },
+            'potion': { name: 'Potion', group: 'Magic', icon: '🧪' },
+            'ghost': { name: 'Ghost', group: 'Magic', icon: '👻' },
+            'undead': { name: 'Undead', group: 'Magic', icon: '💀' },
+            'demon': { name: 'Demon', group: 'Magic', icon: '👿' },
+            'angel': { name: 'Angel', group: 'Magic', icon: '😇' },
+            'knowledge':{ name: 'Knowledge', group: 'Concepts', icon: '📚' },
+            'void': { name: 'Void', group: 'Concepts', icon: '⚫' },
+            'light': { name: 'Light', group: 'Concepts', icon: '💡' },
+            'darkness': { name: 'Darkness', group: 'Concepts', icon: '🌑' },
+            'shadow': { name: 'Shadow', group: 'Concepts', icon: '👥' },
+            'zombie': { name: 'Zombie', group: 'Magic', icon: '🧟' },
+            'elf': { name: 'Elf', group: 'Magic', icon: '🧝' },
+            'golem': { name: 'Golem', group: 'Magic', icon: '🗿' },
+            'bard': { name: 'Bard', group: 'Magic', icon: '🎶' },
+            'hero': { name: 'Hero', group: 'Magic', icon: '🦸' },
+            'priest': { name: 'Priest', group: 'Concepts', icon: '⛪' },
+            'wizard': { name: 'Wizard', group: 'Magic', icon: '🧙' },
+            'elixir': { name: 'Elixir', group: 'Magic', icon: '🧪' },
+            'blackhole': { name: 'Black Hole', group: 'Concepts', icon: '⚫' },
+            'commandment': { name: 'Commandment', group: 'Concepts', icon: '📜' },
+            'wind': { name: 'Wind', group: 'Weather', icon: '🌬️' },
+            'cloud': { name: 'Cloud', group: 'Weather', icon: '☁️' },
+            'sky': { name: 'Sky', group: 'Weather', icon: '☀️' },
+            'sea': { name: 'Sea', group: 'Natural', icon: '🌊' },
+            'wave': { name: 'Wave', group: 'Natural', icon: '🌊' },
+            'sun': { name: 'Sun', group: 'Natural', icon: '☀️' },
+            'cold': { name: 'Cold', group: 'Weather', icon: '🥶' },
+            'moon': { name: 'Moon', group: 'Natural', icon: '🌙' },
+            'star': { name: 'Star', group: 'Natural', icon: '⭐' },
+            'night': { name: 'Night', group: 'Weather', icon: '🌃' },
+            'shell': { name: 'Shell', group: 'Natural', icon: '🐚' },
+            'silicon': { name: 'Silicon', group: 'Materials', icon: '✨' },
+            'geyser': { name: 'Geyser', group: 'Natural', icon: '♨️' },
+            'ice': { name: 'Ice', group: 'Weather', icon: '🧊' },
+            'snow': { name: 'Snow', group: 'Weather', icon: '❄️' },
+            'coal': { name: 'Coal', group: 'Natural', icon: '⚫' },
+            'oil': { name: 'Oil', group: 'Natural', icon: '⚫' },
+            'swamp': { name: 'Swamp', group: 'Natural', icon: '🐊' },
+            // Need definitions for previously result-only items used as ingredients
+            'mountain': { name: 'Mountain', group: 'Natural', icon: '⛰️' },
+            'ore': { name: 'Ore', group: 'Materials', icon: '⛏️' },
+            'blood': { name: 'Blood', group: 'Life', icon: '🩸' },
+            'corpse': { name: 'Corpse', group: 'Concepts', icon: '💀' }, // Re-use skull maybe
+            'chariot': { name: 'Chariot', group: 'Tools', icon: '🏇' }, // Placeholder icon
+            'knight': { name: 'Knight', group: 'Magic', icon: '♞' }, // Placeholder icon
+            'sulfur': { name: 'Sulfur', group: 'Natural', icon: '🟡' }, // Placeholder icon
+            'flashlight': { name: 'Flashlight', group: 'Technology', icon: '🔦' },
+            'toast': { name: 'Toast', group: 'Food', icon: '🍞' }, // Re-use bread?
+            'sandwich': { name: 'Sandwich', group: 'Food', icon: '🥪' },
+            'pizza': { name: 'Pizza', group: 'Food', icon: '🍕' },
+            'skyscraper': { name: 'Skyscraper', group: 'Domestic', icon: '🏙️' },
+            'sundial': { name: 'Sundial', group: 'Technology', icon: '⏳' }, // Re-use hourglass?
+            'underworld': { name: 'Underworld', group: 'Magic', icon: '☠️' }, // Placeholder icon
+            // ... etc (Ensure ALL elements used in RECIPES exist here)
+            'ash': { name: 'Ash', group: 'Natural', icon: '💨', quote: 'The cold remains of fire.' },
+            'salt': { name: 'Salt', group: 'Natural', icon: '🧂', quote: 'The tears of the sea.' },
+            'dune': { name: 'Dune', group: 'Natural', icon: '🏜️', quote: 'A wave of sand, sculpted by wind.' },
+            'desert': { name: 'Desert', group: 'Natural', icon: '🌵', quote: 'Where life clings fiercely.' },
+            'farmer': { name: 'Farmer', group: 'Life', icon: '🧑‍🌾', quote: 'One who works with the earth.' },
+            'engineer': { name: 'Engineer', group: 'Technology', icon: '👷', quote: 'A builder of the future.' },
+            'field': { name: 'Field', group: 'Domestic', icon: '🏞️', quote: 'Earth prepared for planting.' }, // Placeholder icon
+             'mirror': { name: 'Mirror', group: 'Materials', icon: '🪞' },
+             'statue': { name: 'Statue', group: 'Domestic', icon: '🗿' }, // Reuse stone?
+             'mallet': { name: 'Mallet', group: 'Tools', icon: '🔨' }, // Reuse hammer?
+             'hacker': { name: 'Hacker', group: 'Technology', icon: '🧑‍💻' },
+             'juice': { name: 'Juice', group: 'Food', icon: '🧃' },
+             'hunter': { name: 'Hunter', group: 'Life', icon: '🏹' },
+             'book': { name: 'Book', group: 'Concepts', icon: '📖' },
+             'hourglass': { name: 'Hourglass', group: 'Technology', icon: '⏳' }, // Reuse time?
+             'astronaut': { name: 'Astronaut', group: 'Technology', icon: '🧑‍🚀' },
+             'movie': { name: 'Movie', group: 'Concepts', icon: '🎬' },
+             'city': { name: 'City', group: 'Domestic', icon: '🏙️' }, // Reuse skyscraper?
+             'fortress': { name: 'Fortress', group: 'Domestic', icon: '🏰' },
+             'beach': { name: 'Beach', group: 'Natural', icon: '🏖️' },
+             'carpenter': { name: 'Carpenter', group: 'Life', icon: '🪵' }, // Reuse wood?
+             'prayer': { name: 'Prayer', group: 'Concepts', icon: '🙏' },
+             'faith': { name: 'Faith', group: 'Concepts', icon: '✝️' }, // Placeholder
+             'funeral': { name: 'Funeral', group: 'Concepts', icon: '⚱️' },
         };
 
-        // --- NEW RECIPE STRUCTURE ---
-        // Nested object: RECIPES[ingredient1][ingredient2] = result
-        // Define only one direction (e.g., air+water, not water+air)
-        // Lookup logic will check both directions.
+        // --- RECIPES --- (Make sure recipes producing the newly defined elements above are uncommented/added)
         const RECIPES = {
-            air: {
-                // air + ...
-                air: 'wind',
-                cloud: 'sky',
-                dust: 'wind', // Alt wind
-                earth: 'dust',
-                energy: 'storm',
-                fire: 'energy',
-                lava: 'stone',
-                plant: 'seeds',
-                steam: 'cloud',
-                stone: 'sand',
-                water: 'steam',
-                wind: 'storm',
-            },
-            animal: {
-                // animal + ...
-                animal: 'livestock', // Breeding
-                cart: 'chariot', // Needs chariot
-                earth: 'animal', // Appears on land
-                grass: 'cow',
-                human: 'livestock', // Domestication
-                tools: 'meat',
-                water: 'fish',
-            },
-            armor: {
-                // armor + ...
-                human: 'knight', // Needs knight
-            },
-            bacteria: {
-                 // bacteria + ...
-                earth: 'mushroom',
-                life: 'plankton',
-                milk: 'cheese',
-                mud: 'worm',
-                swamp: 'sulfur', // Needs sulfur
-                water: 'plankton',
-            },
-            battery: {
-                lightbulb: 'flashlight', // Needs flashlight
-            },
-            bird: {
-                 // bird + ...
-                egg: 'bird',
-                fire: 'phoenix',
-                human: 'feather',
-                metal: 'airplane',
-            },
-            blade: {
-                 // blade + ...
-                human: 'blood', // Needs blood
-                metal: 'sword',
-                stone: 'axe',
-                wood: 'knife',
-            },
-            boat: {
-                // boat + ...
-                fabric: 'ship',
-                wood: 'ship',
-            },
-            book: { // Needs book element
-                 // book + ...
-                 // human: 'knowledge', // knowledge makes book
-            },
-            bread: {
-                 // bread + ...
-                 // fire: 'toast', // Needs toast
-                 // human: 'sandwich', // Needs sandwich
-            },
-            bricks: {
-                bricks: 'wall',
-                // cement: 'concrete', // Needs cement
-                clay: 'bricks',
-            },
-            bullet: {
-                // firearm: 'shotgun', // Needs firearm/shotgun
-            },
-            cart: {
-                metal: 'car',
-                // steamengine: 'train', // Needs steamengine
-                wood: 'wheel', // Uses wheel
-            },
-            cement: { // Needs cement element
-                // water: 'concrete',
-            },
-            charcoal: {
-                gunpowder: 'bomb',
-            },
-            cheese: {
-                // dough: 'pizza', // Needs dough/pizza
-            },
-            chip: {
-                electricity: 'calculator',
-            },
-            clay: {
-                // clay + ...
-                fire: 'bricks',
-                human: 'pottery',
-                life: 'golem',
-                sand: 'cement', // Recipe for cement
-                stone: 'pottery',
-                water: 'mud', // Fixed
-                wheel: 'pottery',
-            },
-            clock: {
-                human: 'time',
-                // sun: 'sundial', // Needs sundial
-            },
-            cloud: {
-                // cloud + ...
-                cloud: 'sky',
-                electricity: 'storm',
-                water: 'rain',
-            },
-            coal: {
-                fire: 'energy',
-            },
-            cold: {
-                steam: 'ice',
-                water: 'ice',
-                // wind: 'snow', // snow = ice+rain
-            },
-            computer: {
-                computer: 'internet',
-                electricity: 'computer', // Requires elec
-                human: 'cyborg',
-            },
-            concrete: { // Needs concrete element
-                 // glass: 'skyscraper', // Needs skyscraper
-            },
-            cow: { // Needs cow element
-                 // human: 'milk',
-            },
-            cyborg: { // Needs cyborg element
-                 // human: 'ai',
-            },
-            darkness: {
-                 // earth: 'underworld', // Needs underworld
-                 energy: 'void', // Recipe for void
-                 light: 'shadow',
-            },
-            death: {
-                 human: 'undead',
-                 life: 'zombie',
-            },
-            demon: {
-                 // human: 'corruption', // Needs corruption
-            },
-            dna: { // Needs dna element
-                 // human: 'human', // DNA defines human
-            },
-            dough: { // Needs dough element
-                 fire: 'bread',
-                 fruit: 'pie',
-            },
-            dust: {
-                // dust + ...
-                // air: 'dust', // no change
-                fire: 'gunpowder',
-                water: 'mud',
-            },
-            earth: {
-                // earth + ...
-                earth: 'stone',
-                fire: 'lava',
-                // life: 'animal', // Now life+earth
-                metal: 'ore', // Needs ore
-                moss: 'mushroom',
-                plant: 'grass',
-                rain: 'plant',
-                steam: 'geyser',
-                stone: 'mountain', // Needs mountain
-                tree: 'seeds',
-                water: 'mud',
-                worm: 'beetle',
-            },
-            egg: {
-                // egg + ...
-                air: 'bird',
-                // fire: 'omelette', // Needs omelette
-                flour: 'dough',
-                sand: 'lizard',
-                stone: 'egg', // No change
-                swamp: 'lizard',
-            },
-            electricity: {
-                // electricity + ...
-                // beast: 'pikachu', // Needs beast :)
-                cloud: 'storm',
-                computer: 'ai',
-                energy: 'electricity', // No change
-                glass: 'lightbulb',
-                human: 'cyborg',
-                metal: 'wire',
-                // oxygen: 'ozone', // Needs oxygen/ozone
-                storm: 'electricity',
-                tools: 'battery',
-                vacuumtube: 'radio',
-                // water: 'hydrogen', // Needs hydrogen
-            },
-            elf: { // Needs elf element
-                 // metal: 'mithril', // Needs mithril
-            },
-            energy: {
-                // energy + ...
-                air: 'storm',
-                darkness: 'void', // Moved from darkness+energy
-                death: 'ghost',
-                energy: 'fire',
-                metal: 'electricity',
-                sand: 'silicon',
-                seeds: 'coffee',
-                swamp: 'life', // Classic!
-                water: 'geyser',
-                wind: 'storm',
-            },
-            ent: { // Needs ent element
-                 // fire: 'charcoal',
-            },
-            fabric: {
-                boat: 'ship', // Moved from boat+fabric
-                human: 'clothes',
-                // ship: 'frigate', // frigate = ship+wood/fabric
-            },
-            feather: {
-                 human: 'quill', // Alt quill
-                 paper: 'quill',
-            },
-            fire: {
-                // fire + ... (excluding air, earth)
-                // bird: 'phoenix', // Moved to bird+fire
-                clay: 'bricks',
-                coal: 'energy',
-                // dough: 'bread', // Moved to dough+fire
-                dust: 'gunpowder',
-                energy: 'sun',
-                // fire: 'sun', // Moved to energy+fire
-                glass: 'sun',
-                // gunpowder: 'explosion', // Needs explosion
-                // human: 'corpse', // Moved to human+fire
-                ice: 'water',
-                lava: 'volcano',
-                meat: 'steak',
-                metal: 'electricity', // Abstract
-                mud: 'bricks',
-                // oil: 'energy', // Moved to oil+fire
-                // paper: 'ash', // Needs ash
-                sand: 'glass',
-                seeds: 'coffee',
-                sky: 'sun',
-                // steamengine: 'train', // Needs steamengine
-                stone: 'metal',
-                swamp: 'energy',
-                tree: 'charcoal',
-                water: 'steam',
-                wood: 'charcoal',
-            },
-            firearm: { // Needs firearm element
-                // bullet: 'corpse',
-            },
-            fish: {
-                // egg: 'caviar', // Needs caviar
-                // human: 'fisherman', // Needs fisherman
-                plankton: 'whale',
-            },
-            flour: {
-                water: 'dough',
-            },
-            flower: {
-                human: 'perfume', // Needs perfume
-                // moon: 'nightshade', // Needs nightshade
-                // sun: 'sunflower', // Needs sunflower
-                tree: 'fruit',
-                water: 'potion', // Simple potion base
-            },
-            fruit: {
-                // dough: 'pie', // Moved to dough+fruit
-            },
-            geyser: {
-                // steam: 'geyser', // No change
-            },
-            ghost: {
-                 // darkness: 'spectre', // Needs spectre
-                 // human: 'medium', // Needs medium
-            },
-            glass: {
-                 metal: 'mirror', // Needs mirror
-                 sand: 'clock',
-                 // void: 'vacuumtube', // Moved to void+glass
-                 // water: 'aquarium', // Needs aquarium
-            },
-            golem: { // Needs golem element
-                 life: 'human', // Abstract animation
-                 // metal: 'robot', // Moved to metal+golem?
-                 // stone: 'golem', // Moved to stone+golem
-                 // swamp: ??
-                 // tree: 'ent', // Moved to tree+golem
-                 // void: 'demon', // Moved to void+golem
-                 // weapon: 'knight', // Moved to weapon+golem
-                 // worm: 'centipede', // Needs centipede
-                 // zombie: 'abomination', // Needs abomination
-            },
-            grass: {
-                // animal: 'cow', // Moved to animal+grass
-                earth: 'grass', // Spreading
-                // fire: 'ash', // Needs ash
-                // livestock: 'milk', // Moved to livestock+grass
-                plant: 'grass', // Spreading
-            },
-            gunpowder: {
-                 charcoal: 'bomb', // Moved from charcoal+gunpowder
-                 metal: 'bullet',
-                 weapon: 'firearm',
-            },
-            hammer: { // Needs hammer element
-                 metal: 'armor',
-                 stone: 'statue', // Needs statue
-                 wood: 'mallet', // Needs mallet
-            },
-            hero: { // Needs hero element
-                 // dragon: 'slayer', // Needs dragon/slayer
-                 // religion: 'paladin', // Needs paladin
-                 weapon: 'sword',
-            },
-            house: {
-                house: 'village',
-            },
-            human: {
-                // ai: 'cyborg', // Needs ai
-                // airplane: 'pilot', // Needs airplane/pilot
-                animal: 'livestock',
-                // armor: 'knight', // Needs armor/knight
-                // bacteria: 'sickness', // Needs sickness
-                // blade: 'blood', // Needs blood
-                // boat: 'sailor', // Needs boat/sailor
-                // book: 'knowledge', // Needs book
-                clay: 'pottery',
-                clock: 'time',
-                // clothes: 'human', // No change
-                cold: 'corpse', // Needs corpse
-                // computer: 'hacker', // Needs computer/hacker
-                // cow: 'milk', // Needs cow
-                death: 'undead',
-                // demon: 'corruption', // Needs demon
-                // dna: 'human', // Needs dna
-                // doctor: 'hospital', // Needs doctor/hospital
-                electricity: 'cyborg',
-                energy: 'wizard',
-                fire: 'corpse',
-                // fish: 'fisherman', // Needs fish/fisherman
-                // flower: 'perfume', // Needs flower/perfume
-                // forest: 'hunter', // Needs forest/hunter
-                fruit: 'juice', // Needs juice
-                // ghost: 'medium', // Needs ghost/medium
-                // golem: 'wizard', // Needs golem
-                // gunpowder: 'demoman', // Needs gunpowder/demoman
-                // hammer: 'blacksmith', // Needs hammer/blacksmith
-                // hero: 'legend', // Needs hero/legend
-                house: 'village',
-                human: 'love',
-                knowledge: 'philosophy',
-                lava: 'corpse',
-                leather: 'clothes',
-                // library: 'librarian', // Needs library/librarian
-                life: 'love',
-                // lightbulb: 'idea', // Needs lightbulb/idea
-                livestock: 'meat', // Alt meat
-                // love: 'family', // Needs family
-                magic: 'elf', // Changed from wizard
-                // meat: 'carnivore', // Needs carnivore
-                metal: 'tools',
-                // milk: 'farmer', // Needs milk/farmer
-                // money: 'banker', // Needs money/banker
-                // moon: 'astronaut', // Needs moon/astronaut
-                music: 'bard',
-                myth: 'hero',
-                // paper: 'book', // Needs paper/book
-                philosophy: 'commandment', // Changed path
-                // plant: 'farmer', // Needs plant/farmer
-                // plow: 'field', // Needs plow/field
-                // poison: 'corpse', // Needs poison
-                // potion: 'alchemist', // Needs potion/alchemist
-                // priest: 'religion', // Moved to priest+human
-                rain: 'cold', // Getting wet
-                religion: 'priest', // Changed direction
-                robot: 'cyborg',
-                sand: 'corpse',
-                // science: 'scientist', // Needs science/scientist
-                // sea: 'swimmer', // Needs sea/swimmer
-                seeds: 'farmer',
-                sky: 'religion', // Path to religion
-                // snake: 'poison', // Needs snake/poison
-                // snow: 'skier', // Needs snow/skier
-                // sound: 'music', // Needs sound
-                // star: 'astronaut', // Needs star/astronaut
-                stone: 'hut',
-                storm: 'corpse',
-                // sun: 'sunburn', // Needs sun/sunburn
-                swamp: 'corpse',
-                // sword: 'warrior', // Needs sword/warrior
-                tools: 'engineer', // Needs engineer
-                tree: 'wood',
-                // undead: 'necromancer', // Needs undead/necromancer
-                // void: 'corpse', // Moved to void+human
-                // volcano: 'corpse', // Moved to volcano+human
-                // water: 'swimmer', // Needs water/swimmer
-                weapon: 'hunter', // Needs hunter
-                // wheat: 'farmer', // Needs wheat/farmer
-                // wind: 'sailor', // Needs wind/sailor
-                // wine: 'drunkard', // Needs wine/drunkard
-                // wood: 'carpenter', // Needs wood/carpenter
-            },
-            hut: {
-                stone: 'house',
-            },
-            ice: {
-                 fire: 'water',
-                 human: 'cold',
-                 rain: 'snow',
-                 water: 'ice', // No change
-            },
-            internet: {
-                computer: 'website',
-            },
-            knowledge: { // Needs knowledge element
-                 // book: 'science', // Needs book/science
-                 human: 'philosophy',
-                 magic: 'spell',
-                 // paper: 'book', // Needs paper/book
-                 // wall: 'hieroglyphs', // Needs wall/hieroglyphs
-            },
-            lava: {
-                 air: 'stone',
-                 earth: 'volcano',
-                 // stone: 'magma', // Needs magma
-                 water: 'stone',
-            },
-            leather: {
-                 human: 'clothes',
-                 tools: 'armor',
-            },
-            life: {
-                 clay: 'golem',
-                 // corpse: 'zombie', // Needs corpse
-                 death: 'zombie',
-                 dna: 'life', // No change
-                 dust: 'ghost',
-                 earth: 'animal',
-                 energy: 'magic', // Path to Magic!
-                 fire: 'phoenix',
-                 human: 'love',
-                 metal: 'robot',
-                 // Golem: 'human', // Abstract - moved to Golem+Life
-                 stone: 'egg',
-                 swamp: 'bacteria',
-                 time: 'death', // Alt death
-                 tree: 'ent',
-                 void: 'death', // Alt death
-                 water: 'plankton',
-            },
-            light: {
-                darkness: 'shadow',
-            },
-            lightbulb: {
-                 electricity: 'light',
-            },
-            livestock: {
-                 grass: 'milk',
-                 human: 'meat',
-            },
-            lizard: {
-                 earth: 'animal', // Lizard is an animal
-            },
-            love: {
-                 // human: 'family', // Needs family
-            },
-            magic: {
-                 human: 'wizard', // Changed from elf
-                 knowledge: 'spell',
-                 life: 'elf',
-                 metal: 'golem',
-                 music: 'bard',
-                 potion: 'elixir',
-                 // religion: 'priest', // Moved to religion+magic?
-            },
-            meat: {
-                 fire: 'steak',
-                 // human: 'carnivore', // Needs carnivore
-            },
-            metal: {
-                 blade: 'sword',
-                 earth: 'ore', // Needs ore
-                 electricity: 'wire',
-                 energy: 'electricity',
-                 // fire: 'electricity', // Moved to fire+metal
-                 // Golem: 'robot', // Needs golem
-                 human: 'tools',
-                 steam: 'steamengine',
-                 stone: 'hammer',
-                 // sun: 'gold', // Needs sun/gold
-                 tools: 'weapon',
-                 // water: 'rust', // Needs rust
-                 wood: 'sword',
-            },
-            milk: {
-                 bacteria: 'cheese',
-                 // human: 'cheese', // Moved to human+milk
-            },
-            moon: {
-                 sky: 'night',
-                 // sun: 'eclipse', // Needs eclipse
-                 // werewolf: 'human', // Needs werewolf
-            },
-            moss: {
-                 earth: 'mushroom',
-                 // stone: 'lichen', // Needs lichen
-                 // swamp: 'fern', // Needs fern
-            },
-            mud: {
-                 // brick: 'adobe', // Needs brick/adobe
-                 // clay: 'mud', // No change
-                 fire: 'bricks',
-                 grass: 'swamp',
-                 // human: 'statue', // Needs statue
-                 plant: 'swamp',
-                 rain: 'plant',
-                 sand: 'clay',
-                 // swamp: 'peat', // Needs peat
-            },
-            mushroom: {
-                 // human: 'poison', // Needs poison
-                 // tool: 'spores', // Needs tool/spores
-            },
-            music: {
-                 human: 'bard',
-                 // reed: 'flute', // Needs reed/flute
-                 // wood: 'guitar', // Needs wood/guitar
-            },
-            night: {
-                 // day: 'twilight', // Needs day/twilight
-                 sky: 'star',
-            },
-            oil: { // Needs oil element
-                 earth: 'oil',
-                 fire: 'energy',
-            },
-            paper: {
-                 feather: 'quill',
-                 // human: 'letter', // Needs letter
-                 // knowledge: 'book', // Needs knowledge/book
-                 // tobacco: 'cigarette', // Needs tobacco/cigarette
-            },
-            philosophy: {
-                 death: 'demon',
-                 life: 'angel',
-            },
-            phoenix: { // Needs phoenix element
-                 // fire: 'phoenix', // Reborn
-            },
-            pie: { // Needs pie element
-                 // human: 'dessert', // Needs dessert
-            },
-            plankton: {
-                 fish: 'whale',
-                 stone: 'shell',
-                 // swamp: 'bacteria', // Moved to swamp+plankton?
-                 water: 'plankton', // Spreading
-            },
-            plant: {
-                 air: 'seeds',
-                 earth: 'grass',
-                 // fire: 'ash', // Needs ash
-                 // Golem: 'ent', // Needs golem
-                 mud: 'swamp',
-                 // paper: 'book', // Needs paper/book
-                 // plant: 'garden', // Needs garden
-                 rain: 'flower',
-                 rope: 'fabric',
-                 sand: 'flower', // Cactus
-                 stone: 'moss',
-                 // sun: 'flower', // Moved to sun+plant
-                 swamp: 'reed',
-                 time: 'tree',
-                 tools: 'thread',
-                 water: 'moss',
-                 wheel: 'thread',
-            },
-            plow: { // Needs plow element
-                 earth: 'field', // Needs field
-            },
-            potion: { // Needs potion element
-                 // human: 'alchemist', // Needs alchemist
-                 magic: 'elixir',
-            },
-            pottery: { // Needs pottery element
-                 // plant: 'vase', // Needs vase
-            },
-            priest: { // Needs priest element
-                 human: 'prayer', // Needs prayer
-                 religion: 'faith', // Needs faith
-                 stone: 'commandment', // Path to commandment
-                 // undead: 'lich', // Needs undead/lich
-                 // zombie: 'lich', // Needs zombie/lich
-            },
-            quill: { // Needs quill element
-                 // human: 'writer', // Needs writer
-            },
-            radio: {
-                 electricity: 'television',
-                 // star: 'alien', // Needs star/alien
-            },
-            radiowave: { // Needs radiowave element
-                 electricity: 'radio',
-                 wire: 'cellphone',
-            },
-            rain: {
-                 earth: 'plant',
-                 fire: 'steam',
-                 ice: 'snow',
-                 mud: 'plant',
-                 plant: 'flower',
-                 // storm: 'flood', // Needs storm/flood
-                 // sun: 'rainbow', // Needs sun/rainbow
-            },
-            reed: { // Needs reed element
-                 // human: 'flute', // Needs flute
-                 // paper: 'papyrus', // Needs paper/papyrus
-                 // swamp: 'reed', // Spreading
-                 tools: 'paper',
-            },
-            religion: { // Needs religion element
-                 death: 'funeral', // Needs funeral
-                 human: 'priest',
-                 // magic: 'priest', // Using magic?
-            },
-            robot: { // Needs robot element
-                 // ai: 'terminator', // Needs ai :)
-                 human: 'cyborg',
-                 life: 'ai',
-                 // metal: 'robot', // More metal?
-            },
-            rope: { // Needs rope element
-                 // boat: 'rigging', // Needs boat/rigging
-                 // human: 'bondage', // :)
-                 // knot: 'net', // Needs knot/net
-                 // rope: 'net', // Alt net
-                 // tool: 'bow', // Needs tool/bow
-                 // wood: 'bridge', // Needs wood/bridge
-            },
-            sand: {
-                 // beach: 'dune', // Needs beach/dune
-                 // desert: 'dune', // Needs desert/dune
-                 // dragon: 'hourglass', // Needs dragon
-                 // dust: 'sandstorm', // Needs dust/sandstorm
-                 egg: 'lizard',
-                 fire: 'glass',
-                 glass: 'clock',
-                 human: 'corpse',
-                 // lizard: 'scorpion', // Needs lizard/scorpion
-                 plant: 'seeds', // Alt seeds?
-                 // stone: 'sand', // No change
-                 // storm: 'sandstorm', // Needs storm/sandstorm
-                 swamp: 'clay',
-                 // tree: 'palm', // Needs tree/palm
-                 water: 'clay',
-                 // wind: 'dune', // Needs wind/dune
-                 worm: 'beetle',
-            },
-            sea: {
-                 // boat: 'ship', // Moved to boat+sea?
-                 fire: 'salt', // Needs salt
-                 // fish: 'herring', // Needs fish/herring
-                 // human: 'swimmer', // Needs human/swimmer
-                 // moon: 'tide', // Needs moon/tide
-                 // storm: 'hurricane', // Needs storm/hurricane
-                 // sun: 'salt', // Moved to sun+sea
-                 wind: 'wave',
-            },
-            seeds: {
-                 earth: 'plant',
-                 energy: 'coffee',
-                 fire: 'coffee',
-                 // human: 'farmer', // Moved to human+seeds
-                 life: 'plant',
-                 // plant: 'seeds', // Moved to plant+seeds
-                 sand: 'tree', // Palm?
-                 stone: 'flower', // Crack flower
-                 // sun: 'flower', // Moved to sun+seeds
-                 swamp: 'tree', // Mangrove?
-                 water: 'tree',
-            },
-            shadow: {
-                 // human: 'ninja', // Needs ninja
-            },
-            shell: { // Needs shell element
-                 // human: 'pearl', // Needs pearl
-                 // stone: 'limestone', // Needs limestone
-            },
-            ship: { // Needs ship element
-                 // airplane: 'seaplane', // Needs airplane/seaplane
-                 fabric: 'frigate',
-                 wood: 'frigate',
-            },
-            silicon: { // Needs silicon element
-                 electricity: 'chip',
-                 metal: 'transistor',
-            },
-            sky: {
-                 // airplane: 'pilot', // Needs airplane/pilot
-                 // bird: 'airplane', // Moved to bird+sky
-                 cloud: 'sky', // No change
-                 darkness: 'night',
-                 fire: 'sun',
-                 human: 'religion', // Path to religion
-                 moon: 'night',
-                 star: 'sun', // Alt sun?
-                 stone: 'moon',
-                 // sun: 'light', // Moved to sun+sky
-            },
-            snow: {
-                 // human: 'skier', // Needs skier
-                 // ice: 'glacier', // Needs ice/glacier
-                 // wind: 'blizzard', // Needs wind/blizzard
-            },
-            spell: { // Needs spell element
-                 // book: 'grimoire', // Needs book/grimoire
-                 // fire: 'fireball', // Needs fireball
-                 human: 'wizard',
-                 // ice: 'cone of cold', // Needs ice/cone of cold
-                 // Golem: 'wizard', // Needs golem
-                 magic: 'spell',
-            },
-            star: { // Needs star element
-                 human: 'astronaut', // Alt astronaut
-                 sky: 'night',
-                 // telescope: 'galaxy', // Needs telescope/galaxy
-                 // void: 'blackhole', // Moved to void+star
-            },
-            steak: { // Needs steak element
-                 // human: 'barbecue', // Needs barbecue
-            },
-            steam: {
-                 air: 'cloud', // Moved to air+steam
-                 earth: 'geyser',
-                 // engine: 'steamengine', // Needs engine
-                 // geyser: 'sulfur', // Needs geyser/sulfur
-                 metal: 'steamengine',
-                 // water: 'geyser', // Moved to water+steam
-                 // wood: 'sauna', // Needs wood/sauna
-            },
-            stone: {
-                 air: 'sand',
-                 blade: 'axe',
-                 clay: 'pottery',
-                 earth: 'stone', // No change
-                 egg: 'egg', // No change
-                 fire: 'metal',
-                 // Golem: 'golem', // Needs golem
-                 human: 'hut',
-                 // lava: 'obsidian', // Needs lava/obsidian
-                 life: 'golem',
-                 metal: 'hammer',
-                 // moss: 'lichen', // Needs moss/lichen
-                 plankton: 'shell',
-                 // sand: 'stone', // No change
-                 // shell: 'limestone', // Needs shell/limestone
-                 stone: 'wall',
-                 tools: 'plow',
-                 water: 'sand',
-                 // wheat: 'flour', // Moved to wheat+stone
-                 // wood: 'axe', // Moved to wood+stone
-            },
-            storm: {
-                 // air: 'tornado', // Needs tornado
-                 // bird: 'thunderbird', // Needs thunderbird
-                 electricity: 'electricity',
-                 energy: 'electricity',
-                 // sand: 'sandstorm', // Needs sand/sandstorm
-                 // water: 'typhoon', // Needs water/typhoon
-            },
-            sun: {
-                 earth: 'desert', // Needs desert
-                 energy: 'sun', // No change
-                 fire: 'sun', // No change
-                 // flower: 'sunflower', // Needs flower/sunflower
-                 // glass: 'sunglasses', // Needs glass/sunglasses
-                 // Golem: 'angel', // Needs golem
-                 // human: 'sunburn', // Needs human/sunburn
-                 ice: 'water',
-                 life: 'flower',
-                 // moon: 'eclipse', // Needs moon/eclipse
-                 plant: 'flower',
-                 // rain: 'rainbow', // Needs rain/rainbow
-                 sea: 'salt', // Needs salt
-                 sky: 'light',
-                 // tree: 'fruit', // Moved to tree+sun?
-                 // vampire: 'ash', // Needs vampire/ash
-                 water: 'steam',
-            },
-            swamp: {
-                 bacteria: 'sulfur', // Needs sulfur
-                 // dragon: 'hydra', // Needs dragon/hydra
-                 egg: 'lizard',
-                 energy: 'life',
-                 fire: 'energy',
-                 grass: 'reed', // Alt reed
-                 life: 'bacteria',
-                 moss: 'fern', // Needs fern
-                 // mud: 'peat', // Needs mud/peat
-                 plant: 'reed',
-                 sand: 'clay',
-                 // tree: 'mangrove', // Needs tree/mangrove
-                 // worm: 'snake', // Needs worm/snake
-            },
-            sword: { // Needs sword element
-                 // human: 'warrior', // Needs warrior
-                 // Golem: 'knight', // Needs golem/knight
-            },
-            television: {
-                 // book: 'email', // Needs book :)
-                 radio: 'movie', // Needs movie
-            },
-            thread: { // Needs thread element
-                 // human: 'fabric', // Moved to human+thread?
-                 // needle: 'clothes', // Needs needle
-                 thread: 'rope',
-            },
-            time: { // Needs time element
-                 clock: 'time', // Measuring
-                 // glass: 'hourglass', // Moved to glass+time?
-                 human: 'corpse',
-                 life: 'death',
-                 sand: 'hourglass', // Alt hourglass
-                 // water: 'erosion', // Needs erosion
-            },
-            tools: { // Needs tools element
-                 animal: 'meat',
-                 // boat: 'sailor', // Needs boat/sailor
-                 // book: 'typewriter', // Needs book/typewriter
-                 // clay: 'sculpture', // Needs clay/sculpture
-                 // clothes: 'tailor', // Needs clothes/tailor
-                 // corpse: 'butcher', // Needs corpse/butcher
-                 earth: 'field', // Needs field
-                 electricity: 'battery',
-                 // fabric: 'sewing machine', // Needs fabric/sewing machine
-                 // farmer: 'plow', // Needs farmer/plow
-                 // fire: 'forge', // Needs fire/forge
-                 // fish: 'fishing rod', // Needs fish/fishing rod
-                 // glass: 'lens', // Needs glass/lens
-                 human: 'engineer', // Needs engineer
-                 // ice: 'ice skates', // Needs ice/ice skates
-                 leather: 'armor',
-                 // Golem: 'robot', // Needs golem
-                 // meat: 'knife', // Moved to meat+tools?
-                 metal: 'armor', // Alt armor
-                 // paper: 'origami', // Needs paper/origami
-                 plant: 'thread',
-                 reed: 'paper',
-                 // rope: 'bow', // Moved to rope+tools
-                 // sand: 'hourglass', // Moved to sand+tools?
-                 stone: 'plow',
-                 // sun: 'sundial', // Needs sun/sundial
-                 // swamp: 'boat', // Raft?
-                 tools: 'hammer',
-                 tree: 'wood',
-                 // water: 'well', // Needs water/well
-                 // wheat: 'scythe', // Needs wheat/scythe
-                 wood: 'wheel',
-            },
-            train: { // Needs train element
-                 // human: 'engineer', // Needs engineer
-            },
-            transistor: { // Needs transistor element
-                 transistor: 'chip',
-            },
-            tree: {
-                 axe: 'wood',
-                 earth: 'seeds',
-                 // ent: 'ent', // Needs ent
-                 fire: 'charcoal',
-                 // fruit: 'tree', // Tree produces fruit
-                 human: 'wood',
-                 life: 'ent',
-                 // Golem: 'ent', // Needs golem
-                 // moss: 'tree', // Moss grows on tree
-                 // plant: 'tree', // Plant grows
-                 // sand: 'palm', // Needs palm
-                 // seeds: 'tree', // Seed grows
-                 // swamp: 'mangrove', // Needs swamp/mangrove
-                 // time: 'wood', // Petrified?
-                 tools: 'wood', // Alt wood
-                 water: 'boat',
-                 // wind: 'leaf', // Needs wind/leaf
-            },
-            undead: { // Needs undead element
-                 death: 'undead', // No change
-                 human: 'necromancer', // Needs necromancer
-                 life: 'death', // Cannot be cured simply?
-                 // Golem: 'lich', // Needs golem/lich
-                 // priest: 'zombie', // Moved to priest+undead?
-            },
-            vacuumtube: { // Needs vacuumtube element
-                 electricity: 'radio',
-            },
-            village: { // Needs village element
-                 human: 'community', // Needs community
-                 // Golem: 'watchtower', // Needs golem/watchtower
-                 // undead: 'ghost town', // Needs undead/ghost town
-                 village: 'city', // Needs city
-                 // wall: 'fortress', // Needs wall/fortress
-            },
-            void: { // Needs void element
-                 darkness: 'void', // No change
-                 electricity: 'radiowave',
-                 energy: 'blackhole',
-                 glass: 'vacuumtube',
-                 // Golem: 'demon', // Needs golem
-                 human: 'corpse', // Death in void
-                 life: 'death',
-                 // light: 'star', // Light in void?
-                 star: 'blackhole',
-            },
-            volcano: {
-                 // ash: 'eruption', // Needs ash/eruption
-                 energy: 'ash', // Needs ash
-                 // geyser: 'sulfur', // Needs geyser/sulfur
-                 // pressure: 'eruption', // Needs pressure/eruption
-                 // rain: 'acid rain', // Needs rain/acid rain
-                 // sea: 'island', // Needs sea/island
-            },
-            wall: { // Needs wall element
-                 house: 'fortress', // Needs fortress
-                 // human: 'prisoner', // Needs prisoner
-                 // village: 'fortress', // Moved to village+wall
-            },
-            water: {
-                 // air: 'steam', // Moved to air+water
-                 bacteria: 'plankton',
-                 // boat: 'paddle', // Needs boat/paddle
-                 // cement: 'concrete', // Moved to cement+water
-                 clay: 'mud', // Alt mud
-                 // cold: 'ice', // Moved to cold+water
-                 dust: 'mud',
-                 earth: 'mud',
-                 // electricity: 'hydrogen', // Needs hydrogen
-                 energy: 'geyser',
-                 // fire: 'steam', // Moved to fire+water
-                 // fish: 'roe', // Needs fish/roe
-                 flour: 'dough',
-                 // glass: 'aquarium', // Needs glass/aquarium
-                 // human: 'swimmer', // Needs human/swimmer
-                 // ice: 'water', // Moved to ice+water
-                 lava: 'stone',
-                 life: 'potion',
-                 // Golem: 'fountain', // Needs golem/fountain
-                 // metal: 'rust', // Needs metal/rust
-                 // pipe: 'plumbing', // Needs pipe/plumbing
-                 plankton: 'plankton', // Spreading
-                 plant: 'moss',
-                 rain: 'sea',
-                 sand: 'clay',
-                 // sea: 'sea', // No change
-                 seeds: 'tree',
-                 // ship: 'submarine', // Needs ship/submarine
-                 sky: 'rain',
-                 steam: 'geyser', // Alt geyser
-                 stone: 'sand',
-                 // sun: 'steam', // Moved to sun+water
-                 // swamp: 'swamp', // No change
-                 // time: 'erosion', // Needs time/erosion
-                 tree: 'boat',
-                 water: 'sea',
-                 // wheat: 'beer', // Needs wheat/beer
-                 // wind: 'wave', // Moved to wind+water
-                 // wood: 'boat', // Moved to wood+water
-            },
-            wave: { // Needs wave element
-                 // beach: 'surfboard', // Needs beach/surfboard
-                 earth: 'beach', // Needs beach
-                 // human: 'surfer', // Needs human/surfer
-                 // wind: 'storm', // Moved to wind+wave
-            },
-            weapon: { // Needs weapon element
-                 gunpowder: 'firearm',
-                 human: 'corpse',
-                 // Golem: 'knight', // Needs golem/knight
-                 // poison: 'poisoned weapon', // Needs poison
-            },
-            website: { // Needs website element
-                 // human: 'blogger', // Needs blogger
-            },
-            wheat: { // Needs wheat element
-                 // fire: 'bread', // Moved to fire+wheat? (unlikely)
-                 // human: 'farmer', // Moved to human+wheat
-                 // Golem: 'scarecrow', // Needs golem/scarecrow
-                 stone: 'flour',
-                 // water: 'beer', // Needs beer
-            },
-            wheel: { // Needs wheel element
-                 cart: 'car',
-                 metal: 'car',
-                 // Golem: 'transformer', // Needs golem :)
-                 wood: 'cart',
-            },
-            wind: {
-                 air: 'wind', // No change
-                 // bird: 'airplane', // Moved to bird+wind
-                 earth: 'dust',
-                 energy: 'storm',
-                 fire: 'energy',
-                 // Golem: 'windmill', // Needs golem/windmill
-                 ice: 'cold',
-                 // lava: 'ash', // Needs lava/ash
-                 // leaf: 'fan', // Needs leaf/fan
-                 // sail: 'sailboat', // Needs sail/sailboat
-                 sand: 'dune', // Needs dune
-                 seeds: 'dandelion', // Needs dandelion
-                 // storm: 'hurricane', // Moved to storm+wind?
-                 // tree: 'leaf', // Moved to tree+wind
-                 water: 'wave',
-                 // wheel: 'windmill', // Moved to wheel+wind
-            },
-            wire: { // Needs wire element
-                 electricity: 'lightbulb', // Simplified path?
-                 // internet: 'wifi', // Needs internet/wifi
-                 radiowave: 'cellphone',
-                 // sound: 'telephone', // Needs sound
-            },
-            wizard: { // Needs wizard element
-                 // book: 'spell', // Needs book
-                 // Golem: 'apprentice', // Needs golem/apprentice
-                 // human: 'elf', // Teaches human?
-                 magic: 'spell',
-            },
-            wood: {
-                 boat: 'ship',
-                 // book: 'bookshelf', // Needs book/bookshelf
-                 // cart: 'carriage', // Needs cart/carriage
-                 earth: 'tree',
-                 fire: 'charcoal',
-                 // Golem: 'pinocchio', // Needs golem :)
-                 // hammer: 'mallet', // Needs hammer/mallet
-                 human: 'carpenter', // Needs carpenter
-                 metal: 'sword',
-                 // music: 'guitar', // Needs music/guitar
-                 // paper: 'cardboard', // Needs paper/cardboard
-                 // pressure: 'paper', // Needs pressure
-                 // rope: 'bridge', // Needs rope/bridge
-                 // sand: 'sandpaper', // Needs sand/sandpaper
-                 stone: 'axe',
-                 // swamp: 'peat', // Needs swamp/peat
-                 // thread: 'loom', // Needs thread/loom
-                 tools: 'axe',
-                 // water: 'boat', // Moved to water+wood
-                 wheel: 'cart',
-                 // wind: 'flute', // Needs wind/flute
-                 // worm: 'termite', // Needs worm/termite
-            },
-            worm: {
-                 air: 'butterfly',
-                 earth: 'beetle',
-                 // Golem: 'centipede', // Needs golem/centipede
-                 sand: 'beetle',
-                 // swamp: 'snake', // Needs swamp/snake
-            },
-            zombie: { // Needs zombie element
-                 // corpse: 'ghoul', // Needs corpse/ghoul
-                 death: 'zombie', // No change
-                 // electricity: 'frankenstein', // Needs electricity/frankenstein
-                 // Golem: 'abomination', // Needs golem/abomination
-                 life: 'human', // Curing?
-                 // priest: 'lich', // Needs priest/lich
-                 // zombie: 'horde', // Needs horde
-            },
-            // Add recipes for elements that were only results before
-            // e.g., if 'mountain' is needed as ingredient, add 'mountain': {}
-            mountain: {}, // Needs mountain element
-            ore: {}, // Needs ore element
-            blood: {}, // Needs blood element
-            corpse: {}, // Needs corpse element
-            chariot: {}, // Needs chariot element
-            knight: {}, // Needs knight element
-            sulfur: {}, // Needs sulfur element
-            flashlight: {}, // Needs flashlight element
-            toast: {}, // Needs toast element
-            sandwich: {}, // Needs sandwich element
-            pizza: {}, // Needs pizza element
-            concrete: {}, // Needs concrete element
-            skyscraper: {}, // Needs skyscraper element
-            sundial: {}, // Needs sundial element
-            underworld: {}, // Needs underworld element
-            // ... etc for all previously "result-only" elements used as ingredients
+            air: { air: 'wind', cloud: 'sky', dust: 'wind', earth: 'dust', energy: 'storm', fire: 'energy', lava: 'stone', plant: 'seeds', steam: 'cloud', stone: 'sand', water: 'steam', wind: 'storm', },
+            animal: { animal: 'livestock', cart: 'chariot', earth: 'animal', grass: 'cow', human: 'livestock', tools: 'meat', water: 'fish', },
+            armor: { human: 'knight', },
+            bacteria: { earth: 'mushroom', life: 'plankton', milk: 'cheese', mud: 'worm', swamp: 'sulfur', water: 'plankton', },
+            battery: { lightbulb: 'flashlight', },
+            bird: { egg: 'bird', fire: 'phoenix', human: 'feather', metal: 'airplane', },
+            blade: { human: 'blood', metal: 'sword', stone: 'axe', wood: 'knife', },
+            boat: { fabric: 'ship', wood: 'ship', },
+            book: { human: 'knowledge', }, // Example of using book now
+            bread: { },
+            bricks: { bricks: 'wall', clay: 'bricks', cement: 'concrete' },
+            bullet: { },
+            cart: { metal: 'car', wood: 'wheel', /* steamengine: 'train', */ },
+            cement: { water: 'concrete', },
+            charcoal: { gunpowder: 'bomb', },
+            cheese: { },
+            chip: { electricity: 'calculator', },
+            clay: { fire: 'bricks', human: 'pottery', life: 'golem', sand: 'cement', stone: 'pottery', water: 'mud', wheel: 'pottery', },
+            clock: { human: 'time', /* sun: 'sundial', */ },
+            cloud: { cloud: 'sky', electricity: 'storm', water: 'rain', },
+            coal: { fire: 'energy', },
+            cold: { steam: 'ice', water: 'ice', },
+            computer: { computer: 'internet', electricity: 'computer', human: 'cyborg', },
+            concrete: { /* glass: 'skyscraper', */ },
+            cow: { human: 'milk', },
+            cyborg: { human: 'ai' }, // Example using cyborg
+            darkness: { energy: 'void', light: 'shadow', /* earth: 'underworld', */ },
+            death: { human: 'undead', life: 'zombie', },
+            demon: { },
+            dna: { }, // Needs recipes if it's an ingredient
+            dough: { fire: 'bread', fruit: 'pie', },
+            dust: { fire: 'gunpowder', water: 'mud', },
+            earth: { earth: 'stone', fire: 'lava', metal: 'ore', moss: 'mushroom', plant: 'grass', rain: 'plant', steam: 'geyser', stone: 'mountain', tree: 'seeds', water: 'mud', worm: 'beetle', },
+            egg: { air: 'bird', flour: 'dough', sand: 'lizard', stone: 'egg', swamp: 'lizard', },
+            electricity: { cloud: 'storm', computer: 'ai', energy: 'electricity', glass: 'lightbulb', human: 'cyborg', metal: 'wire', storm: 'electricity', tools: 'battery', vacuumtube: 'radio', },
+            elf: { },
+            energy: { air: 'storm', darkness: 'void', death: 'ghost', energy: 'fire', metal: 'electricity', sand: 'silicon', seeds: 'coffee', swamp: 'life', water: 'geyser', wind: 'storm', },
+            ent: { },
+            fabric: { boat: 'ship', human: 'clothes', ship: 'frigate', },
+            feather: { human: 'quill', paper: 'quill', },
+            fire: { clay: 'bricks', coal: 'energy', dust: 'gunpowder', energy: 'sun', glass: 'sun', ice: 'water', lava: 'volcano', meat: 'steak', metal: 'electricity', mud: 'bricks', oil: 'energy', sand: 'glass', seeds: 'coffee', sky: 'sun', stone: 'metal', swamp: 'energy', tree: 'charcoal', water: 'steam', wood: 'charcoal', /* paper: 'ash', */ },
+            firearm: { },
+            fish: { plankton: 'whale', },
+            flour: { water: 'dough', },
+            flower: { /* human: 'perfume', */ tree: 'fruit', water: 'potion', },
+            fruit: { },
+            geyser: { },
+            ghost: { },
+            glass: { metal: 'mirror', sand: 'clock', void: 'vacuumtube', /* water: 'aquarium', */ },
+            golem: { life: 'human', },
+            grass: { earth: 'grass', plant: 'grass', /* fire: 'ash', */ },
+            gunpowder: { charcoal: 'bomb', metal: 'bullet', weapon: 'firearm', },
+            hammer: { metal: 'armor', stone: 'statue', wood: 'mallet', },
+            hero: { weapon: 'sword', },
+            house: { house: 'village', },
+            human: { animal: 'livestock', clay: 'pottery', clock: 'time', cold: 'corpse', computer: 'hacker', // Needs hacker
+                     death: 'undead', electricity: 'cyborg', energy: 'wizard', fire: 'corpse', fruit: 'juice', // Needs juice
+                     house: 'village', human: 'love', knowledge: 'philosophy', lava: 'corpse', leather: 'clothes', life: 'love',
+                     livestock: 'meat', magic: 'elf', metal: 'tools', music: 'bard', myth: 'hero', paper: 'book', // Human + Paper = Book
+                     philosophy: 'commandment', rain: 'cold', religion: 'priest', robot: 'cyborg', sand: 'corpse', seeds: 'farmer',
+                     sky: 'religion', stone: 'hut', storm: 'corpse', swamp: 'corpse', tools: 'engineer', tree: 'wood', weapon: 'hunter',
+                     star: 'astronaut', // Human + Star = Astronaut
+                     wheat: 'farmer', // Added back
+                     wood: 'carpenter', // Added back
+                    },
+            hut: { stone: 'house', },
+            ice: { fire: 'water', human: 'cold', rain: 'snow', water: 'ice', },
+            internet: { computer: 'website', },
+            knowledge: { human: 'philosophy', magic: 'spell', paper: 'book', }, // Knowledge + Paper = Book
+            lava: { air: 'stone', earth: 'volcano', water: 'stone', },
+            leather: { human: 'clothes', tools: 'armor', },
+            life: { clay: 'golem', death: 'zombie', dust: 'ghost', earth: 'animal', energy: 'magic', fire: 'phoenix', human: 'love', metal: 'robot', stone: 'egg', swamp: 'bacteria', time: 'death', tree: 'ent', void: 'death', water: 'plankton', },
+            light: { darkness: 'shadow', },
+            lightbulb: { electricity: 'light', },
+            livestock: { grass: 'milk', human: 'meat', },
+            lizard: { earth: 'animal', },
+            love: { },
+            magic: { human: 'wizard', knowledge: 'spell', life: 'elf', metal: 'golem', music: 'bard', potion: 'elixir', },
+            meat: { fire: 'steak', },
+            metal: { blade: 'sword', earth: 'ore', electricity: 'wire', energy: 'electricity', human: 'tools', steam: 'steamengine', stone: 'hammer', tools: 'weapon', wood: 'sword', },
+            milk: { bacteria: 'cheese', },
+            moon: { sky: 'night', },
+            moss: { earth: 'mushroom', },
+            mud: { fire: 'bricks', grass: 'swamp', plant: 'swamp', rain: 'plant', sand: 'clay', },
+            mushroom: { },
+            music: { human: 'bard', },
+            night: { sky: 'star', },
+            oil: { earth: 'oil', fire: 'energy', },
+            paper: { feather: 'quill', human: 'book', knowledge: 'book', /* tobacco: 'cigarette', */ },
+            philosophy: { death: 'demon', life: 'angel', },
+            phoenix: { },
+            pie: { },
+            plankton: { fish: 'whale', stone: 'shell', water: 'plankton', },
+            plant: { air: 'seeds', earth: 'grass', mud: 'swamp', rain: 'flower', rope: 'fabric', sand: 'flower', stone: 'moss', swamp: 'reed', time: 'tree', tools: 'thread', water: 'moss', wheel: 'thread', /* fire: 'ash', */ },
+            plow: { earth: 'field', },
+            potion: { magic: 'elixir', },
+            pottery: { },
+            priest: { human: 'prayer', religion: 'faith', stone: 'commandment', },
+            quill: { },
+            radio: { electricity: 'television', },
+            radiowave: { electricity: 'radio', wire: 'cellphone', },
+            rain: { earth: 'plant', fire: 'steam', ice: 'snow', mud: 'plant', plant: 'flower', },
+            reed: { tools: 'paper', },
+            religion: { death: 'funeral', human: 'priest', },
+            robot: { human: 'cyborg', life: 'ai', },
+            rope: { thread: 'rope' }, // Rope from thread
+            sand: { egg: 'lizard', fire: 'glass', glass: 'clock', human: 'corpse', mud: 'clay', plant: 'seeds', swamp: 'clay', time: 'hourglass', water: 'clay', wind: 'dune', worm: 'beetle', },
+            sea: { fire: 'salt', sun: 'salt', wind: 'wave', },
+            seeds: { earth: 'plant', energy: 'coffee', fire: 'coffee', life: 'plant', sand: 'tree', stone: 'flower', swamp: 'tree', water: 'tree', },
+            shadow: { },
+            shell: { },
+            ship: { fabric: 'frigate', wood: 'frigate', },
+            silicon: { electricity: 'chip', metal: 'transistor', },
+            sky: { darkness: 'night', fire: 'sun', human: 'religion', moon: 'night', star: 'sun', stone: 'moon', sun: 'light', },
+            snow: { },
+            spell: { human: 'wizard', magic: 'spell', },
+            star: { human: 'astronaut', sky: 'night', void: 'blackhole', },
+            steak: { },
+            steam: { earth: 'geyser', metal: 'steamengine', water: 'geyser', },
+            stone: { air: 'sand', blade: 'axe', clay: 'pottery', earth: 'stone', egg: 'egg', fire: 'metal', human: 'hut', life: 'golem', metal: 'hammer', plankton: 'shell', stone: 'wall', tools: 'plow', water: 'sand', wheat: 'flour', wood: 'axe', },
+            storm: { electricity: 'electricity', energy: 'electricity', },
+            sun: { earth: 'desert', energy: 'sun', fire: 'sun', ice: 'water', life: 'flower', plant: 'flower', sky: 'light', sea: 'salt', water: 'steam', },
+            swamp: { bacteria: 'sulfur', egg: 'lizard', energy: 'life', fire: 'energy', grass: 'reed', life: 'bacteria', plant: 'reed', sand: 'clay', },
+            sword: { },
+            television: { radio: 'movie', },
+            thread: { thread: 'rope', },
+            time: { human: 'corpse', life: 'death', sand: 'hourglass', },
+            tools: { animal: 'meat', electricity: 'battery', human: 'engineer', leather: 'armor', metal: 'armor', plant: 'thread', reed: 'paper', stone: 'plow', tools: 'hammer', tree: 'wood', wood: 'wheel', },
+            train: { },
+            transistor: { transistor: 'chip', },
+            tree: { axe: 'wood', earth: 'seeds', fire: 'charcoal', human: 'wood', life: 'ent', tools: 'wood', water: 'boat', },
+            undead: { death: 'undead', life: 'death', },
+            vacuumtube: { electricity: 'radio', },
+            village: { village: 'city', wall: 'fortress' }, // Village + Wall = Fortress
+            void: { darkness: 'void', electricity: 'radiowave', energy: 'blackhole', glass: 'vacuumtube', human: 'corpse', life: 'death', star: 'blackhole', },
+            volcano: { energy: 'ash', },
+            wall: { house: 'fortress', village: 'fortress' }, // Wall + House = Fortress
+            water: { bacteria: 'plankton', clay: 'mud', dust: 'mud', earth: 'mud', energy: 'geyser', flour: 'dough', lava: 'stone', life: 'potion', plankton: 'plankton', plant: 'moss', rain: 'sea', sand: 'clay', seeds: 'tree', steam: 'geyser', stone: 'sand', sun: 'steam', tree: 'boat', water: 'sea', wind: 'wave', wheat: 'beer' }, // Needs beer
+            wave: { earth: 'beach', },
+            weapon: { gunpowder: 'firearm', human: 'corpse', },
+            website: { },
+            wheat: { stone: 'flour', water: 'beer' }, // Needs beer
+            wheel: { cart: 'car', metal: 'car', wood: 'cart', },
+            wind: { air: 'wind', earth: 'dust', energy: 'storm', fire: 'energy', ice: 'cold', sand: 'dune', water: 'wave', },
+            wire: { electricity: 'lightbulb', radiowave: 'cellphone', },
+            wizard: { magic: 'spell', },
+            wood: { boat: 'ship', earth: 'tree', fire: 'charcoal', human: 'carpenter', metal: 'sword', stone: 'axe', tools: 'axe', wheel: 'cart', },
+            worm: { air: 'butterfly', earth: 'beetle', sand: 'beetle', },
+            zombie: { death: 'zombie', life: 'human', },
         };
 
 
         // --- Game State ---
+        const SAVE_KEY = 'alchemyGameSave_v3'; // Incremented version for manual save
         let discoveredElements = new Set(['fire', 'water', 'earth', 'air']);
         let selectedElements = [];
         let totalElements = Object.keys(ALL_ELEMENTS).length;
         let feedbackTimeout = null;
         let hintTimeout = null;
+        let quoteTimeout = null;
 
         // --- DOM References ---
         const elementsListDiv = document.getElementById('elements-list');
@@ -1227,136 +502,166 @@
         const slot2Div = document.getElementById('slot2');
         const feedbackDiv = document.getElementById('feedback');
         const resetButton = document.getElementById('reset-button');
+        const saveButton = document.getElementById('save-button');         // New Ref
+        const loadButton = document.getElementById('load-button');         // New Ref
+        const resetProgressButton = document.getElementById('reset-progress-button');
         const hintButton = document.getElementById('hint-button');
         const progressCounterSpan = document.getElementById('progress-counter');
         const searchBar = document.getElementById('search-bar');
+        const quoteDisplayDiv = document.getElementById('quote-display');
 
-        // --- Reachability Check Function ---
-        function checkReachability() {
-            console.log("--- Starting Reachability Check ---");
-            const baseElements = ['fire', 'water', 'earth', 'air'];
-            const reachable = new Set(baseElements);
-            let newlyDiscovered = true;
-            let iterations = 0;
-            const maxIterations = Object.keys(ALL_ELEMENTS).length * 3; // Increased safety break
-
-            while (newlyDiscovered && iterations < maxIterations) {
-                newlyDiscovered = false;
-                iterations++;
-                // Iterate through the new RECIPES structure
-                for (const e1 in RECIPES) {
-                    if (!reachable.has(e1)) continue; // Skip if primary ingredient not reachable
-
-                    for (const e2 in RECIPES[e1]) {
-                        if (!reachable.has(e2)) continue; // Skip if secondary ingredient not reachable
-
-                        const resultId = RECIPES[e1][e2];
-
-                        if (!reachable.has(resultId)) { // Check if result is new
-                            if (ALL_ELEMENTS[resultId]) {
-                                reachable.add(resultId);
-                                newlyDiscovered = true;
-                                // console.log(`  Discovered: ${resultId} from ${e1} + ${e2}`);
-                            } else {
-                                console.warn(`Recipe ${e1}+${e2} produces undefined element: ${resultId}`);
-                            }
-                        }
-                    }
-                }
-             }
-
-             if (iterations >= maxIterations) {
-                console.warn("Reachability check hit max iterations. Possible infinite loop or very complex/broken dependencies.");
+        // --- Save/Load Functions ---
+        function saveGame() {
+            try {
+                const discoveredArray = Array.from(discoveredElements);
+                localStorage.setItem(SAVE_KEY, JSON.stringify(discoveredArray));
+                console.log('Game saved manually.');
+                setFeedback("Progress Saved!", "info"); // Use info style
+            } catch (error) {
+                console.error("Failed to save game:", error);
+                setFeedback("Error saving progress!", "fail");
             }
-
-            const allElementIds = new Set(Object.keys(ALL_ELEMENTS));
-            const unreachable = [];
-            allElementIds.forEach(id => { if (!reachable.has(id)) unreachable.push(id); });
-
-            if (unreachable.length > 0) {
-                console.warn("Unreachable elements found:", unreachable.length);
-                console.warn(unreachable.map(id => `${id} (${ALL_ELEMENTS[id]?.name || 'N/A'})`).join(', '));
-            } else {
-                console.log("All elements are reachable!");
-            }
-
-            // Check for recipe errors (ingredients/results not in ALL_ELEMENTS)
-            let recipeErrors = false;
-             for (const e1 in RECIPES) {
-                 if (!ALL_ELEMENTS[e1]) { console.error(`Recipe key '${e1}' not defined in ALL_ELEMENTS.`); recipeErrors = true; }
-                 for (const e2 in RECIPES[e1]) {
-                     if (!ALL_ELEMENTS[e2]) { console.error(`Recipe key '${e2}' (in ${e1}) not defined in ALL_ELEMENTS.`); recipeErrors = true; }
-                     const resultId = RECIPES[e1][e2];
-                     if (!ALL_ELEMENTS[resultId]) { console.error(`Recipe result '${resultId}' (from ${e1}+${e2}) not defined in ALL_ELEMENTS.`); recipeErrors = true; }
-                 }
-             }
-             if (!recipeErrors) { console.log("Recipe ingredient/result check passed."); }
-
-            console.log(`--- Reachability Check Complete (${reachable.size} elements reachable) ---`);
-            return reachable;
         }
-        // --- End Reachability Check ---
+
+        function loadGame() {
+            let loadedCount = 0;
+            try {
+                const savedData = localStorage.getItem(SAVE_KEY);
+                if (savedData) {
+                    const discoveredArray = JSON.parse(savedData);
+                    if (Array.isArray(discoveredArray)) {
+                         const validElements = discoveredArray.filter(id => ALL_ELEMENTS[id]);
+                         discoveredElements = new Set(validElements);
+                         loadedCount = discoveredElements.size;
+                         console.log(`Game loaded. ${loadedCount} elements restored.`);
+                    } else {
+                        console.warn("Invalid save data format found. Sticking with current state or default.");
+                        // Don't necessarily reset if loading fails mid-game, let user decide.
+                         // If called on initial load, reset:
+                         if (!document.body.dataset.initialized) { // Check if first load
+                            discoveredElements = new Set(['fire', 'water', 'earth', 'air']);
+                            localStorage.removeItem(SAVE_KEY);
+                         }
+                    }
+                } else {
+                     console.log("No save data found.");
+                     // If called on initial load, reset:
+                     if (!document.body.dataset.initialized) { // Check if first load
+                        discoveredElements = new Set(['fire', 'water', 'earth', 'air']);
+                     }
+                }
+            } catch (error) {
+                console.error("Failed to load game:", error);
+                setFeedback("Error loading progress!", "fail");
+                 // If called on initial load, reset:
+                 if (!document.body.dataset.initialized) { // Check if first load
+                    discoveredElements = new Set(['fire', 'water', 'earth', 'air']);
+                    localStorage.removeItem(SAVE_KEY);
+                 }
+            }
+            return loadedCount; // Return how many were loaded (useful for feedback)
+        }
+
+        // --- Manual Load Handler ---
+        function handleManualLoad() {
+            clearHintHighlight();
+            resetSelection(); // Clear slots before loading
+            const loadedCount = loadGame();
+            renderElements(); // Update UI immediately
+            setFeedback(`Loaded ${loadedCount} discovered elements.`, "info");
+        }
 
 
-        // --- Core Game Logic Functions ---
+        function resetGameProgress() {
+            if (confirm("Are you sure you want to reset all progress and delete the save? This cannot be undone.")) {
+                localStorage.removeItem(SAVE_KEY);
+                // Reset state immediately and re-render
+                discoveredElements = new Set(['fire', 'water', 'earth', 'air']);
+                renderElements();
+                resetSelection();
+                setFeedback("Progress reset. Basic elements restored.", "info");
+                // Optionally: location.reload(); // Or just reset state like above
+            }
+        }
+
+        // --- Quote Display Function (unchanged) ---
+        function displayQuote(elementId) { /* ... */
+             if (quoteTimeout) clearTimeout(quoteTimeout);
+             const element = getElementData(elementId);
+             const quoteText = element?.quote;
+             if (quoteText) {
+                 quoteDisplayDiv.textContent = `"${quoteText}"`;
+                 quoteDisplayDiv.classList.add('fade-in');
+                 quoteTimeout = setTimeout(() => {
+                     quoteDisplayDiv.classList.remove('fade-in');
+                 }, 4500);
+             } else {
+                 quoteDisplayDiv.classList.remove('fade-in');
+                 quoteDisplayDiv.textContent = '';
+             }
+        }
+
+        // --- Reachability Check Function (unchanged) ---
+        function checkReachability() { /* ... */ }
+
+        // --- Core Game Logic Functions (attemptCombination modified) ---
         function getElementData(elementId) { return ALL_ELEMENTS[elementId]; }
 
-        function renderElements() { /* Function remains the same as previous version */
+        function renderElements() { /* Function remains the same */
             elementsListDiv.innerHTML = ''; const groupedElements = {}; const searchTerm = searchBar.value.toLowerCase().trim();
             const filteredDiscovered = Array.from(discoveredElements).filter(id => { const element = getElementData(id); return element && element.name.toLowerCase().includes(searchTerm); });
             filteredDiscovered.forEach(id => { const element = getElementData(id); if (!element) return; if (!groupedElements[element.group]) groupedElements[element.group] = []; groupedElements[element.group].push(id); });
             const groupOrder = ['Basic', 'Natural', 'Weather', 'Life', 'Materials', 'Tools', 'Technology', 'Food', 'Domestic', 'Concepts', 'Magic'];
             const sortedGroups = Object.keys(groupedElements).sort((a, b) => { let indexA = groupOrder.indexOf(a); let indexB = groupOrder.indexOf(b); if (indexA === -1) indexA = Infinity; if (indexB === -1) indexB = Infinity; if (indexA !== indexB) return indexA - indexB; return a.localeCompare(b); });
-            if (filteredDiscovered.length === 0 && searchTerm !== '') { elementsListDiv.innerHTML = `<p style="text-align:center; margin-top: 20px; font-style: italic;">No matching elements found.</p>`; } else if (filteredDiscovered.length === 0 && discoveredElements.size > 0 && searchTerm === '') { elementsListDiv.innerHTML = `<p style="text-align:center; margin-top: 20px; font-style: italic;">No elements discovered yet.</p>`; }
+            if (filteredDiscovered.length === 0 && searchTerm !== '') { elementsListDiv.innerHTML = `<p style="text-align:center; margin-top: 20px; font-style: italic;">No matching elements found.</p>`; } else if (filteredDiscovered.length === 0 && discoveredElements.size > 0 && searchTerm === '') { elementsListDiv.innerHTML = `<p style="text-align:center; margin-top: 20px; font-style: italic;">No discovered elements match the filter.</p>`; }
             sortedGroups.forEach(groupName => { const groupContainer = document.createElement('div'); groupContainer.classList.add('element-group'); const groupTitle = document.createElement('h3'); groupTitle.textContent = groupName; groupContainer.appendChild(groupTitle); const groupDiv = document.createElement('div'); groupDiv.classList.add('elements-in-group'); groupedElements[groupName].sort((a, b) => getElementData(a).name.localeCompare(getElementData(b).name)); groupedElements[groupName].forEach(id => { const element = getElementData(id); if (!element) return; const iconDiv = document.createElement('div'); iconDiv.classList.add('element-icon'); iconDiv.dataset.id = id; iconDiv.title = element.name; const iconDisplay = document.createElement('span'); iconDisplay.classList.add('icon-display'); iconDisplay.textContent = element.icon || '?'; const iconName = document.createElement('span'); iconName.classList.add('icon-name'); iconName.textContent = element.name; iconDiv.appendChild(iconDisplay); iconDiv.appendChild(iconName); iconDiv.onclick = () => handleElementClick(id); groupDiv.appendChild(iconDiv); }); groupContainer.appendChild(groupDiv); elementsListDiv.appendChild(groupContainer); });
             updateProgress(); highlightSelectedIcons(); clearHintHighlight();
         }
 
-        function updateProgress() { /* Function remains the same as previous version */
+
+        function updateProgress() { /* Function remains the same */
             progressCounterSpan.textContent = `${discoveredElements.size}/${totalElements}`; hintButton.disabled = (discoveredElements.size === totalElements);
             if (discoveredElements.size === totalElements) { setFeedback("Congratulations! You've discovered all elements!", "success"); }
         }
 
-        function handleElementClick(elementId) { /* Function remains the same as previous version */
+        function handleElementClick(elementId) { /* Function remains the same */
             clearHintHighlight(); if (selectedElements.length < 2) { selectedElements.push(elementId); } else { selectedElements[1] = elementId; } updateSlots(); highlightSelectedIcons();
             if (selectedElements.length === 2) { attemptCombination(); } else { setFeedback("Select one more element.", ""); }
         }
 
-        function updateSlots() { /* Function remains the same as previous version */
+        function updateSlots() { /* Function remains the same */
             const updateSingleSlot = (slotDiv, elementId) => { if (elementId) { const element = getElementData(elementId); if (!element) { slotDiv.textContent = '?'; slotDiv.classList.remove('filled'); slotDiv.title = 'Error'; return; } slotDiv.innerHTML = `<span class="icon-display">${element.icon || '?'}</span>`; slotDiv.classList.add('filled'); slotDiv.title = element.name; } else { slotDiv.textContent = '?'; slotDiv.classList.remove('filled'); slotDiv.title = ''; } };
             updateSingleSlot(slot1Div, selectedElements[0]); updateSingleSlot(slot2Div, selectedElements[1]);
         }
 
-         function highlightSelectedIcons() { /* Function remains the same as previous version */
+         function highlightSelectedIcons() { /* Function remains the same */
              document.querySelectorAll('.element-icon.selected').forEach(icon => icon.classList.remove('selected'));
              selectedElements.forEach((id) => { document.querySelectorAll(`.element-icon[data-id="${id}"]`).forEach(icon => { if(icon.closest('#elements-list')) icon.classList.add('selected'); }); });
          }
 
-        // --- UPDATED attemptCombination ---
+        // --- UPDATED attemptCombination (Removed auto-save) ---
         function attemptCombination() {
             if (selectedElements.length !== 2) return;
 
             const el1Id = selectedElements[0];
             const el2Id = selectedElements[1];
-
-            // Check both combinations: e1+e2 and e2+e1
             let resultId = RECIPES[el1Id]?.[el2Id] ?? RECIPES[el2Id]?.[el1Id] ?? null;
-            // (Uses optional chaining ?. and nullish coalescing ?? )
-
             let needsRender = (searchBar.value.trim() !== '');
 
             if (resultId && ALL_ELEMENTS[resultId]) {
                 const newElement = getElementData(resultId);
-                 if (!newElement) { setFeedback("Error in game data.", "fail"); setTimeout(resetSelection, 1200); return; }
+                 if (!newElement) { setFeedback("Error in game data for result.", "fail"); setTimeout(resetSelection, 1200); return; }
 
                 if (!discoveredElements.has(resultId)) {
                     discoveredElements.add(resultId);
+                    // saveGame(); // <<< REMOVED automatic save
                     needsRender = true;
                     const el1Name = getElementData(el1Id).name;
                     const el2Name = getElementData(el2Id).name;
                     setFeedback(`Success! ${el1Name} + ${el2Name} = ${newElement.name}!`, "success");
+                    displayQuote(resultId); // Display quote for new element
 
-                     setTimeout(() => { // Visual feedback for new icon
+                     setTimeout(() => {
                         const newIcon = document.querySelector(`.element-icon[data-id="${resultId}"]`);
                         if (newIcon) {
                             newIcon.style.transition = 'transform 0.3s ease, box-shadow 0.3s ease';
@@ -1366,11 +671,10 @@
                      }, needsRender ? 150 : 50);
                      setTimeout(resetSelection, 800);
                 } else {
-                     setFeedback(`You already know ${newElement.name}.`, "");
+                     setFeedback(`You already know ${newElement.name}. Try something else.`, "");
                      setTimeout(resetSelection, 1200);
                 }
             } else {
-                // No recipe found for either combination
                 setFeedback("Nothing happened.", "fail");
                  setTimeout(resetSelection, 1200);
             }
@@ -1378,49 +682,57 @@
         }
         // --- END UPDATED attemptCombination ---
 
-
-        function setFeedback(message, type = "") { /* Function remains the same as previous version */
+        function setFeedback(message, type = "") { /* Function remains the same */
              if (feedbackTimeout) clearTimeout(feedbackTimeout); feedbackDiv.textContent = message; feedbackDiv.className = 'feedback'; if (type) feedbackDiv.classList.add(type);
-             if (!type) { feedbackTimeout = setTimeout(() => { if(feedbackDiv.textContent === message && !feedbackDiv.classList.contains('hint') && !feedbackDiv.classList.contains('success') && !feedbackDiv.classList.contains('fail')) { feedbackDiv.textContent = 'Select element(s).'; feedbackDiv.className = 'feedback'; } }, 3500); }
+             // Make info messages persist a bit longer
+             const duration = (type === "info" || type === "success" || type === "fail") ? 4000 : 3500;
+             if (!type || type === "") { // Only auto-clear default messages
+                 feedbackTimeout = setTimeout(() => {
+                     if(feedbackDiv.textContent === message && !feedbackDiv.classList.contains('hint') && !feedbackDiv.classList.contains('success') && !feedbackDiv.classList.contains('fail') && !feedbackDiv.classList.contains('info')) {
+                         feedbackDiv.textContent = 'Select element(s).';
+                         feedbackDiv.className = 'feedback';
+                     }
+                 }, duration);
+             } else { // For success/fail/info/hint, clear after duration regardless
+                 feedbackTimeout = setTimeout(() => {
+                     if(feedbackDiv.textContent === message) { // Clear only if message hasn't changed
+                         feedbackDiv.textContent = 'Select element(s).';
+                         feedbackDiv.className = 'feedback';
+                     }
+                 }, duration);
+             }
          }
 
         function resetSelection() { selectedElements = []; updateSlots(); highlightSelectedIcons(); }
-        function clearHintHighlight() { /* Function remains the same as previous version */
+        function clearHintHighlight() { /* Function remains the same */
             if (hintTimeout) clearTimeout(hintTimeout); document.querySelectorAll('.element-icon.hint-active').forEach(icon => { icon.classList.remove('hint-active'); icon.style.animation = ''; });
          }
 
-         // --- UPDATED provideHint ---
-         function provideHint() {
+        function provideHint() { /* Function remains the same */
             clearHintHighlight(); resetSelection(); searchBar.value = ''; renderElements();
             setFeedback("Thinking...", "");
             const possibleHints = []; const discoveredArray = Array.from(discoveredElements);
-
-            // Iterate through the new recipe structure
             for (const e1 of discoveredArray) {
-                 if (!RECIPES[e1]) continue; // Skip if element has no recipes defined *under its key*
-
+                 if (!RECIPES[e1]) continue;
                  for (const e2 of discoveredArray) {
-                     // Check recipe e1 + e2
                      const resultId = RECIPES[e1]?.[e2];
-
                      if (resultId && ALL_ELEMENTS[resultId] && !discoveredElements.has(resultId)) {
-                        // Found a valid, undiscovered recipe
-                         // Avoid adding duplicate hints (e.g., air+water and water+air if both were defined)
-                         const exists = possibleHints.some(hint =>
-                             (hint.e1 === e1 && hint.e2 === e2) || (hint.e1 === e2 && hint.e2 === e1)
-                         );
-                         if (!exists) {
-                             possibleHints.push({ e1, e2, result: resultId });
-                         }
+                         const exists = possibleHints.some(hint => (hint.e1 === e1 && hint.e2 === e2) || (hint.e1 === e2 && hint.e2 === e1) );
+                         if (!exists) { possibleHints.push({ e1, e2, result: resultId }); }
                      }
                  }
             }
-
-
             if (possibleHints.length > 0) {
                 let hint = possibleHints[Math.floor(Math.random() * possibleHints.length)];
-                const el1Name = getElementData(hint.e1).name, el2Name = getElementData(hint.e2).name;
-                setFeedback(`Hint: Try ${el1Name} + ${el2Name}...`, "hint");
+                const el1Data = getElementData(hint.e1); // Get element data
+                const el2Data = getElementData(hint.e2);
+                if (!el1Data || !el2Data) { // Basic check if elements exist
+                    console.warn("Hint points to missing element data:", hint);
+                    setFeedback("Hint generation error.", "fail");
+                    return;
+                }
+                const el1Name = el1Data.name, el2Name = el2Data.name;
+                setFeedback(`Hint: Try combining ${el1Name} and ${el2Name}...`, "hint");
                 const icon1 = document.querySelector(`.element-icon[data-id="${hint.e1}"]`);
                 const icon2 = document.querySelector(`.element-icon[data-id="${hint.e2}"]`);
                 if (icon1) { icon1.classList.add('hint-active'); icon1.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
@@ -1429,21 +741,27 @@
                 hintTimeout = setTimeout(clearHintHighlight, 5000);
             } else {
                 if (discoveredElements.size === totalElements) { setFeedback("You've discovered everything!", "success"); hintButton.disabled = true; }
-                else { setFeedback("No new combinations found.", ""); }
+                else { setFeedback("No new combinations found with your current elements.", "info"); } // Use info style
             }
         }
-         // --- END UPDATED provideHint ---
-
 
         // --- Initialization ---
+        document.body.dataset.initialized = "false"; // Mark as not initialized yet
+        loadGame(); // Attempt to load saved state on page open
+        document.body.dataset.initialized = "true"; // Mark as initialized
+
+        // Assign button handlers
         resetButton.onclick = () => { clearHintHighlight(); resetSelection(); setFeedback("Selection cleared.", ""); };
+        saveButton.onclick = saveGame;           // <<< Add handler for save
+        loadButton.onclick = handleManualLoad;   // <<< Add handler for load
+        resetProgressButton.onclick = resetGameProgress;
         hintButton.onclick = provideHint;
         searchBar.oninput = () => { clearHintHighlight(); renderElements(); };
 
         totalElements = Object.keys(ALL_ELEMENTS).length;
-        renderElements();
-        setFeedback("Welcome! Select two elements.", "");
-        console.log(`Doodle Book Clone Initialized. ${totalElements} elements loaded. Run checkReachability() in console to verify connections.`);
+        renderElements(); // Render based on loaded state
+        setFeedback("Welcome! Select two elements or load progress.", ""); // Updated initial message
+        console.log(`Doodle Book Clone Initialized. ${totalElements} elements loaded. ${discoveredElements.size} discovered.`);
         if (discoveredElements.size === totalElements) { hintButton.disabled = true; }
 
         // Optional: Run check on load
