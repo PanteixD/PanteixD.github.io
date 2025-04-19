@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Doodle Book Clone - Manual Save/Load</title>
+    <title>Doodle Book Clone - Auto Save/Load</title> <!-- Updated Title -->
     <style>
         /* CSS remains mostly the same */
         :root { --parchment-bg: #f5e8c9; --book-border: #8a6a4a; --text-color: #4a3a2a; --icon-size: 55px; --slot-size: 70px; --selected-glow: 0 0 10px 3px #4a90e2; --hint-glow: 0 0 10px 3px #ffcc00; }
@@ -32,8 +32,7 @@
         #hint-button:hover { background-color: #fff0a0; }
         #save-button { background-color: #d4edda; } /* Style for Save */
         #save-button:hover { background-color: #b8dbbd; }
-        #load-button { background-color: #d1ecf1; } /* Style for Load */
-        #load-button:hover { background-color: #b3dce6; }
+        /* #load-button removed */
         #reset-progress-button { background-color: #f8d7da; }
         #reset-progress-button:hover { background-color: #f1b0b7; }
 
@@ -95,8 +94,8 @@
                     <div id="controls">
                         <button id="hint-button" class="action-button">Hint</button>
                         <button id="reset-button" class="action-button">Clear Slots</button>
-                        <button id="save-button" class="action-button">Save</button>   <!-- New Save Button -->
-                        <button id="load-button" class="action-button">Load</button>   <!-- New Load Button -->
+                        <button id="save-button" class="action-button">Save</button>   <!-- Manual Save Button -->
+                        <!-- <button id="load-button" class="action-button">Load</button> REMOVED -->
                         <button id="reset-progress-button" class="action-button">Reset All</button> <!-- Renamed -->
                     </div>
                 </div>
@@ -111,7 +110,7 @@
         <div id="right-page" class="page">
             <div id="inventory-header">
                 <h2>Element Inventory</h2>
-                <span id="progress-counter">0/0</span>
+                <span id="progress-counter">0/0</span> <!-- Counter will be updated by JS -->
             </div>
             <input type="search" id="search-bar" placeholder="Search elements..." autocomplete="off">
             <div id="elements-list">
@@ -122,9 +121,7 @@
 
     <script>
         // --- Game Data ---
-        const ALL_ELEMENTS = { /* ... (Your extensive ALL_ELEMENTS object with quotes) ... */
-            // Add 'quote' property to elements
-            // NOTE: Add many more quotes for a better experience!
+        const ALL_ELEMENTS = { /* ... (Your extensive ALL_ELEMENTS object - 161 entries expected) ... */
             'fire':  { name: 'Fire',  group: 'Basic', icon: '🔥', quote: 'The spark that changes everything.' },
             'water': { name: 'Water', group: 'Basic', icon: '💧', quote: 'The source of life, the shaper of stone.' },
             'earth': { name: 'Earth', group: 'Basic', icon: '🌍', quote: 'Solid ground, fertile soil.' },
@@ -152,9 +149,6 @@
             'time': { name: 'Time', group: 'Concepts', icon: '⏳', quote: 'The relentless river.' },
             'death': { name: 'Death', group: 'Concepts', icon: '💀', quote: 'The end, or perhaps a beginning?' },
             'magic': { name: 'Magic', group: 'Magic', icon: '🪄', quote: 'Weaving wonder from the mundane.' },
-            // ... (add quotes to many more elements)
-
-            // Existing elements without quotes yet (will show nothing or default)
             'seeds': { name: 'Seeds', group: 'Life', icon: '🌰' },
             'bacteria': { name: 'Bacteria', group: 'Life', icon: '🦠' },
             'plankton': { name: 'Plankton', group: 'Life', icon: '🦐' },
@@ -291,50 +285,49 @@
             'coal': { name: 'Coal', group: 'Natural', icon: '⚫' },
             'oil': { name: 'Oil', group: 'Natural', icon: '⚫' },
             'swamp': { name: 'Swamp', group: 'Natural', icon: '🐊' },
-            // Need definitions for previously result-only items used as ingredients
             'mountain': { name: 'Mountain', group: 'Natural', icon: '⛰️' },
             'ore': { name: 'Ore', group: 'Materials', icon: '⛏️' },
             'blood': { name: 'Blood', group: 'Life', icon: '🩸' },
-            'corpse': { name: 'Corpse', group: 'Concepts', icon: '💀' }, // Re-use skull maybe
-            'chariot': { name: 'Chariot', group: 'Tools', icon: '🏇' }, // Placeholder icon
-            'knight': { name: 'Knight', group: 'Magic', icon: '♞' }, // Placeholder icon
-            'sulfur': { name: 'Sulfur', group: 'Natural', icon: '🟡' }, // Placeholder icon
+            'corpse': { name: 'Corpse', group: 'Concepts', icon: '💀' },
+            'chariot': { name: 'Chariot', group: 'Tools', icon: '🏇' },
+            'knight': { name: 'Knight', group: 'Magic', icon: '♞' },
+            'sulfur': { name: 'Sulfur', group: 'Natural', icon: '🟡' },
             'flashlight': { name: 'Flashlight', group: 'Technology', icon: '🔦' },
-            'toast': { name: 'Toast', group: 'Food', icon: '🍞' }, // Re-use bread?
+            'toast': { name: 'Toast', group: 'Food', icon: '🍞' },
             'sandwich': { name: 'Sandwich', group: 'Food', icon: '🥪' },
             'pizza': { name: 'Pizza', group: 'Food', icon: '🍕' },
             'skyscraper': { name: 'Skyscraper', group: 'Domestic', icon: '🏙️' },
-            'sundial': { name: 'Sundial', group: 'Technology', icon: '⏳' }, // Re-use hourglass?
-            'underworld': { name: 'Underworld', group: 'Magic', icon: '☠️' }, // Placeholder icon
-            // ... etc (Ensure ALL elements used in RECIPES exist here)
+            'sundial': { name: 'Sundial', group: 'Technology', icon: '⏳' },
+            'underworld': { name: 'Underworld', group: 'Magic', icon: '☠️' },
             'ash': { name: 'Ash', group: 'Natural', icon: '💨', quote: 'The cold remains of fire.' },
             'salt': { name: 'Salt', group: 'Natural', icon: '🧂', quote: 'The tears of the sea.' },
             'dune': { name: 'Dune', group: 'Natural', icon: '🏜️', quote: 'A wave of sand, sculpted by wind.' },
             'desert': { name: 'Desert', group: 'Natural', icon: '🌵', quote: 'Where life clings fiercely.' },
             'farmer': { name: 'Farmer', group: 'Life', icon: '🧑‍🌾', quote: 'One who works with the earth.' },
             'engineer': { name: 'Engineer', group: 'Technology', icon: '👷', quote: 'A builder of the future.' },
-            'field': { name: 'Field', group: 'Domestic', icon: '🏞️', quote: 'Earth prepared for planting.' }, // Placeholder icon
+            'field': { name: 'Field', group: 'Domestic', icon: '🏞️', quote: 'Earth prepared for planting.' },
              'mirror': { name: 'Mirror', group: 'Materials', icon: '🪞' },
-             'statue': { name: 'Statue', group: 'Domestic', icon: '🗿' }, // Reuse stone?
-             'mallet': { name: 'Mallet', group: 'Tools', icon: '🔨' }, // Reuse hammer?
+             'statue': { name: 'Statue', group: 'Domestic', icon: '🗿' },
+             'mallet': { name: 'Mallet', group: 'Tools', icon: '🔨' },
              'hacker': { name: 'Hacker', group: 'Technology', icon: '🧑‍💻' },
              'juice': { name: 'Juice', group: 'Food', icon: '🧃' },
              'hunter': { name: 'Hunter', group: 'Life', icon: '🏹' },
              'book': { name: 'Book', group: 'Concepts', icon: '📖' },
-             'hourglass': { name: 'Hourglass', group: 'Technology', icon: '⏳' }, // Reuse time?
+             'hourglass': { name: 'Hourglass', group: 'Technology', icon: '⏳' },
              'astronaut': { name: 'Astronaut', group: 'Technology', icon: '🧑‍🚀' },
              'movie': { name: 'Movie', group: 'Concepts', icon: '🎬' },
-             'city': { name: 'City', group: 'Domestic', icon: '🏙️' }, // Reuse skyscraper?
+             'city': { name: 'City', group: 'Domestic', icon: '🏙️' },
              'fortress': { name: 'Fortress', group: 'Domestic', icon: '🏰' },
              'beach': { name: 'Beach', group: 'Natural', icon: '🏖️' },
-             'carpenter': { name: 'Carpenter', group: 'Life', icon: '🪵' }, // Reuse wood?
+             'carpenter': { name: 'Carpenter', group: 'Life', icon: '🪵' },
              'prayer': { name: 'Prayer', group: 'Concepts', icon: '🙏' },
-             'faith': { name: 'Faith', group: 'Concepts', icon: '✝️' }, // Placeholder
+             'faith': { name: 'Faith', group: 'Concepts', icon: '✝️' },
              'funeral': { name: 'Funeral', group: 'Concepts', icon: '⚱️' },
+             'beer': { name: 'Beer', group: 'Food', icon: '🍺' }, // Added beer
         };
 
-        // --- RECIPES --- (Make sure recipes producing the newly defined elements above are uncommented/added)
-        const RECIPES = {
+        // --- RECIPES --- (Ensure all elements in recipes are defined in ALL_ELEMENTS)
+        const RECIPES = { /* ... (Your extensive RECIPES object - 201 recipes expected) ... */
             air: { air: 'wind', cloud: 'sky', dust: 'wind', earth: 'dust', energy: 'storm', fire: 'energy', lava: 'stone', plant: 'seeds', steam: 'cloud', stone: 'sand', water: 'steam', wind: 'storm', },
             animal: { animal: 'livestock', cart: 'chariot', earth: 'animal', grass: 'cow', human: 'livestock', tools: 'meat', water: 'fish', },
             armor: { human: 'knight', },
@@ -343,28 +336,28 @@
             bird: { egg: 'bird', fire: 'phoenix', human: 'feather', metal: 'airplane', },
             blade: { human: 'blood', metal: 'sword', stone: 'axe', wood: 'knife', },
             boat: { fabric: 'ship', wood: 'ship', },
-            book: { human: 'knowledge', }, // Example of using book now
-            bread: { },
+            book: { human: 'knowledge', paper: 'knowledge', }, // Paper+Human = Knowledge, Knowledge+Paper=Book? or Human+Paper=Book
+            bread: { dough: 'toast', }, // Bread + dough = toast? Needs review
             bricks: { bricks: 'wall', clay: 'bricks', cement: 'concrete' },
             bullet: { },
-            cart: { metal: 'car', wood: 'wheel', /* steamengine: 'train', */ },
+            cart: { metal: 'car', wood: 'wheel', steamengine: 'train', }, // Steam engine recipe needed
             cement: { water: 'concrete', },
             charcoal: { gunpowder: 'bomb', },
-            cheese: { },
+            cheese: { dough: 'pizza', }, // Cheese + dough = Pizza
             chip: { electricity: 'calculator', },
             clay: { fire: 'bricks', human: 'pottery', life: 'golem', sand: 'cement', stone: 'pottery', water: 'mud', wheel: 'pottery', },
-            clock: { human: 'time', /* sun: 'sundial', */ },
+            clock: { human: 'time', sun: 'sundial', },
             cloud: { cloud: 'sky', electricity: 'storm', water: 'rain', },
             coal: { fire: 'energy', },
             cold: { steam: 'ice', water: 'ice', },
             computer: { computer: 'internet', electricity: 'computer', human: 'cyborg', },
-            concrete: { /* glass: 'skyscraper', */ },
+            concrete: { glass: 'skyscraper', }, // Concrete + glass = Skyscraper
             cow: { human: 'milk', },
-            cyborg: { human: 'ai' }, // Example using cyborg
-            darkness: { energy: 'void', light: 'shadow', /* earth: 'underworld', */ },
+            cyborg: { human: 'ai' },
+            darkness: { energy: 'void', light: 'shadow', earth: 'underworld', },
             death: { human: 'undead', life: 'zombie', },
             demon: { },
-            dna: { }, // Needs recipes if it's an ingredient
+            dna: { life: 'human' }, // Needs review, life+dna=human?
             dough: { fire: 'bread', fruit: 'pie', },
             dust: { fire: 'gunpowder', water: 'mud', },
             earth: { earth: 'stone', fire: 'lava', metal: 'ore', moss: 'mushroom', plant: 'grass', rain: 'plant', steam: 'geyser', stone: 'mountain', tree: 'seeds', water: 'mud', worm: 'beetle', },
@@ -375,35 +368,33 @@
             ent: { },
             fabric: { boat: 'ship', human: 'clothes', ship: 'frigate', },
             feather: { human: 'quill', paper: 'quill', },
-            fire: { clay: 'bricks', coal: 'energy', dust: 'gunpowder', energy: 'sun', glass: 'sun', ice: 'water', lava: 'volcano', meat: 'steak', metal: 'electricity', mud: 'bricks', oil: 'energy', sand: 'glass', seeds: 'coffee', sky: 'sun', stone: 'metal', swamp: 'energy', tree: 'charcoal', water: 'steam', wood: 'charcoal', /* paper: 'ash', */ },
+            fire: { clay: 'bricks', coal: 'energy', dust: 'gunpowder', energy: 'sun', glass: 'sun', ice: 'water', lava: 'volcano', meat: 'steak', metal: 'electricity', mud: 'bricks', oil: 'energy', sand: 'glass', seeds: 'coffee', sky: 'sun', stone: 'metal', swamp: 'energy', tree: 'charcoal', water: 'steam', wood: 'charcoal', paper: 'ash', },
             firearm: { },
             fish: { plankton: 'whale', },
             flour: { water: 'dough', },
-            flower: { /* human: 'perfume', */ tree: 'fruit', water: 'potion', },
+            flower: { human: 'perfume', tree: 'fruit', water: 'potion', }, // Needs Perfume element
             fruit: { },
             geyser: { },
             ghost: { },
-            glass: { metal: 'mirror', sand: 'clock', void: 'vacuumtube', /* water: 'aquarium', */ },
+            glass: { metal: 'mirror', sand: 'clock', void: 'vacuumtube', water: 'aquarium', }, // Needs Aquarium element
             golem: { life: 'human', },
-            grass: { earth: 'grass', plant: 'grass', /* fire: 'ash', */ },
+            grass: { earth: 'grass', plant: 'grass', fire: 'ash', },
             gunpowder: { charcoal: 'bomb', metal: 'bullet', weapon: 'firearm', },
             hammer: { metal: 'armor', stone: 'statue', wood: 'mallet', },
             hero: { weapon: 'sword', },
             house: { house: 'village', },
-            human: { animal: 'livestock', clay: 'pottery', clock: 'time', cold: 'corpse', computer: 'hacker', // Needs hacker
-                     death: 'undead', electricity: 'cyborg', energy: 'wizard', fire: 'corpse', fruit: 'juice', // Needs juice
+            human: { animal: 'livestock', clay: 'pottery', clock: 'time', cold: 'corpse', computer: 'hacker',
+                     death: 'undead', electricity: 'cyborg', energy: 'wizard', fire: 'corpse', fruit: 'juice',
                      house: 'village', human: 'love', knowledge: 'philosophy', lava: 'corpse', leather: 'clothes', life: 'love',
-                     livestock: 'meat', magic: 'elf', metal: 'tools', music: 'bard', myth: 'hero', paper: 'book', // Human + Paper = Book
+                     livestock: 'meat', magic: 'elf', metal: 'tools', myth: 'hero', paper: 'book', // H+P=Book
                      philosophy: 'commandment', rain: 'cold', religion: 'priest', robot: 'cyborg', sand: 'corpse', seeds: 'farmer',
                      sky: 'religion', stone: 'hut', storm: 'corpse', swamp: 'corpse', tools: 'engineer', tree: 'wood', weapon: 'hunter',
-                     star: 'astronaut', // Human + Star = Astronaut
-                     wheat: 'farmer', // Added back
-                     wood: 'carpenter', // Added back
-                    },
+                     star: 'astronaut', wheat: 'farmer', wood: 'carpenter', life: 'dna', // H+L=DNA? Review
+                     },
             hut: { stone: 'house', },
             ice: { fire: 'water', human: 'cold', rain: 'snow', water: 'ice', },
             internet: { computer: 'website', },
-            knowledge: { human: 'philosophy', magic: 'spell', paper: 'book', }, // Knowledge + Paper = Book
+            knowledge: { human: 'philosophy', magic: 'spell', paper: 'book', }, // K+P=Book? Choose one method
             lava: { air: 'stone', earth: 'volcano', water: 'stone', },
             leather: { human: 'clothes', tools: 'armor', },
             life: { clay: 'golem', death: 'zombie', dust: 'ghost', earth: 'animal', energy: 'magic', fire: 'phoenix', human: 'love', metal: 'robot', stone: 'egg', swamp: 'bacteria', time: 'death', tree: 'ent', void: 'death', water: 'plankton', },
@@ -412,23 +403,23 @@
             livestock: { grass: 'milk', human: 'meat', },
             lizard: { earth: 'animal', },
             love: { },
-            magic: { human: 'wizard', knowledge: 'spell', life: 'elf', metal: 'golem', music: 'bard', potion: 'elixir', },
-            meat: { fire: 'steak', },
+            magic: { human: 'wizard', knowledge: 'spell', life: 'elf', metal: 'golem', potion: 'elixir', }, // Removed music->bard here, add bard recipes
+            meat: { fire: 'steak', bread: 'sandwich', }, // Meat + Bread = Sandwich
             metal: { blade: 'sword', earth: 'ore', electricity: 'wire', energy: 'electricity', human: 'tools', steam: 'steamengine', stone: 'hammer', tools: 'weapon', wood: 'sword', },
             milk: { bacteria: 'cheese', },
             moon: { sky: 'night', },
             moss: { earth: 'mushroom', },
             mud: { fire: 'bricks', grass: 'swamp', plant: 'swamp', rain: 'plant', sand: 'clay', },
             mushroom: { },
-            music: { human: 'bard', },
+            //music: { human: 'bard', }, // Remove? Add bard recipes
             night: { sky: 'star', },
             oil: { earth: 'oil', fire: 'energy', },
-            paper: { feather: 'quill', human: 'book', knowledge: 'book', /* tobacco: 'cigarette', */ },
+            paper: { feather: 'quill', human: 'book', knowledge: 'book', tobacco: 'cigarette', }, // Needs Tobacco, Cigarette elements
             philosophy: { death: 'demon', life: 'angel', },
             phoenix: { },
             pie: { },
             plankton: { fish: 'whale', stone: 'shell', water: 'plankton', },
-            plant: { air: 'seeds', earth: 'grass', mud: 'swamp', rain: 'flower', rope: 'fabric', sand: 'flower', stone: 'moss', swamp: 'reed', time: 'tree', tools: 'thread', water: 'moss', wheel: 'thread', /* fire: 'ash', */ },
+            plant: { air: 'seeds', earth: 'grass', mud: 'swamp', rain: 'flower', rope: 'fabric', sand: 'flower', stone: 'moss', swamp: 'reed', time: 'tree', tools: 'thread', water: 'moss', wheel: 'thread', fire: 'ash', },
             plow: { earth: 'field', },
             potion: { magic: 'elixir', },
             pottery: { },
@@ -440,8 +431,8 @@
             reed: { tools: 'paper', },
             religion: { death: 'funeral', human: 'priest', },
             robot: { human: 'cyborg', life: 'ai', },
-            rope: { thread: 'rope' }, // Rope from thread
-            sand: { egg: 'lizard', fire: 'glass', glass: 'clock', human: 'corpse', mud: 'clay', plant: 'seeds', swamp: 'clay', time: 'hourglass', water: 'clay', wind: 'dune', worm: 'beetle', },
+            rope: { thread: 'rope' },
+            sand: { egg: 'lizard', fire: 'glass', glass: 'clock', human: 'corpse', mud: 'clay', plant: 'seeds', swamp: 'clay', time: 'hourglass', water: 'beach', wind: 'dune', worm: 'beetle', }, // Sand+Water=Beach
             sea: { fire: 'salt', sun: 'salt', wind: 'wave', },
             seeds: { earth: 'plant', energy: 'coffee', fire: 'coffee', life: 'plant', sand: 'tree', stone: 'flower', swamp: 'tree', water: 'tree', },
             shadow: { },
@@ -468,15 +459,15 @@
             tree: { axe: 'wood', earth: 'seeds', fire: 'charcoal', human: 'wood', life: 'ent', tools: 'wood', water: 'boat', },
             undead: { death: 'undead', life: 'death', },
             vacuumtube: { electricity: 'radio', },
-            village: { village: 'city', wall: 'fortress' }, // Village + Wall = Fortress
+            village: { village: 'city', wall: 'fortress' },
             void: { darkness: 'void', electricity: 'radiowave', energy: 'blackhole', glass: 'vacuumtube', human: 'corpse', life: 'death', star: 'blackhole', },
             volcano: { energy: 'ash', },
-            wall: { house: 'fortress', village: 'fortress' }, // Wall + House = Fortress
-            water: { bacteria: 'plankton', clay: 'mud', dust: 'mud', earth: 'mud', energy: 'geyser', flour: 'dough', lava: 'stone', life: 'potion', plankton: 'plankton', plant: 'moss', rain: 'sea', sand: 'clay', seeds: 'tree', steam: 'geyser', stone: 'sand', sun: 'steam', tree: 'boat', water: 'sea', wind: 'wave', wheat: 'beer' }, // Needs beer
+            wall: { house: 'fortress', village: 'fortress' },
+            water: { bacteria: 'plankton', clay: 'mud', dust: 'mud', earth: 'mud', energy: 'geyser', flour: 'dough', lava: 'stone', life: 'potion', plankton: 'plankton', plant: 'moss', rain: 'sea', sand: 'beach', seeds: 'tree', steam: 'geyser', stone: 'sand', sun: 'steam', tree: 'boat', water: 'sea', wind: 'wave', wheat: 'beer' },
             wave: { earth: 'beach', },
             weapon: { gunpowder: 'firearm', human: 'corpse', },
             website: { },
-            wheat: { stone: 'flour', water: 'beer' }, // Needs beer
+            wheat: { stone: 'flour', water: 'beer' },
             wheel: { cart: 'car', metal: 'car', wood: 'cart', },
             wind: { air: 'wind', earth: 'dust', energy: 'storm', fire: 'energy', ice: 'cold', sand: 'dune', water: 'wave', },
             wire: { electricity: 'lightbulb', radiowave: 'cellphone', },
@@ -488,10 +479,10 @@
 
 
         // --- Game State ---
-        const SAVE_KEY = 'alchemyGameSave_v3'; // Incremented version for manual save
+        const SAVE_KEY = 'alchemyGameSave_v4'; // Incremented version for auto save/load changes
         let discoveredElements = new Set(['fire', 'water', 'earth', 'air']);
         let selectedElements = [];
-        let totalElements = Object.keys(ALL_ELEMENTS).length;
+        let totalElements = 0; // Will be calculated after ALL_ELEMENTS is defined
         let feedbackTimeout = null;
         let hintTimeout = null;
         let quoteTimeout = null;
@@ -502,8 +493,8 @@
         const slot2Div = document.getElementById('slot2');
         const feedbackDiv = document.getElementById('feedback');
         const resetButton = document.getElementById('reset-button');
-        const saveButton = document.getElementById('save-button');         // New Ref
-        const loadButton = document.getElementById('load-button');         // New Ref
+        const saveButton = document.getElementById('save-button');
+        // const loadButton = document.getElementById('load-button'); // REMOVED Ref
         const resetProgressButton = document.getElementById('reset-progress-button');
         const hintButton = document.getElementById('hint-button');
         const progressCounterSpan = document.getElementById('progress-counter');
@@ -523,7 +514,8 @@
             }
         }
 
-        function loadGame() {
+        // Renamed to indicate it's for initial/automatic load
+        function loadInitialGame() {
             let loadedCount = 0;
             try {
                 const savedData = localStorage.getItem(SAVE_KEY);
@@ -533,44 +525,27 @@
                          const validElements = discoveredArray.filter(id => ALL_ELEMENTS[id]);
                          discoveredElements = new Set(validElements);
                          loadedCount = discoveredElements.size;
-                         console.log(`Game loaded. ${loadedCount} elements restored.`);
+                         console.log(`Game loaded automatically. ${loadedCount} elements restored.`);
                     } else {
-                        console.warn("Invalid save data format found. Sticking with current state or default.");
-                        // Don't necessarily reset if loading fails mid-game, let user decide.
-                         // If called on initial load, reset:
-                         if (!document.body.dataset.initialized) { // Check if first load
-                            discoveredElements = new Set(['fire', 'water', 'earth', 'air']);
-                            localStorage.removeItem(SAVE_KEY);
-                         }
+                        console.warn("Invalid save data format found. Starting with default elements.");
+                        discoveredElements = new Set(['fire', 'water', 'earth', 'air']);
+                        localStorage.removeItem(SAVE_KEY);
                     }
                 } else {
-                     console.log("No save data found.");
-                     // If called on initial load, reset:
-                     if (!document.body.dataset.initialized) { // Check if first load
-                        discoveredElements = new Set(['fire', 'water', 'earth', 'air']);
-                     }
+                     console.log("No save data found. Starting with default elements.");
+                     discoveredElements = new Set(['fire', 'water', 'earth', 'air']);
                 }
             } catch (error) {
                 console.error("Failed to load game:", error);
-                setFeedback("Error loading progress!", "fail");
-                 // If called on initial load, reset:
-                 if (!document.body.dataset.initialized) { // Check if first load
-                    discoveredElements = new Set(['fire', 'water', 'earth', 'air']);
-                    localStorage.removeItem(SAVE_KEY);
-                 }
+                setFeedback("Error loading previous progress. Starting fresh.", "fail");
+                discoveredElements = new Set(['fire', 'water', 'earth', 'air']);
+                localStorage.removeItem(SAVE_KEY);
             }
-            return loadedCount; // Return how many were loaded (useful for feedback)
+            // No feedback message here, initial message will cover it.
         }
 
-        // --- Manual Load Handler ---
-        function handleManualLoad() {
-            clearHintHighlight();
-            resetSelection(); // Clear slots before loading
-            const loadedCount = loadGame();
-            renderElements(); // Update UI immediately
-            setFeedback(`Loaded ${loadedCount} discovered elements.`, "info");
-        }
-
+        // --- Manual Load Handler REMOVED ---
+        // function handleManualLoad() { ... }
 
         function resetGameProgress() {
             if (confirm("Are you sure you want to reset all progress and delete the save? This cannot be undone.")) {
@@ -580,7 +555,6 @@
                 renderElements();
                 resetSelection();
                 setFeedback("Progress reset. Basic elements restored.", "info");
-                // Optionally: location.reload(); // Or just reset state like above
             }
         }
 
@@ -604,7 +578,7 @@
         // --- Reachability Check Function (unchanged) ---
         function checkReachability() { /* ... */ }
 
-        // --- Core Game Logic Functions (attemptCombination modified) ---
+        // --- Core Game Logic Functions (updateProgress modified) ---
         function getElementData(elementId) { return ALL_ELEMENTS[elementId]; }
 
         function renderElements() { /* Function remains the same */
@@ -618,10 +592,14 @@
             updateProgress(); highlightSelectedIcons(); clearHintHighlight();
         }
 
-
-        function updateProgress() { /* Function remains the same */
-            progressCounterSpan.textContent = `${discoveredElements.size}/${totalElements}`; hintButton.disabled = (discoveredElements.size === totalElements);
-            if (discoveredElements.size === totalElements) { setFeedback("Congratulations! You've discovered all elements!", "success"); }
+        // --- MODIFIED updateProgress ---
+        function updateProgress() {
+            // totalElements is now calculated correctly during initialization
+            progressCounterSpan.textContent = `${discoveredElements.size}/${totalElements}`;
+            hintButton.disabled = (discoveredElements.size === totalElements);
+            if (discoveredElements.size === totalElements) {
+                setFeedback("Congratulations! You've discovered all elements!", "success");
+            }
         }
 
         function handleElementClick(elementId) { /* Function remains the same */
@@ -639,8 +617,7 @@
              selectedElements.forEach((id) => { document.querySelectorAll(`.element-icon[data-id="${id}"]`).forEach(icon => { if(icon.closest('#elements-list')) icon.classList.add('selected'); }); });
          }
 
-        // --- UPDATED attemptCombination (Removed auto-save) ---
-        function attemptCombination() {
+        function attemptCombination() { /* Function remains the same, no auto-save was here */
             if (selectedElements.length !== 2) return;
 
             const el1Id = selectedElements[0];
@@ -654,7 +631,7 @@
 
                 if (!discoveredElements.has(resultId)) {
                     discoveredElements.add(resultId);
-                    // saveGame(); // <<< REMOVED automatic save
+                    // Manual save is still needed via button
                     needsRender = true;
                     const el1Name = getElementData(el1Id).name;
                     const el2Name = getElementData(el2Id).name;
@@ -680,22 +657,20 @@
             }
             if (needsRender) { setTimeout(renderElements, 100); } else { updateProgress(); }
         }
-        // --- END UPDATED attemptCombination ---
 
         function setFeedback(message, type = "") { /* Function remains the same */
              if (feedbackTimeout) clearTimeout(feedbackTimeout); feedbackDiv.textContent = message; feedbackDiv.className = 'feedback'; if (type) feedbackDiv.classList.add(type);
-             // Make info messages persist a bit longer
              const duration = (type === "info" || type === "success" || type === "fail") ? 4000 : 3500;
-             if (!type || type === "") { // Only auto-clear default messages
+             if (!type || type === "") {
                  feedbackTimeout = setTimeout(() => {
                      if(feedbackDiv.textContent === message && !feedbackDiv.classList.contains('hint') && !feedbackDiv.classList.contains('success') && !feedbackDiv.classList.contains('fail') && !feedbackDiv.classList.contains('info')) {
                          feedbackDiv.textContent = 'Select element(s).';
                          feedbackDiv.className = 'feedback';
                      }
                  }, duration);
-             } else { // For success/fail/info/hint, clear after duration regardless
+             } else {
                  feedbackTimeout = setTimeout(() => {
-                     if(feedbackDiv.textContent === message) { // Clear only if message hasn't changed
+                     if(feedbackDiv.textContent === message) {
                          feedbackDiv.textContent = 'Select element(s).';
                          feedbackDiv.className = 'feedback';
                      }
@@ -715,7 +690,7 @@
             for (const e1 of discoveredArray) {
                  if (!RECIPES[e1]) continue;
                  for (const e2 of discoveredArray) {
-                     const resultId = RECIPES[e1]?.[e2];
+                     const resultId = RECIPES[e1]?.[e2] ?? RECIPES[e2]?.[e1] ?? null; // Check both ways
                      if (resultId && ALL_ELEMENTS[resultId] && !discoveredElements.has(resultId)) {
                          const exists = possibleHints.some(hint => (hint.e1 === e1 && hint.e2 === e2) || (hint.e1 === e2 && hint.e2 === e1) );
                          if (!exists) { possibleHints.push({ e1, e2, result: resultId }); }
@@ -724,9 +699,9 @@
             }
             if (possibleHints.length > 0) {
                 let hint = possibleHints[Math.floor(Math.random() * possibleHints.length)];
-                const el1Data = getElementData(hint.e1); // Get element data
+                const el1Data = getElementData(hint.e1);
                 const el2Data = getElementData(hint.e2);
-                if (!el1Data || !el2Data) { // Basic check if elements exist
+                if (!el1Data || !el2Data) {
                     console.warn("Hint points to missing element data:", hint);
                     setFeedback("Hint generation error.", "fail");
                     return;
@@ -741,27 +716,25 @@
                 hintTimeout = setTimeout(clearHintHighlight, 5000);
             } else {
                 if (discoveredElements.size === totalElements) { setFeedback("You've discovered everything!", "success"); hintButton.disabled = true; }
-                else { setFeedback("No new combinations found with your current elements.", "info"); } // Use info style
+                else { setFeedback("No new combinations found with your current elements.", "info"); }
             }
         }
 
         // --- Initialization ---
-        document.body.dataset.initialized = "false"; // Mark as not initialized yet
-        loadGame(); // Attempt to load saved state on page open
-        document.body.dataset.initialized = "true"; // Mark as initialized
+        totalElements = Object.keys(ALL_ELEMENTS).length; // Calculate total *unique* elements defined
+        loadInitialGame(); // Attempt to load saved state automatically on page open
 
         // Assign button handlers
         resetButton.onclick = () => { clearHintHighlight(); resetSelection(); setFeedback("Selection cleared.", ""); };
-        saveButton.onclick = saveGame;           // <<< Add handler for save
-        loadButton.onclick = handleManualLoad;   // <<< Add handler for load
+        saveButton.onclick = saveGame;
+        // loadButton.onclick = handleManualLoad; // REMOVED Listener
         resetProgressButton.onclick = resetGameProgress;
         hintButton.onclick = provideHint;
         searchBar.oninput = () => { clearHintHighlight(); renderElements(); };
 
-        totalElements = Object.keys(ALL_ELEMENTS).length;
-        renderElements(); // Render based on loaded state
-        setFeedback("Welcome! Select two elements or load progress.", ""); // Updated initial message
-        console.log(`Doodle Book Clone Initialized. ${totalElements} elements loaded. ${discoveredElements.size} discovered.`);
+        renderElements(); // Render based on loaded or default state
+        setFeedback("Welcome! Select two elements to combine.", ""); // Updated initial message
+        console.log(`Doodle Book Clone Initialized. ${totalElements} total elements defined. ${discoveredElements.size} discovered.`);
         if (discoveredElements.size === totalElements) { hintButton.disabled = true; }
 
         // Optional: Run check on load
